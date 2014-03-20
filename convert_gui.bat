@@ -1,0 +1,1 @@
+pyuic4 gui_andreev.ui -o gui_andreev.py
