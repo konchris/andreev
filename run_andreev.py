@@ -25,6 +25,7 @@ except AttributeError:
     _fromUtf8 = lambda s: s
 
 from functions import *
+import initialize
 #import mpl
 
 class main_program(QtGui.QMainWindow):
@@ -33,190 +34,30 @@ class main_program(QtGui.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         DEV.app = app
-        
-       
-        QtCore.QObject.connect(self.ui.btnHistogramStart, QtCore.SIGNAL("clicked()"), self.measurement_btn_Acquire_Histogram)
-        QtCore.QObject.connect(self.ui.btnIVStart, QtCore.SIGNAL("clicked()"), self.measurement_btn_Acquire_IV)  
-        
-        QtCore.QObject.connect(self.ui.btnBStart, QtCore.SIGNAL("clicked()"), self.magnet_goto)   
-        QtCore.QObject.connect(self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), self.magnet_init)    
-        QtCore.QObject.connect(self.ui.btnBZeroMagnet, QtCore.SIGNAL("clicked()"), self.magnet_zero)   
-        QtCore.QObject.connect(self.ui.btnSwitchHeaterOn, QtCore.SIGNAL("clicked()"), self.switchheater_on)  
-        QtCore.QObject.connect(self.ui.btnSwitchHeaterOff, QtCore.SIGNAL("clicked()"), self.switchheater_off)  
-        
-        QtCore.QObject.connect(self.ui.btnMeasurementStop, QtCore.SIGNAL("clicked()"), self.measurement_btn_Stop)
-        
-        QtCore.QObject.connect(self.ui.btnUnbreak, QtCore.SIGNAL("clicked()"), self.motor_unbreak)
-        QtCore.QObject.connect(self.ui.btnBreak, QtCore.SIGNAL("clicked()"), self.motor_break)
-        QtCore.QObject.connect(self.ui.btnStop, QtCore.SIGNAL("clicked()"), self.motor_stop)
-        QtCore.QObject.connect(self.ui.btnMotorHome, QtCore.SIGNAL("clicked()"), self.motor_home)
-        QtCore.QObject.connect(self.ui.btnMotorSetLimit, QtCore.SIGNAL("clicked()"), self.motor_set_limit) 
-        
-        QtCore.QObject.connect(self.ui.btnSetBias, QtCore.SIGNAL("clicked()"), self.set_bias) 
-        
-        QtCore.QObject.connect(self.ui.btnChAUp, QtCore.SIGNAL("clicked()"), self.ch_a_up) 
-        QtCore.QObject.connect(self.ui.btnChADown, QtCore.SIGNAL("clicked()"), self.ch_a_down) 
-        QtCore.QObject.connect(self.ui.btnChBUp, QtCore.SIGNAL("clicked()"), self.ch_b_up) 
-        QtCore.QObject.connect(self.ui.btnChBDown, QtCore.SIGNAL("clicked()"), self.ch_b_down) 
-        
-        QtCore.QObject.connect(self.ui.btnSaveStart, QtCore.SIGNAL("clicked()"), self.save_btn_Start)
-        QtCore.QObject.connect(self.ui.btnSaveStop, QtCore.SIGNAL("clicked()"), self.close_files)
-        QtCore.QObject.connect(self.ui.btnSaveDescription, QtCore.SIGNAL("clicked()"), self.save_description)
-        
-        QtCore.QObject.connect(self.ui.btnOffset, QtCore.SIGNAL("clicked()"), self.offset_correct)
-        QtCore.QObject.connect(self.ui.btnLockinSet, QtCore.SIGNAL("clicked()"), self.lockin_set)
-        QtCore.QObject.connect(self.ui.btnLIReadPhase, QtCore.SIGNAL("clicked()"), self.lockin_read_phase)
-        QtCore.QObject.connect(self.ui.btnLIZeroPhase, QtCore.SIGNAL("clicked()"), self.lockin_set_phase)
-        
-        QtCore.QObject.connect(self.ui.btnTempSet, QtCore.SIGNAL("clicked()"), self.set_temp_parameters)
-        QtCore.QObject.connect(self.ui.btnTempSweep, QtCore.SIGNAL("clicked()"), self.temp_sweep)
-        QtCore.QObject.connect(self.ui.btnTempSweepStop, QtCore.SIGNAL("clicked()"), self.temp_sweep_stop)
-        QtCore.QObject.connect(self.ui.btnTemperatureCustom, QtCore.SIGNAL("clicked()"), self.temp_custom)
-        
-        QtCore.QObject.connect(self.ui.btnExecute, QtCore.SIGNAL("clicked()"), self.execute)  
-        
+             
         #Read all the saved default values 
         try:
             read_config(self.ui)
         except Exception,e:
             print e            
             log("Can't read config file")
-
-        # validators
-        intValidator = QtGui.QIntValidator()
-        intValidator.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        doubleValidator = QtGui.QDoubleValidator()
-        doubleValidator.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-
-        # histogram
-        self.ui.editHistogramBias.setValidator(doubleValidator)
-        self.ui.editHistogramLower.setValidator(doubleValidator)
-        self.ui.editHistogramUpper.setValidator(doubleValidator)
-        self.ui.editHistogramOpeningSpeed.setValidator(intValidator)
-        self.ui.editHistogramClosingSpeed.setValidator(intValidator)
-        # motor
-        self.ui.editLowerLimit.setValidator(doubleValidator)
-        self.ui.editUpperLimit.setValidator(doubleValidator)
-        self.ui.editSpeed.setValidator(intValidator)  
-        # view
-        self.ui.editViewBegin.setValidator(intValidator)
-        self.ui.editViewEnd.setValidator(intValidator)
-        self.ui.editViewStep.setValidator(intValidator)
-        self.ui.editTimerInterval.setValidator(intValidator)
-        self.ui.editMaximumValues.setValidator(intValidator)
-        # iv
-        self.ui.editIVMin.setValidator(doubleValidator)
-        self.ui.editIVMax.setValidator(doubleValidator)
-        self.ui.editIVSteps.setValidator(doubleValidator)
-        self.ui.editIVDelay.setValidator(doubleValidator) 
-        # temperature
-        self.ui.editTempSetpoint.setValidator(doubleValidator)
-        self.ui.editTempHeater.setValidator(intValidator)
-        self.ui.editTempP.setValidator(intValidator)
-        self.ui.editTempI.setValidator(intValidator)
-        self.ui.editTempD.setValidator(intValidator)
-        self.ui.editTempSweepStart.setValidator(doubleValidator)
-        self.ui.editTempSweepStop.setValidator(doubleValidator)
-        self.ui.editTempSweepStep.setValidator(doubleValidator)
-        self.ui.editTempSweepDelay.setValidator(doubleValidator)    
-        # b-field
-        self.ui.editBMax.setValidator(doubleValidator)
-        self.ui.editBRate.setValidator(doubleValidator)
-        self.ui.editBBias.setValidator(doubleValidator)  
-        # lockin
-        self.ui.editLIFreq.setValidator(doubleValidator)
-        self.ui.editLIBW.setValidator(doubleValidator)
-        self.ui.editLIAmpl.setValidator(doubleValidator)
-        self.ui.editAverage.setValidator(intValidator)
-        self.ui.editRate.setValidator(intValidator)
+          
+                     
+        # initialize.py - most of long initializations 
+        initialize.init_connections(self)            
+        initialize.init_variables(self)
+        initialize.init_curvewidgets(self)
+        initialize.init_files(self)
+        initialize.init_shutdowns(self)
+        initialize.init_validators(self)
         
         # periodic timer for refresh
         self.timer_second = QTimer()
         self.timer_second.timeout.connect(self.second_tick)
-        self.timer_second.start(250)  
-                     
-                     
-        init_variables(self)
-        #initialize_cw(self.ui)
-        
-        
-        self.data_curve1 = make.curve([],[])
-        self.data_curve2 = make.curve([],[], yaxis="right", color="b")
-        self.data_curve3 = make.curve([],[])
-        self.data_curve4 = make.curve([],[], yaxis="right", color="b")
-        self.data_curve5 = make.curve([],[])
-        self.data_curve6 = make.curve([],[], yaxis="right", color="b")
-        self.data_curve6b = make.curve([],[], yaxis="right", color="b")
-        self.data_curve7 = make.curve([],[])
-        self.data_curve8 = make.curve([],[], yaxis="right", color="b")
-        self.data_curve9 = make.curve([],[], linestyle="NoPen", marker="Rect",  markersize=3, markeredgecolor="k", markerfacecolor="b") # SolidLine NoPen
-        #self.data_curve10 = make.curve([],[],yaxis="right",color="b")
-        self.data_curve11 = make.curve([],[], linestyle="NoPen", marker="Rect" ,markersize=3, markeredgecolor="k", markerfacecolor="k") # SolidLine NoPen
-        self.data_curve12 = make.curve([],[], yaxis="right", linestyle="NoPen", marker="Ellipse",  markersize=4, markeredgecolor="k",markerfacecolor="r") # SolidLine NoPen
-        
-        self.ui.cw1.plot.set_axis_title(self.ui.cw1.plot.Y_LEFT, "AUX0/Sample")
-        self.ui.cw1.plot.set_axis_title(self.ui.cw1.plot.Y_RIGHT, "AUX1/RRef")
-        self.ui.cw1.plot.set_axis_color(self.ui.cw1.plot.Y_RIGHT, "MediumBlue")
-        self.ui.cw2.plot.set_axis_title(self.ui.cw2.plot.Y_LEFT, "Motor Position")
-        self.ui.cw2.plot.set_axis_title(self.ui.cw2.plot.Y_RIGHT, "Motor Speed (RPM)")
-        self.ui.cw2.plot.set_axis_color(self.ui.cw2.plot.Y_RIGHT, "MediumBlue")
-        self.ui.cw3.plot.set_axis_title(self.ui.cw3.plot.Y_LEFT, "Magnet (B)")
-        self.ui.cw3.plot.set_axis_title(self.ui.cw3.plot.Y_RIGHT, "Temperatures (K)")
-        self.ui.cw3.plot.set_axis_color(self.ui.cw3.plot.Y_RIGHT, "MediumBlue")
-        self.ui.cw4.plot.set_axis_title(self.ui.cw4.plot.Y_LEFT, "Resistance (Ohm)")
-        self.ui.cw4.plot.set_axis_title(self.ui.cw4.plot.Y_RIGHT, "Conductance (Go)")
-        self.ui.cw4.plot.set_axis_color(self.ui.cw4.plot.Y_RIGHT, "MediumBlue")
-        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)")
-        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "Voltage (V)") 
-        self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.Y_LEFT, "dI/dV")
-        self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.Y_RIGHT, "d2I/dV2")  
-        self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.X_BOTTOM, "Voltage (V)") 
-        self.ui.cw6.plot.set_axis_color(self.ui.cw6.plot.Y_RIGHT, "DarkRed")
-        
-    
-        self.ui.cw1.plot.add_item(self.data_curve1)
-        self.ui.cw1.plot.add_item(self.data_curve2)
-        self.ui.cw2.plot.add_item(self.data_curve3)
-        self.ui.cw2.plot.add_item(self.data_curve4)
-        self.ui.cw3.plot.add_item(self.data_curve5)
-        self.ui.cw3.plot.add_item(self.data_curve6)
-        self.ui.cw3.plot.add_item(self.data_curve6b)
-        self.ui.cw4.plot.add_item(self.data_curve7)
-        self.ui.cw4.plot.add_item(self.data_curve8)
-        self.ui.cw5.plot.add_item(self.data_curve9)
-        #self.ui.cw5.plot.add_item(self.data_curve10)
-        self.ui.cw6.plot.add_item(self.data_curve11)
-        self.ui.cw6.plot.add_item(self.data_curve12)
-        
-        self.ui.cw1.plot.enable_used_axes()
-        self.ui.cw2.plot.enable_used_axes()
-        self.ui.cw3.plot.enable_used_axes()
-        self.ui.cw4.plot.enable_used_axes()
-        self.ui.cw5.plot.enable_used_axes()
-        self.ui.cw6.plot.enable_used_axes()
-        
-
-        # shutdowns
-        self.stop_measure = False
-        self.shutdown = False
-        self.temp_sweep_abort = False
-        self.offset_in_progress = False
-        
-        self.f_li0 = None
-        self.f_li1 = None
-        self.f_li3 = None
-        self.f_li4 = None
-        self.f_agilent_new = None
-        self.f_agilent_old = None
-        self.f_motor = None
-        self.f_temp = None
-        self.f_ips = None
-        self.f_femto = None
-        self.f_config = None
+        self.timer_second.start(250)
         
         # start saving
         #self.save_btn_Start()
-        
         
         #########################################################
         ############## MEASUREMENT PARAMETERS ###################
@@ -235,8 +76,6 @@ class main_program(QtGui.QMainWindow):
         
         self.data_lock = thread.allocate_lock()
         thread.start_new_thread(self.measurement_thread,())    
-
-        
 
 
     # offset

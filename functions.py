@@ -17,10 +17,7 @@ from configobj import ConfigObj
 import winsound
 #import tables
 
-def initialize_cw(_ui):
-    #from guiqwt.builder import make
-    
-    _ui.editCommand.setText("asdf")
+
 
 def export_html(parent, path="C:\wamp\www\\"):
     #from PyQt4.QtCore import QPoint
@@ -222,74 +219,7 @@ def save_data(filename, saving_data):
             filename.write(line)
         #filename.flush()
         
-def init_variables(_self):
 
-    _self._start_time = time.time()
-    _self.plot_data = {}
-    _self.plot_data["new"] = [False,False,False,False]
-    _self.plot_data["x1"] = []
-    _self.plot_data["y1"] = []
-    _self.plot_data["x3"] = []
-    _self.plot_data["y3"] = []
-    _self.plot_data["x4"] = []
-    _self.plot_data["y4"] = []    
-    
-    _self.data = {}
-    _self.data["li_timestamp_0"] = []
-    _self.data["li_aux0"] = []
-    _self.data["li_aux1"] = []
-    _self.data["li_0_x"] = []
-    _self.data["li_0_y"] = []
-    
-    _self.data["li_timestamp_1"] = []
-    _self.data["li_1_x"] = []
-    _self.data["li_1_y"] = []
-    
-    _self.data["li_timestamp_3"] = []
-    _self.data["li_3_x"] = []
-    _self.data["li_3_y"] = []
-    
-    _self.data["li_timestamp_4"] = []
-    _self.data["li_4_x"] = []
-    _self.data["li_4_y"] = []
-    
-    _self.data["agilent_voltage_timestamp"] = []
-    _self.data["agilent_voltage_voltage"] = []
-    
-    _self.data["agilent_current_timestamp"] = []
-    _self.data["agilent_current_voltage"] = []
-
-    _self.data["motor_timestamp"] = []
-    _self.data["motor_pos"] = []
-    _self.data["motor_cur"] = []
-    _self.data["motor_vel"] = []
-    
-    _self.data["temp_timestamp"] = []
-    _self.data["temp1"] = []
-    _self.data["temp2"] = []
-    
-    _self.data["ips_timestamp"] = []
-    _self.data["ips_mfield"] = []
-    
-    _self.data["femto_timestamp"] = []
-    _self.data["femto_channela"] = []
-    _self.data["femto_channelb"] = []
-    
-    _self.config_data = {}
-    _self.config_data["offset_aux0"] = [0,0,0,0]
-    _self.config_data["offset_aux1"] = [0,0,0,0]
-    _self.config_data["offset_agilent_voltage"] = [0,0,0,0]
-    _self.config_data["offset_agilent_current"] = [0,0,0,0]
-    _self.config_data["lockin_phases"] = [0,0,0,0]
-    
-    _self.ui.editOffsetAux0_0.setText(str(0.0))
-    _self.ui.editOffsetAux0_1.setText(str(0.0))
-    _self.ui.editOffsetAux0_2.setText(str(0.0))
-    _self.ui.editOffsetAux0_3.setText(str(0.0))
-    _self.ui.editOffsetAux1_0.setText(str(0.0))
-    _self.ui.editOffsetAux1_1.setText(str(0.0))
-    _self.ui.editOffsetAux1_2.setText(str(0.0))
-    _self.ui.editOffsetAux1_3.setText(str(0.0))
     
 def log(message, exception=None):
     # time to do not show same log again
