@@ -17,7 +17,69 @@ from configobj import ConfigObj
 import winsound
 #import tables
 
-#C:\wamp\www
+def initialize_cw(_ui):
+    #from guiqwt.builder import make
+    
+    _ui.editCommand.setText("asdf")
+
+def export_html(parent, path="C:\wamp\www\\"):
+    #from PyQt4.QtCore import QPoint
+    #form_objects = inspect.getmembers(parent)
+    
+    f = open(path+"index.html","w")
+    f.write("<html><head><title>Andreev Measurement</title>")
+    f.write("<style type=\"text/css\">\n")
+    
+    # background
+    f.write("body {background-color: #BBBBBB}\n")   
+    
+    """
+    # inputs
+    for element in form_objects:
+        try:
+            if element[1].__class__.__name__ == 'QLineEdit':
+                f.write("form #%s {position: absolute; top: %ipx; left: %ipx; width: %ipx; height: %ipx}\n"%(
+                    element[1].objectName(),element[1].mapToGlobal(QPoint(0,0)).y(),element[1].mapToGlobal(QPoint(0,0)).x(),int(element[1].width()),int(element[1].height())))
+        except Exception,e:
+            print e
+            print str(element[1].__class__.__name__)
+            f.write("dada!")
+            pass
+    """
+    f.write("</style>\n")
+    f.write("</head>")
+    
+    
+    f.write("<body>\n")
+    f.write("<form>\n")
+    """
+    for element in form_objects:
+        try:
+            if element[1].__class__.__name__ == 'QLineEdit':
+                f.write("<div id=\"%s\"><input type=\"text\" name=\"%s\" value=\"%s\" style=\"width: %ipx;\"/></div>\n"%(
+                    str(element[1].objectName()),str(element[1].objectName()),str(element[1].text()),element[1].width()))
+        except Exception,e:
+            print e"""
+    
+    try:
+        parent.cw1.plot.save_widget(path+"cw1.png")
+        parent.cw2.plot.save_widget(path+"cw2.png")
+        parent.cw3.plot.save_widget(path+"cw3.png")
+        parent.cw4.plot.save_widget(path+"cw4.png")
+        parent.cw5.plot.save_widget(path+"cw5.png")
+        parent.cw6.plot.save_widget(path+"cw6.png")
+        
+        f.write("<img src=\"cw1.png\" />\n")
+        f.write("<img src=\"cw2.png\" />\n")
+        f.write("<img src=\"cw3.png\" />\n")
+        f.write("<img src=\"cw4.png\" />\n")
+        f.write("<img src=\"cw5.png\" />\n")
+        f.write("<img src=\"cw6.png\" />\n")
+    except:
+        log("Plot exporting HTML failed", e)
+        
+    f.write("</form></body></html>")
+    f.flush()
 
 def voltage_ramp(_min=-1,_max=1,_step=0.1,_circular=True):
     """Returns a voltage ramp which has 0-max-0-min-0 shape.
@@ -159,6 +221,75 @@ def save_data(filename, saving_data):
             line = line + "\n"
             filename.write(line)
         #filename.flush()
+        
+def init_variables(_self):
+
+    _self._start_time = time.time()
+    _self.plot_data = {}
+    _self.plot_data["new"] = [False,False,False,False]
+    _self.plot_data["x1"] = []
+    _self.plot_data["y1"] = []
+    _self.plot_data["x3"] = []
+    _self.plot_data["y3"] = []
+    _self.plot_data["x4"] = []
+    _self.plot_data["y4"] = []    
+    
+    _self.data = {}
+    _self.data["li_timestamp_0"] = []
+    _self.data["li_aux0"] = []
+    _self.data["li_aux1"] = []
+    _self.data["li_0_x"] = []
+    _self.data["li_0_y"] = []
+    
+    _self.data["li_timestamp_1"] = []
+    _self.data["li_1_x"] = []
+    _self.data["li_1_y"] = []
+    
+    _self.data["li_timestamp_3"] = []
+    _self.data["li_3_x"] = []
+    _self.data["li_3_y"] = []
+    
+    _self.data["li_timestamp_4"] = []
+    _self.data["li_4_x"] = []
+    _self.data["li_4_y"] = []
+    
+    _self.data["agilent_voltage_timestamp"] = []
+    _self.data["agilent_voltage_voltage"] = []
+    
+    _self.data["agilent_current_timestamp"] = []
+    _self.data["agilent_current_voltage"] = []
+
+    _self.data["motor_timestamp"] = []
+    _self.data["motor_pos"] = []
+    _self.data["motor_cur"] = []
+    _self.data["motor_vel"] = []
+    
+    _self.data["temp_timestamp"] = []
+    _self.data["temp1"] = []
+    _self.data["temp2"] = []
+    
+    _self.data["ips_timestamp"] = []
+    _self.data["ips_mfield"] = []
+    
+    _self.data["femto_timestamp"] = []
+    _self.data["femto_channela"] = []
+    _self.data["femto_channelb"] = []
+    
+    _self.config_data = {}
+    _self.config_data["offset_aux0"] = [0,0,0,0]
+    _self.config_data["offset_aux1"] = [0,0,0,0]
+    _self.config_data["offset_agilent_voltage"] = [0,0,0,0]
+    _self.config_data["offset_agilent_current"] = [0,0,0,0]
+    _self.config_data["lockin_phases"] = [0,0,0,0]
+    
+    _self.ui.editOffsetAux0_0.setText(str(0.0))
+    _self.ui.editOffsetAux0_1.setText(str(0.0))
+    _self.ui.editOffsetAux0_2.setText(str(0.0))
+    _self.ui.editOffsetAux0_3.setText(str(0.0))
+    _self.ui.editOffsetAux1_0.setText(str(0.0))
+    _self.ui.editOffsetAux1_1.setText(str(0.0))
+    _self.ui.editOffsetAux1_2.setText(str(0.0))
+    _self.ui.editOffsetAux1_3.setText(str(0.0))
     
 def log(message, exception=None):
     # time to do not show same log again

@@ -836,6 +836,32 @@ class ZURICH:
                 [["/", self.device, "/demods/5/rate"],0.0],
                ]
         self.daq2.set(general_setting)
+        log("LockIn Rate %i"%(rate))
+    
+    def set_amplitude(self, amplitude=0.01):
+        _range = 1
+        if amplitude < 0.1:
+            _range = 0.1
+            amplitude = amplitude*10
+        if amplitude < 0.01:
+            _range = 0.01
+            amplitude = amplitude*10
+        general_setting = [
+            [["/", self.device, "/sigouts/0/range"],_range],
+            [["/", self.device, "/sigouts/0/amplitudes/6"],amplitude]
+            ]
+        self.daq2.set(general_setting)
+        log("LockIn AC Range %fV, Part %f"%(_range,amplitude))
+    
+    def set_phases(self, phase_0=0, phase_1=0, phase_3=0, phase_4=0):
+        general_setting = [
+                [["/", self.device, "/demods/0/PHASESHIFT"],phase_0],
+                [["/", self.device, "/demods/1/PHASESHIFT"],phase_1],
+                [["/", self.device, "/demods/3/PHASESHIFT"],phase_3],
+                [["/", self.device, "/demods/4/PHASESHIFT"],phase_4]
+               ]
+        self.daq2.set(general_setting)
+        log("Phase Correction: %f, %f, %f, %f"%(phase_0,phase_1,phase_3,phase_4))
     
 
     def lockin_thread(self):

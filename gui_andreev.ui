@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>10</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -359,6 +359,16 @@
           </rect>
          </property>
          <layout class="QFormLayout" name="formLayout_4">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_64">
+            <property name="text">
+             <string>Sweep</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_18">
             <property name="text">
@@ -415,31 +425,97 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
+          <item row="5" column="1">
            <widget class="QPushButton" name="btnIVStart">
             <property name="text">
              <string>Start</string>
             </property>
            </widget>
           </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="formLayoutWidget_5">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>40</y>
+           <width>129</width>
+           <height>174</height>
+          </rect>
+         </property>
+         <layout class="QFormLayout" name="formLayout_5">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
           <item row="0" column="1">
-           <widget class="QLabel" name="label_64">
+           <widget class="QLabel" name="label_90">
             <property name="text">
-             <string>Sweep</string>
+             <string>Estimation Sample</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="editIVTime">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_39">
+            <property name="text">
+             <string>Min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editIVMinEstimate">
             <property name="enabled">
              <bool>false</bool>
             </property>
+            <property name="text">
+             <string/>
+            </property>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_78">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_87">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="editIVMaxEstimate">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_88">
+            <property name="text">
+             <string>Steps</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="editIVStepsEstimate">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_91">
             <property name="text">
              <string>Time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="editIVTimeEstimate">
+            <property name="enabled">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -1339,7 +1415,7 @@
            <x>200</x>
            <y>20</y>
            <width>160</width>
-           <height>241</height>
+           <height>181</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
@@ -1411,10 +1487,17 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
+          <item row="5" column="1">
            <widget class="QPushButton" name="btnLIZeroPhase">
             <property name="text">
              <string>Zero Phase</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QPushButton" name="btnLIReadPhase">
+            <property name="text">
+             <string>Read</string>
             </property>
            </widget>
           </item>
@@ -2170,7 +2253,7 @@
           <rect>
            <x>10</x>
            <y>20</y>
-           <width>441</width>
+           <width>481</width>
            <height>221</height>
           </rect>
          </property>
@@ -2188,7 +2271,7 @@
           <rect>
            <x>10</x>
            <y>20</y>
-           <width>441</width>
+           <width>481</width>
            <height>221</height>
           </rect>
          </property>
@@ -2342,7 +2425,7 @@
      <rect>
       <x>635</x>
       <y>10</y>
-      <width>191</width>
+      <width>201</width>
       <height>301</height>
      </rect>
     </property>
@@ -2356,8 +2439,13 @@
      </item>
      <item>
       <widget class="QTableWidget" name="tableWidget">
+       <property name="font">
+        <font>
+         <pointsize>7</pointsize>
+        </font>
+       </property>
        <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
+        <enum>Qt::ScrollBarAsNeeded</enum>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -2371,29 +2459,19 @@
        <attribute name="horizontalHeaderStretchLastSection">
         <bool>true</bool>
        </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>20</number>
+       </attribute>
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="QLabel" name="label_32">
-    <property name="geometry">
-     <rect>
-      <x>740</x>
-      <y>760</y>
-      <width>91</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Blue = Right Axis</string>
-    </property>
    </widget>
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>760</y>
-      <width>401</width>
+      <width>482</width>
       <height>31</height>
      </rect>
     </property>
@@ -2415,6 +2493,16 @@
        </property>
        <property name="text">
         <string>Temperatur</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnStatusAgilents">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Agilents</string>
        </property>
       </widget>
      </item>
@@ -2453,7 +2541,7 @@
    <widget class="QLabel" name="label_77">
     <property name="geometry">
      <rect>
-      <x>440</x>
+      <x>560</x>
       <y>770</y>
       <width>46</width>
       <height>13</height>
@@ -2466,7 +2554,7 @@
    <widget class="QLineEdit" name="editLastIV">
     <property name="geometry">
      <rect>
-      <x>500</x>
+      <x>620</x>
       <y>770</y>
       <width>201</width>
       <height>20</height>

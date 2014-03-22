@@ -1,5 +1,4 @@
 #!/usr/bin/python -d
-
 import sys
 import os
 from PyQt4 import QtCore, QtGui
@@ -9,27 +8,21 @@ import devices_andreev as DEV
 #Threading
 import thread
 import time  
-import winsound # sounds
-
 import numpy as np
-import scipy.signal as signal
+#import scipy.signal as signal
 #import matplotlib.mlab as mlab
-import matplotlib.pyplot as plt
-import pylab as pl
+#import matplotlib.pyplot as plt
+#import pylab as pl
 
-
-from guidata.qt.QtCore import SIGNAL, QTimer
-
+from guidata.qt.QtCore import QTimer#,SIGNAL
 #---Import plot widget base class
-from guiqwt.plot import CurveWidget
+#from guiqwt.plot import CurveWidget
 from guiqwt.builder import make
-
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     _fromUtf8 = lambda s: s
-
 
 from functions import *
 #import mpl
@@ -72,6 +65,8 @@ class main_program(QtGui.QMainWindow):
         
         QtCore.QObject.connect(self.ui.btnOffset, QtCore.SIGNAL("clicked()"), self.offset_correct)
         QtCore.QObject.connect(self.ui.btnLockinSet, QtCore.SIGNAL("clicked()"), self.lockin_set)
+        QtCore.QObject.connect(self.ui.btnLIReadPhase, QtCore.SIGNAL("clicked()"), self.lockin_read_phase)
+        QtCore.QObject.connect(self.ui.btnLIZeroPhase, QtCore.SIGNAL("clicked()"), self.lockin_set_phase)
         
         QtCore.QObject.connect(self.ui.btnTempSet, QtCore.SIGNAL("clicked()"), self.set_temp_parameters)
         QtCore.QObject.connect(self.ui.btnTempSweep, QtCore.SIGNAL("clicked()"), self.temp_sweep)
@@ -86,123 +81,99 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             print e            
             log("Can't read config file")
-        
 
         # validators
         intValidator = QtGui.QIntValidator()
         intValidator.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        
         doubleValidator = QtGui.QDoubleValidator()
         doubleValidator.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
 
+        # histogram
         self.ui.editHistogramBias.setValidator(doubleValidator)
+        self.ui.editHistogramLower.setValidator(doubleValidator)
+        self.ui.editHistogramUpper.setValidator(doubleValidator)
+        self.ui.editHistogramOpeningSpeed.setValidator(intValidator)
+        self.ui.editHistogramClosingSpeed.setValidator(intValidator)
+        # motor
         self.ui.editLowerLimit.setValidator(doubleValidator)
         self.ui.editUpperLimit.setValidator(doubleValidator)
-        self.ui.editViewBegin.setValidator(doubleValidator)
-        self.ui.editViewEnd.setValidator(doubleValidator)
-        
-        self.ui.editSpeed.setValidator(intValidator)
-
+        self.ui.editSpeed.setValidator(intValidator)  
+        # view
+        self.ui.editViewBegin.setValidator(intValidator)
+        self.ui.editViewEnd.setValidator(intValidator)
         self.ui.editViewStep.setValidator(intValidator)
         self.ui.editTimerInterval.setValidator(intValidator)
-
+        self.ui.editMaximumValues.setValidator(intValidator)
+        # iv
+        self.ui.editIVMin.setValidator(doubleValidator)
+        self.ui.editIVMax.setValidator(doubleValidator)
+        self.ui.editIVSteps.setValidator(doubleValidator)
+        self.ui.editIVDelay.setValidator(doubleValidator) 
+        # temperature
+        self.ui.editTempSetpoint.setValidator(doubleValidator)
+        self.ui.editTempHeater.setValidator(intValidator)
+        self.ui.editTempP.setValidator(intValidator)
+        self.ui.editTempI.setValidator(intValidator)
+        self.ui.editTempD.setValidator(intValidator)
+        self.ui.editTempSweepStart.setValidator(doubleValidator)
+        self.ui.editTempSweepStop.setValidator(doubleValidator)
+        self.ui.editTempSweepStep.setValidator(doubleValidator)
+        self.ui.editTempSweepDelay.setValidator(doubleValidator)    
+        # b-field
+        self.ui.editBMax.setValidator(doubleValidator)
+        self.ui.editBRate.setValidator(doubleValidator)
+        self.ui.editBBias.setValidator(doubleValidator)  
+        # lockin
+        self.ui.editLIFreq.setValidator(doubleValidator)
+        self.ui.editLIBW.setValidator(doubleValidator)
+        self.ui.editLIAmpl.setValidator(doubleValidator)
+        self.ui.editAverage.setValidator(intValidator)
+        self.ui.editRate.setValidator(intValidator)
+        
+        # periodic timer for refresh
         self.timer_second = QTimer()
         self.timer_second.timeout.connect(self.second_tick)
         self.timer_second.start(250)  
-                         
-        # initialize Variables
-        self._start_time = time.time()
-        self.plot_data = {}
-        self.plot_data["new"] = [False,False,False,False]
-        self.plot_data["x1"] = []
-        self.plot_data["y1"] = []
-        self.plot_data["x3"] = []
-        self.plot_data["y3"] = []
-        self.plot_data["x4"] = []
-        self.plot_data["y4"] = []
-
-        self.data = {}
-        self.data["li_timestamp_0"] = []
-        self.data["li_aux0"] = []
-        self.data["li_aux1"] = []
-        self.data["li_0_x"] = []
-        self.data["li_0_y"] = []
-        
-        self.data["li_timestamp_1"] = []
-        self.data["li_1_x"] = []
-        self.data["li_1_y"] = []
-        
-        self.data["li_timestamp_3"] = []
-        self.data["li_3_x"] = []
-        self.data["li_3_y"] = []
-        
-        self.data["li_timestamp_4"] = []
-        self.data["li_4_x"] = []
-        self.data["li_4_y"] = []
-        
-        self.data["agilent_new_timestamp"] = []
-        self.data["agilent_new_voltage"] = []
-        
-        self.data["agilent_old_timestamp"] = []
-        self.data["agilent_old_voltage"] = []
-
-        self.data["motor_timestamp"] = []
-        self.data["motor_pos"] = []
-        self.data["motor_cur"] = []
-        self.data["motor_vel"] = []
-        
-        self.data["temp_timestamp"] = []
-        self.data["temp1"] = []
-        self.data["temp2"] = []
-        
-        self.data["ips_timestamp"] = []
-        self.data["ips_mfield"] = []
-        
-        self.data["femto_timestamp"] = []
-        self.data["femto_channela"] = []
-        self.data["femto_channelb"] = []
-        
-        self.config_data = {}
-        self.config_data["offset_aux0"] = [0,0,0,0]
-        self.config_data["offset_aux1"] = [0,0,0,0]
-        self.config_data["offset_agilent_new"] = [0,0,0,0]
-        self.config_data["offset_agilent_old"] = [0,0,0,0]
-        self.ui.editOffsetAux0_0.setText(str(0.0))
-        self.ui.editOffsetAux0_1.setText(str(0.0))
-        self.ui.editOffsetAux0_2.setText(str(0.0))
-        self.ui.editOffsetAux0_3.setText(str(0.0))
-        self.ui.editOffsetAux1_0.setText(str(0.0))
-        self.ui.editOffsetAux1_1.setText(str(0.0))
-        self.ui.editOffsetAux1_2.setText(str(0.0))
-        self.ui.editOffsetAux1_3.setText(str(0.0))
+                     
+                     
+        init_variables(self)
+        #initialize_cw(self.ui)
         
         
         self.data_curve1 = make.curve([],[])
-        self.data_curve2 = make.curve([],[],yaxis="right",color="b")
+        self.data_curve2 = make.curve([],[], yaxis="right", color="b")
         self.data_curve3 = make.curve([],[])
-        self.data_curve4 = make.curve([],[],yaxis="right",color="b")
+        self.data_curve4 = make.curve([],[], yaxis="right", color="b")
         self.data_curve5 = make.curve([],[])
-        self.data_curve6 = make.curve([],[],yaxis="right",color="b")
-        self.data_curve6b = make.curve([],[],yaxis="right",color="b")
+        self.data_curve6 = make.curve([],[], yaxis="right", color="b")
+        self.data_curve6b = make.curve([],[], yaxis="right", color="b")
         self.data_curve7 = make.curve([],[])
-        self.data_curve8 = make.curve([],[],yaxis="right",color="b")
-        self.data_curve9 = make.curve([],[],linestyle="NoPen",marker="Cross",markersize=2) # SolidLine NoPen
+        self.data_curve8 = make.curve([],[], yaxis="right", color="b")
+        self.data_curve9 = make.curve([],[], linestyle="NoPen", marker="Rect",  markersize=3, markeredgecolor="k", markerfacecolor="b") # SolidLine NoPen
         #self.data_curve10 = make.curve([],[],yaxis="right",color="b")
-        self.data_curve11 = make.curve([],[],linestyle="NoPen",marker="Cross",markersize=2) # SolidLine NoPen
-        self.data_curve12 = make.curve([],[],linestyle="NoPen",marker="Cross",markersize=2,markerfacecolor="b",color="b") # SolidLine NoPen
+        self.data_curve11 = make.curve([],[], linestyle="NoPen", marker="Rect" ,markersize=3, markeredgecolor="k", markerfacecolor="k") # SolidLine NoPen
+        self.data_curve12 = make.curve([],[], yaxis="right", linestyle="NoPen", marker="Ellipse",  markersize=4, markeredgecolor="k",markerfacecolor="r") # SolidLine NoPen
         
         self.ui.cw1.plot.set_axis_title(self.ui.cw1.plot.Y_LEFT, "AUX0/Sample")
         self.ui.cw1.plot.set_axis_title(self.ui.cw1.plot.Y_RIGHT, "AUX1/RRef")
+        self.ui.cw1.plot.set_axis_color(self.ui.cw1.plot.Y_RIGHT, "MediumBlue")
         self.ui.cw2.plot.set_axis_title(self.ui.cw2.plot.Y_LEFT, "Motor Position")
         self.ui.cw2.plot.set_axis_title(self.ui.cw2.plot.Y_RIGHT, "Motor Speed (RPM)")
+        self.ui.cw2.plot.set_axis_color(self.ui.cw2.plot.Y_RIGHT, "MediumBlue")
         self.ui.cw3.plot.set_axis_title(self.ui.cw3.plot.Y_LEFT, "Magnet (B)")
-        self.ui.cw3.plot.set_axis_title(self.ui.cw3.plot.Y_RIGHT, "Temperatures (K)") 
+        self.ui.cw3.plot.set_axis_title(self.ui.cw3.plot.Y_RIGHT, "Temperatures (K)")
+        self.ui.cw3.plot.set_axis_color(self.ui.cw3.plot.Y_RIGHT, "MediumBlue")
         self.ui.cw4.plot.set_axis_title(self.ui.cw4.plot.Y_LEFT, "Resistance (Ohm)")
         self.ui.cw4.plot.set_axis_title(self.ui.cw4.plot.Y_RIGHT, "Conductance (Go)")
-        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)")  
+        self.ui.cw4.plot.set_axis_color(self.ui.cw4.plot.Y_RIGHT, "MediumBlue")
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)")
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "Voltage (V)") 
         self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.Y_LEFT, "dI/dV")
-        self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.Y_RIGHT, "d2I/dV2")   
-
+        self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.Y_RIGHT, "d2I/dV2")  
+        self.ui.cw6.plot.set_axis_title(self.ui.cw6.plot.X_BOTTOM, "Voltage (V)") 
+        self.ui.cw6.plot.set_axis_color(self.ui.cw6.plot.Y_RIGHT, "DarkRed")
+        
+    
         self.ui.cw1.plot.add_item(self.data_curve1)
         self.ui.cw1.plot.add_item(self.data_curve2)
         self.ui.cw2.plot.add_item(self.data_curve3)
@@ -223,28 +194,14 @@ class main_program(QtGui.QMainWindow):
         self.ui.cw4.plot.enable_used_axes()
         self.ui.cw5.plot.enable_used_axes()
         self.ui.cw6.plot.enable_used_axes()
-        #self.ui.cw4.plot.set_axis_scale(self.ui.cw4.plot.Y_LEFT, 'log', autoscale=True)
+        
+
         # shutdowns
         self.stop_measure = False
         self.shutdown = False
         self.temp_sweep_abort = False
         self.offset_in_progress = False
         
-        #########################################################
-        ############## MEASUREMENT PARAMETERS ###################
-        #########################################################
-        #self.rref = 122120.0 # grounded one
-        self.rref = 100000.0 # floating one
-        self.factor_aux0 = 1.0    # real absolute voltage
-        self.factor_aux1 = 1.0
-        
-        
-        self.automatic_gain = False
-        self.average_value = 100
-
-        
-        self.data_lock = thread.allocate_lock()
-        thread.start_new_thread(self.measurement_thread,())    
         self.f_li0 = None
         self.f_li1 = None
         self.f_li3 = None
@@ -256,6 +213,29 @@ class main_program(QtGui.QMainWindow):
         self.f_ips = None
         self.f_femto = None
         self.f_config = None
+        
+        # start saving
+        #self.save_btn_Start()
+        
+        
+        #########################################################
+        ############## MEASUREMENT PARAMETERS ###################
+        #########################################################
+        #self.rref = 122120.0 # grounded one
+        self.rref = 100000.0 # floating one
+        self.wiring = 620.0
+        self.factor_aux0 = 1.0    # real absolute voltage
+        self.factor_aux1 = 1.0
+        
+        
+        self.automatic_gain = False
+        self.average_value = 100
+
+        self._excluded_splits = ["timestamp","li","femto"]
+        
+        self.data_lock = thread.allocate_lock()
+        thread.start_new_thread(self.measurement_thread,())    
+
         
 
 
@@ -280,7 +260,6 @@ class main_program(QtGui.QMainWindow):
         # sets femto to 20dB
         DEV.lockin.femto_reset()
         for amplification in range(1):
-            #start_time = self.data["li_timestamp_0"][-1]
             time.sleep(0.1)
             
             for i in range(10):
@@ -309,8 +288,8 @@ class main_program(QtGui.QMainWindow):
         old_data = DEV.agilent_old.get_data_list()
         offset_old = np.average(old_data["voltage"])
         
-        self.config_data["offset_agilent_new"][0] = offset_new
-        self.config_data["offset_agilent_old"][0] = offset_old
+        self.config_data["offset_agilent_voltage"][0] = offset_new
+        self.config_data["offset_agilent_current"][0] = offset_old
         log("offset agilent new\t%fV"%(offset_new))
         log("offset agilent old\t%fV"%(offset_old))
         
@@ -336,9 +315,12 @@ class main_program(QtGui.QMainWindow):
        
 
     def second_tick(self):
-        """This function is called every second for misc functions"""            
+        """This function is called every second for misc functions""" 
+        #try:
+        #    export_html(self.ui, "C:\wamp\www\\")
+        #except Exception,e:
+        #    log("HTML export failed",e)                               
         try:
-            #print self.data["li_timestamp_0"][-1]-self.data["temp_timestamp"][-1]
             # filtering of values for plotting
             begin = int(self.ui.editViewBegin.text())
             end = int(self.ui.editViewEnd.text())
@@ -348,10 +330,11 @@ class main_program(QtGui.QMainWindow):
             step = int(self.ui.editViewStep.text()) 
             interval = int(self.ui.editTimerInterval.text())
             
-            self.average_value =int(self.ui.editAverage.text())
+            self.average_value = int(self.ui.editAverage.text())
             self.automatic_gain = self.ui.checkAutomaticGain.isChecked()
             self.editHistogramLower = float(self.ui.editHistogramLower.text())
             self.editHistogramUpper = float(self.ui.editHistogramUpper.text())
+            self.editHistogramBias = float(self.ui.editHistogramBias.text())
             
             max_datalength = int(self.ui.editMaximumValues.text())
             for k,v in self.data.items():
@@ -364,7 +347,11 @@ class main_program(QtGui.QMainWindow):
                 _steps = float(self.ui.editIVSteps.text())
                 _low = float(self.ui.editIVMin.text())
                 _high = float(self.ui.editIVMax.text())
-                self.ui.editIVTime.setText("%i s"%(round(_delay*(abs(_high-_low)/_steps))))   
+                _sample_res= self.data["agilent_voltage_voltage"][-1]/self.data["agilent_current_voltage"][-1]
+                self.ui.editIVTimeEstimate.setText("%i s"%(round(_delay*(abs(_high-_low)/_steps)))) 
+                self.ui.editIVMinEstimate.setText("%f mV"%(_sample_res * _low * 1e3))
+                self.ui.editIVMaxEstimate.setText("%f mV"%(_sample_res * _high * 1e3))
+                self.ui.editIVStepsEstimate.setText("%f uV"%(_sample_res * _steps * 1e6))
             except Exception,e:
                 log("IV Time",e)
                 
@@ -442,32 +429,19 @@ class main_program(QtGui.QMainWindow):
             self.ui.progB.setValue(self.data["femto_channelb"][-1]*20+20)
             
             # 1 + 2
-            """ old with zurich
             try:
-                x0 = find_min(self.data["li_timestamp_0"],begin)
-                x1 = find_min(self.data["li_timestamp_0"],end)
+                x0 = find_min(self.data["agilent_voltage_timestamp"],begin)
+                x1 = find_min(self.data["agilent_voltage_timestamp"],end)
+                y0 = find_min(self.data["agilent_current_timestamp"],begin)
+                y1 = find_min(self.data["agilent_current_timestamp"],end)
                 
-                lockin_x = np.array(self.data["li_timestamp_0"][x0:x1:step])-self._start_time
-                self.data_curve1.set_data(lockin_x, np.array(self.data["li_aux0"][x0:x1:step]))
-                self.data_curve2.set_data(lockin_x, np.array(self.data["li_aux1"][x0:x1:step]))
-                self.ui.cw1.plot.do_autoscale() 
-            except Exception,e:
-                log("Lockin",e)
-            """    
-            try:
-                x0 = find_min(self.data["agilent_new_timestamp"],begin)
-                x1 = find_min(self.data["agilent_new_timestamp"],end)
-                y0 = find_min(self.data["agilent_old_timestamp"],begin)
-                y1 = find_min(self.data["agilent_old_timestamp"],end)
-                
-                agilent_new_x = np.array(self.data["agilent_new_timestamp"][x0:x1:step])-self._start_time
-                agilent_old_x = np.array(self.data["agilent_old_timestamp"][y0:y1:step])-self._start_time
-                self.data_curve1.set_data(agilent_new_x, np.array(self.data["agilent_new_voltage"][x0:x1:step]))
-                self.data_curve2.set_data(agilent_old_x, np.array(self.data["agilent_old_voltage"][y0:y1:step]))
+                agilent_voltage_x = np.array(self.data["agilent_voltage_timestamp"][x0:x1:step])-self._start_time
+                agilent_current_x = np.array(self.data["agilent_current_timestamp"][y0:y1:step])-self._start_time
+                self.data_curve1.set_data(agilent_voltage_x, np.array(self.data["agilent_voltage_voltage"][x0:x1:step]))
+                self.data_curve2.set_data(agilent_current_x, np.array(self.data["agilent_current_voltage"][y0:y1:step]))
                 self.ui.cw1.plot.do_autoscale()
-
             except Exception,e:
-                log("Displaying Lockin",e)
+                log("Displaying Voltage/Current",e)
             
             
             # 3 + 4
@@ -504,25 +478,25 @@ class main_program(QtGui.QMainWindow):
             
             # 7 + 8  
             try:
-                if len((self.data["agilent_new_timestamp"])) > 2 and len((self.data["agilent_old_timestamp"])) > 2 :
-                    #x0 = find_min(self.data["li_timestamp_0"],begin)
-                    #x1 = find_min(self.data["li_timestamp_0"],end)
+                if len((self.data["agilent_voltage_timestamp"])) > 2 and len((self.data["agilent_current_timestamp"])) > 2 :
                     self.rref = float(self.ui.editRRef.text())
                     
-                    x0 = find_min(self.data["agilent_new_timestamp"],begin)
-                    x1 = find_min(self.data["agilent_new_timestamp"],end)
-                    voltage_timestamp = self.data["agilent_new_timestamp"][x0:x1]
+                    x0 = find_min(self.data["agilent_voltage_timestamp"],begin)
+                    x1 = find_min(self.data["agilent_voltage_timestamp"],end)
+                    voltage_timestamp = self.data["agilent_voltage_timestamp"][x0:x1]
+                    voltage = np.array(self.data["agilent_voltage_voltage"][x0:x1])
                     
-                    voltage = np.array(self.data["agilent_new_voltage"][x0:x1])
-                    current = np.interp(voltage_timestamp,self.data["agilent_old_timestamp"],self.data["agilent_old_voltage"])
+                    current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
+                    current = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
 
                     resistance_x = np.array(voltage_timestamp)-self._start_time
                     try:
-                        r_y = voltage/current*self.rref
+                        min_index = min(len(voltage),len(current))-1
+                        r_y = voltage[0:min_index]/current[0:min_index]*self.rref
                         self.data_curve7.set_data(resistance_x, r_y)   
                         self.ui.cw4.plot.do_autoscale()
                     except Exception,e:
-                        log("indices:voltage %i, current %i, res %i"%(len(voltage),len(current),len(restance_x)))
+                        log("lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
                         log("Resistance Calculation failed",e)
                 
             except Exception,e:
@@ -538,23 +512,24 @@ class main_program(QtGui.QMainWindow):
                     self.ui.cw6.plot.do_autoscale()
                     self.plot_data["new"][2] = False
                 if self.plot_data["new"][3]:
-                    self.data_curve12.set_data(np.array(self.plot_data["x4"]),np.array(self.plot_data["y4"]))
-                    #self.data_curve12.set_data([0],[0])                    
+                    self.data_curve12.set_data(np.array(self.plot_data["x4"]),np.array(self.plot_data["y4"]))                
                     self.ui.cw6.plot.do_autoscale()
                     self.plot_data["new"][3] = False
             except Exception,e:
-                log("Extra",e)
-            
+                log("Extra",e)            
         except Exception,e:
             log("Error updating Display",e)
-
 
         try:
             item_count = 0
             data = []
             for k,v in self.data.items():
                 try:
-                    if len(v) > 0:
+                    _visible = True    # check for not wanted values
+                    for _split in self._excluded_splits:
+                        if _split in k.split("_"):
+                            _visible = False
+                    if _visible and len(v) > 0:
                         data.append([str(k),v[-1]])
                         item_count += 1
                 except Exception,e:
@@ -590,7 +565,7 @@ class main_program(QtGui.QMainWindow):
         
         # calculate conductance
         #resistance = self.data["li_aux0"][-1] / self.data["li_aux1"][-1] / self.rref
-        resistance = self.data["agilent_new_voltage"][-1] / self.data["agilent_old_voltage"][-1] * self.rref
+        resistance = self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref
         # check if conductance high -> break, else close first
         if resistance > upper_res:
             self.motor_break()
@@ -600,9 +575,9 @@ class main_program(QtGui.QMainWindow):
         while not self.stop_measure:
             try:
                 # update values
-                lower_cond = float(self.ui.editHistogramLower.text())
-                upper_cond = float(self.ui.editHistogramUpper.text())
-                bias = float(self.ui.editHistogramBias.text())
+                lower_cond = self.editHistogramLower
+                upper_cond = self.editHistogramUpper
+                bias = self.editHistogramBias
                 DEV.yoko.set_voltage(bias)
                 
                 # if conductance hits upper limit, break again
@@ -640,55 +615,119 @@ class main_program(QtGui.QMainWindow):
         
         self.stop_measure = False        
         step_list = voltage_ramp(_min,_max,steps,_circular=False)
-        #self.offset_correct(1)
         
         bias = DEV.yoko.get_voltage()
-        
         
         DEV.yoko.set_voltage(step_list[0])
         DEV.yoko.output(True)
         time.sleep(0.5)
         
+        # note down begin of sweep
         begin_time = time.time()
-        last_time = time.time()
-          
+        if not self.f_config == None:
+                self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
+        
+        # last_time is used for display updating        
+        last_time = time.time()          
         for _voltage in step_list:
                 DEV.yoko.set_voltage(_voltage)
                 
-                if time.time() - last_time > 1:
+                if time.time() - last_time > 1: # check if update needed
                     last_time = time.time()
-                    x0 = find_min(self.data["agilent_new_timestamp"],begin_time)
-                    x1 = find_min(self.data["agilent_new_timestamp"],last_time)
-                    self.plot_data["x1"] = self.data["agilent_new_voltage"][x0:x1]
-                    self.plot_data["y1"] = np.interp(self.data["agilent_new_timestamp"][x0:x1],self.data["agilent_old_timestamp"],self.data["agilent_old_voltage"])
-                    self.plot_data["new"][0] = True                    
+
+                try:
+                    self.data_lock.acquire()
+                    
+                    x0 = find_min(self.data["agilent_voltage_timestamp"],begin_time)
+                    x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
+            
+                    voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
+                    voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
+                    current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
+                    current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
+          
+                    
+                    # lockin data refurbishment
+                    li_0_x = np.array(self.data["li_0_x"])        # voltage first
+                    li_1_x = np.array(self.data["li_1_x"])        # voltage second
+                    li_3_x = np.array(self.data["li_3_x"])        # current first
+                    li_4_x = np.array(self.data["li_4_x"])        # current second
+                    
+                    li_0_y = np.array(self.data["li_0_y"])        # voltage first
+                    li_1_y = np.array(self.data["li_1_y"])        # voltage second
+                    li_3_y = np.array(self.data["li_3_y"])        # current first
+                    li_4_y = np.array(self.data["li_4_y"])        # current second
+            
+                    li_0_timestamp = np.array(self.data["li_timestamp_0"])
+                    li_1_timestamp = np.array(self.data["li_timestamp_1"])
+                    li_3_timestamp = np.array(self.data["li_timestamp_3"])
+                    li_4_timestamp = np.array(self.data["li_timestamp_4"])           
+                    
+                    #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
+                    min_0 = min(len(li_0_timestamp),len(li_0_x))-1
+                    li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
+                    li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
+                    min_1 = min(len(li_1_x),len(li_1_timestamp))-1
+                    li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
+                    li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
+                    min_3 = min(len(li_3_x),len(li_3_timestamp))-1
+                    li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
+                    li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
+                    min_4 = min(len(li_4_x),len(li_4_timestamp))-1
+                    li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
+                    li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+                    
+                    li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                    li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                    li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                    li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                    li_first = li_3_r/self.rref/li_0_r    # first
+                    li_second = li_4_r/self.rref/li_1_r   # second
+                    
+            
+                    self.plot_data["x1"] = voltage_list[:]
+                    self.plot_data["y1"] = current_list[:]
+                    
+                    self.plot_data["x3"] = voltage_list[:]
+                    self.plot_data["y3"] = li_first[:]
+                    
+                    self.plot_data["x4"] = voltage_list[:]
+                    self.plot_data["y4"] = li_second[:]
+                    
+                    self.plot_data["new"][0] = True
+                    self.plot_data["new"][2] = True
+                    self.plot_data["new"][3] = True
+                    
+                finally:
+                    self.data_lock.release()
+                   
                 time.sleep(delay)
                 app.processEvents()
                 if self.stop_measure:
                     break
 
+        # note down end of iv sweep
         end_time = time.time()
+        if not self.f_config == None:
+                self.f_config.write("IV_START\t%15.15f\t\n"%(end_time))
+                
         time.sleep(0.5)        
         # switch back voltage
         DEV.yoko.set_voltage(bias)
         
-        x0 = find_min(self.data["li_timestamp_0"],begin_time)
-        x1 = find_min(self.data["li_timestamp_0"],end_time)
-        
-        #voltage_list = self.data["li_aux0"][x0:x1]
-        #current_list = self.data["li_aux1"][x0:x1]
-        x0 = find_min(self.data["agilent_new_timestamp"],begin_time)
-        x1 = find_min(self.data["agilent_new_timestamp"],last_time)
-        
-        
+       
+
+
         try:
             self.data_lock.acquire()
             
-            voltage_timestamp = np.array(self.data["agilent_new_timestamp"][x0:x1])
-            voltage_list = np.array(self.data["agilent_new_voltage"][x0:x1])
-            current_list = np.interp(voltage_timestamp,self.data["agilent_old_timestamp"],self.data["agilent_old_voltage"])
-  
-            self.plot_data["new"][0] = True
+            x0 = find_min(self.data["agilent_voltage_timestamp"],begin_time)
+            x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
+            
+            voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
+            voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
+            current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
+            current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
             
             # lockin data refurbishment
             li_0_x = np.array(self.data["li_0_x"])        # voltage first
@@ -704,19 +743,19 @@ class main_program(QtGui.QMainWindow):
             li_0_timestamp = np.array(self.data["li_timestamp_0"])
             li_1_timestamp = np.array(self.data["li_timestamp_1"])
             li_3_timestamp = np.array(self.data["li_timestamp_3"])
-            li_4_timestamp = np.array(self.data["li_timestamp_4"])
+            li_4_timestamp = np.array(self.data["li_timestamp_4"])           
             
             #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
-            min_0 = min(len(li_0_timestamp),len(li_0))-1
+            min_0 = min(len(li_0_timestamp),len(li_0_x))-1
             li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
             li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
-            min_1 = min(len(li_1),len(li_1_timestamp))-1
+            min_1 = min(len(li_1_x),len(li_1_timestamp))-1
             li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
             li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
-            min_3 = min(len(li_3),len(li_3_timestamp))-1
+            min_3 = min(len(li_3_x),len(li_3_timestamp))-1
             li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
             li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
-            min_4 = min(len(li_4),len(li_4_timestamp))-1
+            min_4 = min(len(li_4_x),len(li_4_timestamp))-1
             li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
             li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
             
@@ -725,32 +764,37 @@ class main_program(QtGui.QMainWindow):
             li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
             li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
             li_first = li_3_r/self.rref/li_0_r    # first
-            li_second = li_4_r/self.rref/li_1_r  # second
+            li_second = li_4_r/self.rref/li_1_r   # second
             
-            #print("%i,%i"%(len(voltage_list),len(li_first)))
+            
+            self.plot_data["x1"] = voltage_list[:]
+            self.plot_data["y1"] = current_list[:]
+            
             self.plot_data["x3"] = voltage_list[:]
             self.plot_data["y3"] = li_first[:]
             
             self.plot_data["x4"] = voltage_list[:]
             self.plot_data["y4"] = li_second[:]
             
+            self.plot_data["new"][0] = True
             self.plot_data["new"][2] = True
             self.plot_data["new"][3] = True
             
-            
             try:        
                 saving_data = [voltage_timestamp, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
-                #saving_data = [voltage_timestamp, voltage_list, current_list]
                 d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
-                file_string = "iv_%i.txt"%(time.time())
+                d_name = os.path.dirname(d)
+                if not os.path.exists(d_name):
+                    os.makedirs(d_name)
+                file_string = "iv_%i.txt"%(round(time.time()))
                 f_iv = open(d+file_string, 'a')
                 save_data(f_iv, saving_data)
                 f_iv.close()
                 self.ui.editLastIV.setText(file_string)
             except Exception,e:
-                log("Failed to save IV",e)
+                log("Failed to Save IV",e)
         except Exception,e:
-            log("IV calculation failed",e)
+            log("IV Calculation Failed",e)
         finally:
             self.data_lock.release()
             
@@ -922,35 +966,35 @@ class main_program(QtGui.QMainWindow):
                     save_data(self.f_femto, saving_data)
                     
                 if not self.offset_in_progress:
-                    agilent_new_timestamp = []
-                    agilent_new_voltage = []
+                    agilent_voltage_timestamp = []
+                    agilent_voltage_voltage = []
                     try:
                         if DEV.agilent_new != None:
                             agilent_new_data = DEV.agilent_new.get_data_list()   
-                            agilent_new_timestamp = agilent_new_data["timestamp"]
-                            agilent_new_voltage =  [(x - self.config_data["offset_agilent_new"][0]) for x in agilent_new_data["voltage"]] 
+                            agilent_voltage_timestamp = agilent_new_data["timestamp"]
+                            agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"][0]) for x in agilent_new_data["voltage"]] 
                     except Exception,e:
                         log("Agilent New failed DAQ",e)
                        
-                    self.data["agilent_new_timestamp"].extend(agilent_new_timestamp)
-                    self.data["agilent_new_voltage"].extend(agilent_new_voltage)              
-                    saving_data = [agilent_new_timestamp,agilent_new_voltage]
+                    self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
+                    self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
+                    saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
                     save_data(self.f_agilent_new, saving_data)    
 
                 if not self.offset_in_progress:
-                    agilent_old_timestamp = []
-                    agilent_old_voltage = []
+                    agilent_current_timestamp = []
+                    agilent_current_voltage = []
                     try:
                         if DEV.agilent_old != None:
                             agilent_old_data = DEV.agilent_old.get_data_list()   
-                            agilent_old_timestamp = agilent_old_data["timestamp"]
-                            agilent_old_voltage =  [(x - self.config_data["offset_agilent_old"][0]) for x in agilent_old_data["voltage"]] 
+                            agilent_current_timestamp = agilent_old_data["timestamp"]
+                            agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"][0]) for x in agilent_old_data["voltage"]] 
                     except Exception,e:
                         log("Agilent old failed DAQ",e)
                        
-                    self.data["agilent_old_timestamp"].extend(agilent_old_timestamp)
-                    self.data["agilent_old_voltage"].extend(agilent_old_voltage)              
-                    saving_data = [agilent_old_timestamp,agilent_old_voltage]
+                    self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
+                    self.data["agilent_current_voltage"].extend(agilent_current_voltage)              
+                    saving_data = [agilent_current_timestamp,agilent_current_voltage]
                     save_data(self.f_agilent_old, saving_data)    
                     
                  
@@ -996,6 +1040,7 @@ class main_program(QtGui.QMainWindow):
                 saving_data = [temp_timestamp,temp1,temp2]
                 save_data(self.f_temp, saving_data)
    
+                """
                 ips_timestamp = []
                 ips_mfield = []
                 try:
@@ -1010,20 +1055,8 @@ class main_program(QtGui.QMainWindow):
                 self.data["ips_mfield"].extend(ips_mfield)
 
                 saving_data = [ips_timestamp,ips_mfield]
-                save_data(self.f_ips, saving_data)
-
-                
-                """if self.automatic_gain:
-                    if np.abs(self.data["li_aux0"][-1]) > 8:
-                        DEV.lockin.femto_decrease_amplification(0)
-                    if np.abs(self.data["li_aux1"][-1]) > 8:
-                        DEV.lockin.femto_decrease_amplification(1)
-                    if np.abs(self.data["li_aux0"][-1]) < 0.1:
-                        DEV.lockin.femto_increase_amplification(0)
-                    if np.abs(self.data["li_aux1"][-1]) < 0.1:
-                        DEV.lockin.femto_increase_amplification(1)"""
-                    
-                        
+                save_data(self.f_ips, saving_data)"""
+            
             except Exception,e:
                 log("Error while handling DAQ",e)
             finally:
@@ -1073,19 +1106,21 @@ class main_program(QtGui.QMainWindow):
     
     def save_description(self):
         desc = self.ui.textDescription.toPlainText()
+        
         try:
             d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
             d_name = os.path.dirname(d)
             if not os.path.exists(d_name):
                 os.makedirs(d_name)
-            f_desc = open(d+"info.txt", 'a')
-            f_desc.write(time.ctime()+'\n')
-            f_desc.write(desc)
-            f_desc.write('\n\n')
+            if logfile == None:
+                set_logfile(d+"log.txt")
+            log("========= LOG =========")
+            for line in desc.split('\n'):
+                log(line)
+            log("=======================")
         except Exception,e:
-            log("Description File Error",e)
-        finally:
-            f_desc.close()
+            log("Description Error",e)
+
     
     # magnet
     def magnet_goto(self):
@@ -1112,7 +1147,33 @@ class main_program(QtGui.QMainWindow):
     
     def lockin_set(self):
         rate = int(self.ui.editRate.text())
+        amplitude = float(self.ui.editLIAmpl.text())
         DEV.lockin.set_rate(rate)
+        DEV.lockin.set_amplitude(amplitude)
+    
+    def lockin_read_phase(self):
+        try:
+            self.config_data["lockin_phases"][0] = self.config_data["lockin_phases"][0] + 180.0/3.141592*np.arctan(self.data["li_0_y"][-1]/self.data["li_0_x"][-1])    
+            self.config_data["lockin_phases"][1] = self.config_data["lockin_phases"][1] + 180.0/3.141592*np.arctan(self.data["li_1_y"][-1]/self.data["li_1_x"][-1])
+            self.config_data["lockin_phases"][2] = self.config_data["lockin_phases"][2] + 180.0/3.141592*np.arctan(self.data["li_3_y"][-1]/self.data["li_3_x"][-1])
+            self.config_data["lockin_phases"][3] = self.config_data["lockin_phases"][3] + 180.0/3.141592*np.arctan(self.data["li_4_y"][-1]/self.data["li_4_x"][-1])
+            self.ui.editLIPhase0.setText(str(round(self.config_data["lockin_phases"][0],2)))
+            self.ui.editLIPhase1.setText(str(round(self.config_data["lockin_phases"][1],2)))
+            self.ui.editLIPhase3.setText(str(round(self.config_data["lockin_phases"][2],2)))
+            self.ui.editLIPhase4.setText(str(round(self.config_data["lockin_phases"][3],2)))
+        except Exception,e:
+            log("Failed to read phase",e)
+        
+    def lockin_set_phase(self):
+        try:
+            DEV.lockin.set_phases(
+                self.config_data["lockin_phases"][0],
+                self.config_data["lockin_phases"][1],
+                self.config_data["lockin_phases"][2],
+                self.config_data["lockin_phases"][3]
+                )
+        except Exception,e:
+            log("Failed to set phase",e)
     
     def measurement_btn_IV_Sweep(self):
         thread.start_new_thread(self.measurement_IV_Sweep,())
