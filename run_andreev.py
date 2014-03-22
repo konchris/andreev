@@ -26,6 +26,8 @@ except AttributeError:
 
 from functions import *
 import initialize
+
+import refresh_display
 #import mpl
 
 class main_program(QtGui.QMainWindow):
@@ -41,8 +43,7 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             print e            
             log("Can't read config file")
-          
-                     
+                
         # initialize.py - most of long initializations 
         initialize.init_connections(self)            
         initialize.init_variables(self)
@@ -51,9 +52,12 @@ class main_program(QtGui.QMainWindow):
         initialize.init_shutdowns(self)
         initialize.init_validators(self)
         
+        #self.ui.btnBInitMagnet.clic
+        
         # periodic timer for refresh
+        refresh_display._self = self
         self.timer_second = QTimer()
-        self.timer_second.timeout.connect(self.second_tick)
+        self.timer_second.timeout.connect(refresh_display.refresh_display)
         self.timer_second.start(250)
         
         # start saving
@@ -153,242 +157,7 @@ class main_program(QtGui.QMainWindow):
     
        
 
-    def second_tick(self):
-        """This function is called every second for misc functions""" 
-        #try:
-        #    export_html(self.ui, "C:\wamp\www\\")
-        #except Exception,e:
-        #    log("HTML export failed",e)                               
-        try:
-            # filtering of values for plotting
-            begin = int(self.ui.editViewBegin.text())
-            end = int(self.ui.editViewEnd.text())
-            _time = time.time()
-            begin = _time - begin
-            end = _time - end
-            step = int(self.ui.editViewStep.text()) 
-            interval = int(self.ui.editTimerInterval.text())
-            
-            self.average_value = int(self.ui.editAverage.text())
-            self.automatic_gain = self.ui.checkAutomaticGain.isChecked()
-            self.editHistogramLower = float(self.ui.editHistogramLower.text())
-            self.editHistogramUpper = float(self.ui.editHistogramUpper.text())
-            self.editHistogramBias = float(self.ui.editHistogramBias.text())
-            
-            max_datalength = int(self.ui.editMaximumValues.text())
-            for k,v in self.data.items():
-                self.data[k] = v[-max_datalength:]
-            
-            self.ui.labSample.setText(str(len(self.data["li_timestamp_0"])))
-            
-            try:
-                _delay = float(self.ui.editIVDelay.text())
-                _steps = float(self.ui.editIVSteps.text())
-                _low = float(self.ui.editIVMin.text())
-                _high = float(self.ui.editIVMax.text())
-                _sample_res= self.data["agilent_voltage_voltage"][-1]/self.data["agilent_current_voltage"][-1]
-                self.ui.editIVTimeEstimate.setText("%i s"%(round(_delay*(abs(_high-_low)/_steps)))) 
-                self.ui.editIVMinEstimate.setText("%f mV"%(_sample_res * _low * 1e3))
-                self.ui.editIVMaxEstimate.setText("%f mV"%(_sample_res * _high * 1e3))
-                self.ui.editIVStepsEstimate.setText("%f uV"%(_sample_res * _steps * 1e6))
-            except Exception,e:
-                log("IV Time",e)
-                
-            try:
-                # saving button
-                saving = True
-                saves = ""
-                if not self.f_config:
-                    saving = False
-                else:
-                    saves = saves + "c"
-                if not self.f_ips:
-                    saving = False
-                else:
-                    saves = saves + "i"
-                if not (self.f_li0 and self.f_li1 and self.f_li3 and self.f_li4 and self.f_femto):
-                    saving = False
-                else:
-                    saves = saves + "l"
-                if not self.f_motor:
-                    saving = False
-                else:
-                    saves = saves + "m"
-                if not self.f_temp:
-                    saving = False
-                else:
-                    saves = saves + "t"
-                if saving:
-                    self.ui.btnSaving.setText("saving: "+saves)
-                    self.ui.btnSaving.setStyleSheet('QPushButton {color: green}')
-                else:
-                    self.ui.btnSaving.setText("idle: "+saves)
-                    self.ui.btnSaving.setStyleSheet('QPushButton {color: grey}')
-            except Exception,e:
-                log("Problem setting saving button color",e)
-            try:
-                if DEV.lockin == None:
-                    self.ui.btnStatusLockin.setStyleSheet('QPushButton {color: grey}')
-                else:
-                    self.ui.btnStatusLockin.setStyleSheet('QPushButton {color: green}')
-                if DEV.lakeshore == None:
-                    self.ui.btnStatusTemperatur.setStyleSheet('QPushButton {color: grey}')
-                else:
-                    self.ui.btnStatusTemperatur.setStyleSheet('QPushButton {color: green}')
-                if DEV.yoko == None:
-                    self.ui.btnStatusYoko.setStyleSheet('QPushButton {color: grey}')
-                else:
-                    self.ui.btnStatusYoko.setStyleSheet('QPushButton {color: green}')
-                if DEV.motor == None:
-                    self.ui.btnStatusMotor.setStyleSheet('QPushButton {color: grey}')
-                else:
-                    self.ui.btnStatusMotor.setStyleSheet('QPushButton {color: green}')
-                if DEV.magnet == None:
-                    self.ui.btnStatusMagnet.setStyleSheet('QPushButton {color: grey}')
-                else:
-                    self.ui.btnStatusMagnet.setStyleSheet('QPushButton {color: green}')
-            except Exception,e:
-                log("Button Status update failed",e)
-            
-            try:
-                if not DEV.magnet == None:
-                    if DEV.magnet.heater:
-                        self.ui.labelSwitchHeater.setText("ON")
-                    else:
-                        self.ui.labelSwitchHeater.setText("OFF")
-            except Exception,e:
-                log("Switch Heater Status Update Error",e)
-                    
-            if interval < 100:
-                interval = 100
-            self.timer_second.setInterval(interval)
-            
-            # amplifier progressbars
-            self.ui.progA.setValue(self.data["femto_channela"][-1]*20+20)
-            self.ui.progB.setValue(self.data["femto_channelb"][-1]*20+20)
-            
-            # 1 + 2
-            try:
-                x0 = find_min(self.data["agilent_voltage_timestamp"],begin)
-                x1 = find_min(self.data["agilent_voltage_timestamp"],end)
-                y0 = find_min(self.data["agilent_current_timestamp"],begin)
-                y1 = find_min(self.data["agilent_current_timestamp"],end)
-                
-                agilent_voltage_x = np.array(self.data["agilent_voltage_timestamp"][x0:x1:step])-self._start_time
-                agilent_current_x = np.array(self.data["agilent_current_timestamp"][y0:y1:step])-self._start_time
-                self.data_curve1.set_data(agilent_voltage_x, np.array(self.data["agilent_voltage_voltage"][x0:x1:step]))
-                self.data_curve2.set_data(agilent_current_x, np.array(self.data["agilent_current_voltage"][y0:y1:step]))
-                self.ui.cw1.plot.do_autoscale()
-            except Exception,e:
-                log("Displaying Voltage/Current",e)
-            
-            
-            # 3 + 4
-            try:
-                x0 = find_min(self.data["motor_timestamp"],begin)
-                x1 = find_min(self.data["motor_timestamp"],end)
-                
-                motor_x = np.array(self.data["motor_timestamp"][x0:x1:step])-self._start_time
-                self.data_curve3.set_data(motor_x, self.data["motor_pos"][x0:x1:step])
-                self.data_curve4.set_data(motor_x, self.data["motor_vel"][x0:x1:step])
-                self.ui.cw2.plot.do_autoscale()
-            except Exception,e:
-                log("Displaying Motor",e)
-
-            # 5 + 6 + 6b
-            try:
-                x0 = find_min(self.data["temp_timestamp"],begin)
-                x1 = find_min(self.data["temp_timestamp"],end)                
-                
-                temp_x = np.array(self.data["temp_timestamp"][x0:x1:step])-self._start_time
-                self.data_curve6.set_data(temp_x, self.data["temp1"][x0:x1:step])
-                self.data_curve6b.set_data(temp_x, self.data["temp2"][x0:x1:step]) 
-                self.ui.cw3.plot.do_autoscale()
-                
-                x0 = find_min(self.data["ips_timestamp"],begin)
-                x1 = find_min(self.data["ips_timestamp"],end)
-                                
-                ips_x = np.array(self.data["ips_timestamp"][x0:x1:step])-self._start_time
-                self.data_curve5.set_data(ips_x, self.data["ips_mfield"][x0:x1:step])
-                
-                self.ui.cw3.plot.do_autoscale()
-            except Exception,e:
-                log("Displaying IPS+TEMP",e)
-            
-            # 7 + 8  
-            try:
-                if len((self.data["agilent_voltage_timestamp"])) > 2 and len((self.data["agilent_current_timestamp"])) > 2 :
-                    self.rref = float(self.ui.editRRef.text())
-                    
-                    x0 = find_min(self.data["agilent_voltage_timestamp"],begin)
-                    x1 = find_min(self.data["agilent_voltage_timestamp"],end)
-                    voltage_timestamp = self.data["agilent_voltage_timestamp"][x0:x1]
-                    voltage = np.array(self.data["agilent_voltage_voltage"][x0:x1])
-                    
-                    current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
-                    current = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
-
-                    resistance_x = np.array(voltage_timestamp)-self._start_time
-                    try:
-                        min_index = min(len(voltage),len(current))-1
-                        r_y = voltage[0:min_index]/current[0:min_index]*self.rref
-                        self.data_curve7.set_data(resistance_x, r_y)   
-                        self.ui.cw4.plot.do_autoscale()
-                    except Exception,e:
-                        log("lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
-                        log("Resistance Calculation failed",e)
-                
-            except Exception,e:
-                log("Displaying Lockin 2",e)
- 
-            try:
-                if self.plot_data["new"][0]:
-                    self.data_curve9.set_data(np.array(self.plot_data["x1"]),np.array(self.plot_data["y1"]))
-                    self.ui.cw5.plot.do_autoscale()
-                    self.plot_data["new"][0] = False
-                if self.plot_data["new"][2]:
-                    self.data_curve11.set_data(np.array(self.plot_data["x3"]),np.array(self.plot_data["y3"]))
-                    self.ui.cw6.plot.do_autoscale()
-                    self.plot_data["new"][2] = False
-                if self.plot_data["new"][3]:
-                    self.data_curve12.set_data(np.array(self.plot_data["x4"]),np.array(self.plot_data["y4"]))                
-                    self.ui.cw6.plot.do_autoscale()
-                    self.plot_data["new"][3] = False
-            except Exception,e:
-                log("Extra",e)            
-        except Exception,e:
-            log("Error updating Display",e)
-
-        try:
-            item_count = 0
-            data = []
-            for k,v in self.data.items():
-                try:
-                    _visible = True    # check for not wanted values
-                    for _split in self._excluded_splits:
-                        if _split in k.split("_"):
-                            _visible = False
-                    if _visible and len(v) > 0:
-                        data.append([str(k),v[-1]])
-                        item_count += 1
-                except Exception,e:
-                    log("Error displaying data: "+str(k),e)
-            data = sorted(data, key=lambda v: v[0])
-            
-            self.ui.tableWidget.setColumnCount(1)
-            self.ui.tableWidget.setRowCount(item_count)
-            self.ui.tableWidget.setHorizontalHeaderLabels(["Value"])
-            captions = []
-            for item in data:
-                captions.append(item[0])
-            self.ui.tableWidget.setVerticalHeaderLabels(captions)
-            i=0
-            for item in data:
-                self.ui.tableWidget.setItem(i,0,QtGui.QTableWidgetItem(str(round(item[1],5))))
-                i = i + 1
-            #self.ui.tableWidget.column
-        except Exception,e:
-            log("Error updating data table",e)
+    
         
 
   
