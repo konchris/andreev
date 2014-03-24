@@ -461,9 +461,9 @@ class GS200:
     def initialize(self):
         """get current set point, set default parameters, ranges etc"""        
         self.set_function("VOLT")
-        self.set_limits(0.01,2)
+        self.set_limits(0.1,2)
         self.set_voltage(0.0000)
-        self.output(False)
+        self.output(True)
 
     def output(self,state=True):
         """defines the state of the voltage output.
@@ -506,9 +506,9 @@ class Agilent34410A:
         """Agilent 34410A"""
         #self.Agilent=visa.instrument('GPIB0::%i'%GPIB_No, delay=dlay,term_chars='\n')
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
-        print "Agilent Created"        
+        #print "Agilent Created"        
         self.initializeVOLTDC()
-        print "Agilent VOLTDC initalized"
+        #print "Agilent VOLTDC initalized"
         self.data = {}
         self.data_lock = thread.allocate_lock()
         self.data["timestamp"] = []
@@ -592,125 +592,7 @@ class Agilent34410A:
             time.sleep(delay)
 
 
-class Agilent34401A:
-    def __init__(self,addr=23):
-        self.agilent=visa.instrument("GPIB::%i"%(addr),timeout=2)
-        self.get_errors()
-        #self.reset()
-        self.setup_dc()
-        self.set_nplc(1)
-        
-        self.data = {}
 
-        self.data_lock = thread.allocate_lock()
-        #self.data_lock.acquire()
-        self.data["timestamp"] = []
-        self.data["voltage"] = []
-        thread.start_new_thread(self.measurement_thread,(0.01,))
-        
-    def reset(self):
-        self.agilent.write("*RST")
-        print 'RESET: '+self.agilent.ask("*IDN?")
-    
-    def clear_device(self):
-        self.agilent.write("CLEAR 722")
-    
-    def setup_dc(self,range=10,resolution=1e-4):
-        """Sets range and resolution (including PLC somehow)"""
-        self.agilent.write("CONF:VOLT:DC %f,%f"%(range,resolution))
-        self.agilent.write('VOLT:DC:RANG:AUTO ON')
-        
-    def set_nplc(self,nplc=1):
-        """Sets Integration time to defined NPLC"""
-        self.agilent.write("VOLT:DC:NPLC %f"%(nplc))
-        
-    def set_trigger(self, source="IMM", delay=0.1, count=1, trg_count=1):
-        """Setup for Trigger-Source and -Delay of Measurement.
-        Number of Measurements per Trigger
-        [count = INF = -1 sets trigger-counts to infinite. To get back to
-        Ready-State send *device-clear*-command]
-        Possible Values: 
-            BUS|IMMediate|EXTernal
-            0-3600 seconds"""
-        if trg_count == -1:
-            str_trg_count = "INF"
-        else:
-            str_trg_count = str(trg_count)
-        self.agilent.write("TRIG:SOUR %s"%(source))
-        #print "TRIG:SOUR %s"%(source)
-        self.agilent.write("TRIG:DEL %f"%(delay))
-        #print "TRIG:DEL %f"%(delay)
-        self.agilent.write("TRIG:COUN %s"%str_trg_count)
-        #print "TRIG:COUN %s"%str_trg_count
-        self.agilent.write("SAMP:COUN %i"%(count))
-        #print "SAMP:COUN %i"%(count)
-    
-    def send_trigger(self):
-        """Sends Bus Trigger"""
-        self.agilent.write("*TRG")
-        
-    def wait_for_trigger(self):
-        """Sets instrument to triggered Mode"""
-        self.agilent.write("INIT")
-    
-    def get_measurements(self):
-        """Fetches measurements of instrument"""
-        answer = self.agilent.ask("FETC?")
-        try:
-            values = [float(x) for x in answer.split(',')]
-            return values
-        except Exception,e:
-            log("Returned Measurement not readable:",e)
-            log(answer)
-            return [0]
-    
-    def measurement(self):
-        try:        
-            return float(self.agilent.ask("READ?"))
-        except Exception,e:
-            log("Measurement Error Agilent",e)
-            return 0
-        
-    def get_errors(self):
-        try:
-            i = 0
-            answer = self.agilent.ask("SYST:ERR?")
-            while answer[1] != "0" and i < 100:
-                log(answer)
-                answer = self.agilent.ask("SYST:ERR?")
-                i = i + 1 
-        except Exception,e:
-            print e
-            
-    def set_text(self, text=""):
-        self.agilent.write(":DISP:TEXT \"%s\""%(text))
-        
-    def get_data_list(self, erase=True):
-        """returns all the gathered data in one bunch
-        and erases the list """       
-        # get lock first
-        self.data_lock.acquire()
-        # copy data
-        return_data = self.data.copy()
-
-        if erase:        
-            self.data["timestamp"] = []
-            self.data["voltage"] = []
-        self.data_lock.release()
-        return return_data
-
-# thread
-    def measurement_thread(self, delay=0.05):
-        log("Agilent Thread started!")
-        while not stop:
-            voltage = self.measurement()
-            # append gathered data to internal data dictionary
-            self.data_lock.acquire()
-            self.data["timestamp"].append(time.time())
-            self.data["voltage"].append(voltage)
-            self.data_lock.release()
-                    
-            time.sleep(delay)
 
 
 class ZURICH:

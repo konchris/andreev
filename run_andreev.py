@@ -5,17 +5,11 @@ from PyQt4 import QtCore, QtGui
 from gui_andreev import Ui_MainWindow
 import devices_andreev as DEV
 
-#Threading
 import thread
 import time  
 import numpy as np
-#import scipy.signal as signal
-#import matplotlib.mlab as mlab
-#import matplotlib.pyplot as plt
-#import pylab as pl
 
 from guidata.qt.QtCore import QTimer#,SIGNAL
-#---Import plot widget base class
 #from guiqwt.plot import CurveWidget
 from guiqwt.builder import make
 
@@ -25,10 +19,10 @@ except AttributeError:
     _fromUtf8 = lambda s: s
 
 from functions import *
-import initialize
 
-import refresh_display
-#import mpl
+# exported functions
+import initialize,refresh_display,gui_helper
+
 
 class main_program(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -36,6 +30,10 @@ class main_program(QtGui.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         DEV.app = app
+        
+        initialize._self = self
+        refresh_display._self = self
+        gui_helper._self = self
              
         #Read all the saved default values 
         try:
@@ -43,6 +41,7 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             print e            
             log("Can't read config file")
+            
                 
         # initialize.py - most of long initializations 
         initialize.init_connections(self)            
@@ -52,17 +51,13 @@ class main_program(QtGui.QMainWindow):
         initialize.init_shutdowns(self)
         initialize.init_validators(self)
         
-        #self.ui.btnBInitMagnet.clic
+       
+        # periodic timer for refresh, value is changed by gui   
+        self.timer_display = QTimer()
+        self.timer_display.timeout.connect(refresh_display.refresh_display)
+        self.timer_display.start(250)
         
-        # periodic timer for refresh
-        refresh_display._self = self
-        self.timer_second = QTimer()
-        self.timer_second.timeout.connect(refresh_display.refresh_display)
-        self.timer_second.start(250)
-        
-        # start saving
-        #self.save_btn_Start()
-        
+       
         #########################################################
         ############## MEASUREMENT PARAMETERS ###################
         #########################################################
@@ -71,13 +66,8 @@ class main_program(QtGui.QMainWindow):
         self.wiring = 620.0
         self.factor_aux0 = 1.0    # real absolute voltage
         self.factor_aux1 = 1.0
-        
-        
-        self.automatic_gain = False
-        self.average_value = 100
 
-        self._excluded_splits = ["timestamp","li","femto"]
-        
+        # lock to synchronize access
         self.data_lock = thread.allocate_lock()
         thread.start_new_thread(self.measurement_thread,())    
 
@@ -154,11 +144,6 @@ class main_program(QtGui.QMainWindow):
         # flush data to /dev/null
         DEV.lockin.get_data_list(averages=10)
         self.offset_in_progress = False
-    
-       
-
-    
-        
 
   
     def aquire_histogram(self):
@@ -587,7 +572,7 @@ class main_program(QtGui.QMainWindow):
                     self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
                     self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
                     saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
-                    save_data(self.f_agilent_new, saving_data)    
+                    save_data(self.f_agilent_voltage, saving_data)    
 
                 if not self.offset_in_progress:
                     agilent_current_timestamp = []
@@ -603,7 +588,7 @@ class main_program(QtGui.QMainWindow):
                     self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
                     self.data["agilent_current_voltage"].extend(agilent_current_voltage)              
                     saving_data = [agilent_current_timestamp,agilent_current_voltage]
-                    save_data(self.f_agilent_old, saving_data)    
+                    save_data(self.f_agilent_current, saving_data)    
                     
                  
                 motor_timestamp = []
@@ -648,7 +633,7 @@ class main_program(QtGui.QMainWindow):
                 saving_data = [temp_timestamp,temp1,temp2]
                 save_data(self.f_temp, saving_data)
    
-                """
+                
                 ips_timestamp = []
                 ips_mfield = []
                 try:
@@ -663,7 +648,7 @@ class main_program(QtGui.QMainWindow):
                 self.data["ips_mfield"].extend(ips_mfield)
 
                 saving_data = [ips_timestamp,ips_mfield]
-                save_data(self.f_ips, saving_data)"""
+                save_data(self.f_ips, saving_data)
             
             except Exception,e:
                 log("Error while handling DAQ",e)
@@ -671,232 +656,16 @@ class main_program(QtGui.QMainWindow):
                 self.data_lock.release()
 
             time.sleep(0.2)
-        self.close_files()
+        initialize.close_files()
     
-     # motor
-    def motor_break(self, speed=None):
-        if speed == None:
-            speed = float(self.ui.editSpeed.text())
-        DEV.motor.set_velocity(-speed)
-        log("Motor break with %f"%(-speed))
-    def motor_unbreak(self, speed=None):
-        if speed == None:
-            speed = float(self.ui.editSpeed.text())
-        DEV.motor.set_velocity(speed)
-        log("Motor unbreak with %f"%(speed))
-    def motor_stop(self):
-        DEV.motor.set_velocity(0)
-        log("Motor stop")
-    def motor_home(self):
-        DEV.motor.set_home()
-        log("Motor homing")
-    def motor_set_limit(self):
-        DEV.motor.set_lower_limit(float(self.ui.editLowerLimit.text()))
-        DEV.motor.set_upper_limit(float(self.ui.editUpperLimit.text()))
-        DEV.motor.set_current(int(self.ui.editMotorCurrent.text()))
-        DEV.motor.set_current_limit(int(self.ui.editMotorCurrentLimit.text()))
-        log("Motor set limits %f,%f"%(float(self.ui.editLowerLimit.text()),
-                                      float(self.ui.editUpperLimit.text())))
-    
-    # femto
-    def ch_a_up(self):
-        DEV.femto.increase_amplification(0)
-        log("Femto decrease a")
-    def ch_a_down(self):
-        DEV.femto.decrease_amplification(0)
-        log("Femto decrease b")
-    def ch_b_up(self):
-        DEV.femto.increase_amplification(1)
-        log("Femto increase a")
-    def ch_b_down(self):
-        DEV.femto.decrease_amplification(1)
-        log("Femto increase b")
-    
-    def save_description(self):
-        desc = self.ui.textDescription.toPlainText()
-        
-        try:
-            d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
-            d_name = os.path.dirname(d)
-            if not os.path.exists(d_name):
-                os.makedirs(d_name)
-            if logfile == None:
-                set_logfile(d+"log.txt")
-            log("========= LOG =========")
-            for line in desc.split('\n'):
-                log(line)
-            log("=======================")
-        except Exception,e:
-            log("Description Error",e)
-
-    
-    # magnet
-    def magnet_goto(self):
-        try:
-            field = float(self.ui.editBMax.text())
-            rate = float(self.ui.editBRate.text())
-        except:
-            field = 0
-            rate = 0.01
-        print "field: %f, rate: %f"%(field,rate)
-        DEV.magnet.SetField(field,rate)
-    def magnet_init(self):
-        DEV.magnet.initialize()
-    def magnet_zero(self):
-        try:
-            rate = float(self.ui.editBRate.text())
-        except:
-            rate = 0.1
-        DEV.magnet.ZeroField(rate)
-    def switchheater_on(self):
-        DEV.magnet.set_switchheater('ON')
-    def switchheater_off(self):
-        DEV.magnet.set_switchheater('OFF')
-    
-    def lockin_set(self):
-        rate = int(self.ui.editRate.text())
-        amplitude = float(self.ui.editLIAmpl.text())
-        DEV.lockin.set_rate(rate)
-        DEV.lockin.set_amplitude(amplitude)
-    
-    def lockin_read_phase(self):
-        try:
-            self.config_data["lockin_phases"][0] = self.config_data["lockin_phases"][0] + 180.0/3.141592*np.arctan(self.data["li_0_y"][-1]/self.data["li_0_x"][-1])    
-            self.config_data["lockin_phases"][1] = self.config_data["lockin_phases"][1] + 180.0/3.141592*np.arctan(self.data["li_1_y"][-1]/self.data["li_1_x"][-1])
-            self.config_data["lockin_phases"][2] = self.config_data["lockin_phases"][2] + 180.0/3.141592*np.arctan(self.data["li_3_y"][-1]/self.data["li_3_x"][-1])
-            self.config_data["lockin_phases"][3] = self.config_data["lockin_phases"][3] + 180.0/3.141592*np.arctan(self.data["li_4_y"][-1]/self.data["li_4_x"][-1])
-            self.ui.editLIPhase0.setText(str(round(self.config_data["lockin_phases"][0],2)))
-            self.ui.editLIPhase1.setText(str(round(self.config_data["lockin_phases"][1],2)))
-            self.ui.editLIPhase3.setText(str(round(self.config_data["lockin_phases"][2],2)))
-            self.ui.editLIPhase4.setText(str(round(self.config_data["lockin_phases"][3],2)))
-        except Exception,e:
-            log("Failed to read phase",e)
-        
-    def lockin_set_phase(self):
-        try:
-            DEV.lockin.set_phases(
-                self.config_data["lockin_phases"][0],
-                self.config_data["lockin_phases"][1],
-                self.config_data["lockin_phases"][2],
-                self.config_data["lockin_phases"][3]
-                )
-        except Exception,e:
-            log("Failed to set phase",e)
-    
-    def measurement_btn_IV_Sweep(self):
-        thread.start_new_thread(self.measurement_IV_Sweep,())
+    #def measurement_btn_IV_Sweep(self):
+    #     thread.start_new_thread(self.measurement_IV_Sweep,())
     def measurement_btn_Acquire_Histogram(self):
         thread.start_new_thread(self.aquire_histogram,())
     def measurement_btn_Acquire_IV(self):
         thread.start_new_thread(self.aquire_iv,())
     def measurement_btn_Acquire_B(self):
         thread.start_new_thread(self.aquire_b_sweep,())
-    def measurement_btn_Stop(self):
-        self.stop_measure = True
-    def temp_sweep_stop(self):
-        self.temp_sweep_abort = True
-        
-    def set_bias(self):     
-        bias = float(self.ui.editBias.text())
-        DEV.yoko.set_voltage(bias)
-        DEV.yoko.output(True)
-        
-    def save_btn_Start(self):
-        if not self.f_li0 == None:
-            self.f_li0.close()
-            self.f_li1.close()
-            self.f_li3.close()
-            self.f_li4.close()
-            self.f_agilent_new.close()
-            self.f_agilent_old.close()
-            self.f_motor.close()
-            self.f_temp.close()
-            self.f_femto.close()
-            self.f_ips.close()
-            self.f_config.close()
-        close_logfile()
-            
-        d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
-        d_name = os.path.dirname(d)
-        if not os.path.exists(d_name):
-            os.makedirs(d_name)
-        self.f_li0 = open(d+"li0.txt", 'a')
-        self.f_li1 = open(d+"li1.txt", 'a')
-        self.f_li3 = open(d+"li3.txt", 'a')
-        self.f_li4 = open(d+"li4.txt", 'a')
-        self.f_agilent_new = open(d+"agilent_new.txt", 'a')
-        self.f_agilent_old = open(d+"agilent_old.txt", 'a')
-        self.f_femto = open(d+"femto.txt", 'a')
-        self.f_motor = open(d+"motor.txt", 'a')
-        self.f_temp = open(d+"temp.txt", 'a')
-        self.f_ips = open(d+"ips.txt", 'a') 
-        self.f_config = open(d+"config.txt", 'a')
-        set_logfile(d+"log.txt")      
-        
-    def close_files(self):
-        if not self.f_li0 == None:
-            self.f_li0.close()
-            self.f_li1.close()
-            self.f_li3.close()
-            self.f_li4.close()
-            self.f_femto.close()
-            self.f_motor.close()
-            self.f_temp.close()
-            self.f_ips.close()
-            self.f_config.close()
-            self.f_li0 = None
-            self.f_li1 = None
-            self.f_li3 = None
-            self.f_li4 = None
-            self.f_agilent_new = None
-            self.f_agilent_old = None
-            self.f_femto = None
-            self.f_motor = None
-            self.f_temp = None
-            self.f_ips = None
-            self.f_config = None
-            close_logfile()
-    
-    # temp
-    def set_temp_parameters(self):
-        try:
-            setpoint = float(self.ui.editTempSetpoint.text())
-            heater = int(self.ui.editTempHeater.text())
-            p = float(self.ui.editTempP.text())
-            i = float(self.ui.editTempI.text())
-            d = float(self.ui.editTempD.text())
-            
-            DEV.lakeshore.set_setpoint(setpoint)
-            DEV.lakeshore.set_heater_range(heater)
-            DEV.lakeshore.set_pid(p,i,d)
-        except Exception,e:
-            log("New Temp was not accepted",e)
-            
-    def temp_custom(self):
-        try:
-            val_1a = self.ui.comboTemperatureDisplay1a.currentIndex()
-            val_1b = self.ui.comboTemperatureDisplay1b.currentIndex()+1
-            val_2a = self.ui.comboTemperatureDisplay2a.currentIndex()
-            val_2b = self.ui.comboTemperatureDisplay2b.currentIndex()+1
-            val_3a = self.ui.comboTemperatureDisplay3a.currentIndex()
-            val_3b = self.ui.comboTemperatureDisplay3b.currentIndex()+1
-            val_4a = self.ui.comboTemperatureDisplay4a.currentIndex()
-            val_4b = self.ui.comboTemperatureDisplay4b.currentIndex()+1
-
-            DEV.lakeshore.set_display(6)    # custom display
-            DEV.lakeshore.set_display_field(1,val_1a,val_1b)
-            DEV.lakeshore.set_display_field(2,val_2a,val_2b)
-            DEV.lakeshore.set_display_field(3,val_3a,val_3b)
-            DEV.lakeshore.set_display_field(4,val_4a,val_4b)
-        except Exception,e:
-            log("New Display Setup not accepted",e)
-        
-        
-    def execute(self):
-        try:
-            exec(str(self.ui.editCommand.text()))
-        except Exception,e:
-            log("Execution failed",e)
             
             
     def closeEvent(self, event):
@@ -923,6 +692,7 @@ class main_program(QtGui.QMainWindow):
      
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
+    global myapp
     myapp = main_program()
    
     myapp.show()

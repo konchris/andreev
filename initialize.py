@@ -6,6 +6,81 @@ Created on Sat Mar 22 13:05:08 2014
 
 @author: David Weber
 """
+global _self
+_self = None
+
+def init_files(_self):
+    _self.f_li0 = None
+    _self.f_li1 = None
+    _self.f_li3 = None
+    _self.f_li4 = None
+    _self.f_agilent_voltage = None
+    _self.f_agilent_current = None
+    _self.f_motor = None
+    _self.f_temp = None
+    _self.f_ips = None
+    _self.f_femto = None
+    _self.f_config = None
+    
+def open_files():
+    from functions import close_logfile,set_logfile
+    import os
+
+    if not _self.f_li0 == None:
+        _self.f_li0.close()
+        _self.f_li1.close()
+        _self.f_li3.close()
+        _self.f_li4.close()
+        _self.f_agilent_voltage.close()
+        _self.f_agilent_current.close()
+        _self.f_motor.close()
+        _self.f_temp.close()
+        _self.f_femto.close()
+        _self.f_ips.close()
+        _self.f_config.close()
+    close_logfile()
+        
+    d = str(_self.ui.editSetupDir.text())+str(_self.ui.editHeader.text())+"\\"    
+    d_name = os.path.dirname(d)
+    if not os.path.exists(d_name):
+        os.makedirs(d_name)
+    _self.f_li0 = open(d+"li0.txt", 'a')
+    _self.f_li1 = open(d+"li1.txt", 'a')
+    _self.f_li3 = open(d+"li3.txt", 'a')
+    _self.f_li4 = open(d+"li4.txt", 'a')
+    _self.f_agilent_voltage = open(d+"agilent_new.txt", 'a')
+    _self.f_agilent_current = open(d+"agilent_old.txt", 'a')
+    _self.f_femto = open(d+"femto.txt", 'a')
+    _self.f_motor = open(d+"motor.txt", 'a')
+    _self.f_temp = open(d+"temp.txt", 'a')
+    _self.f_ips = open(d+"ips.txt", 'a') 
+    _self.f_config = open(d+"config.txt", 'a')
+    set_logfile(d+"log.txt")      
+    
+def close_files():
+    from functions import close_logfile
+    if not _self.f_li0 == None:
+        _self.f_li0.close()
+        _self.f_li1.close()
+        _self.f_li3.close()
+        _self.f_li4.close()
+        _self.f_femto.close()
+        _self.f_motor.close()
+        _self.f_temp.close()
+        _self.f_ips.close()
+        _self.f_config.close()
+        _self.f_li0 = None
+        _self.f_li1 = None
+        _self.f_li3 = None
+        _self.f_li4 = None
+        _self.f_agilent_voltage = None
+        _self.f_agilent_current = None
+        _self.f_femto = None
+        _self.f_motor = None
+        _self.f_temp = None
+        _self.f_ips = None
+        _self.f_config = None
+        close_logfile()
 
 def init_curvewidgets(_self):
     from guiqwt.builder import make
@@ -134,20 +209,11 @@ def init_variables(_self):
     _self.ui.editOffsetAux1_1.setText(str(0.0))
     _self.ui.editOffsetAux1_2.setText(str(0.0))
     _self.ui.editOffsetAux1_3.setText(str(0.0))
+    
+    _self.automatic_gain = False
+    _self.average_value = 100
+    _self._excluded_splits = ["timestamp","li","femto"]
 
-
-def init_files(_self):
-    _self.f_li0 = None
-    _self.f_li1 = None
-    _self.f_li3 = None
-    _self.f_li4 = None
-    _self.f_agilent_new = None
-    _self.f_agilent_old = None
-    _self.f_motor = None
-    _self.f_temp = None
-    _self.f_ips = None
-    _self.f_femto = None
-    _self.f_config = None
 
 def init_shutdowns(_self):
     _self.stop_measure = False
@@ -205,44 +271,47 @@ def init_validators(_self):
     _self.ui.editAverage.setValidator(intValidator)
     _self.ui.editRate.setValidator(intValidator)
 
+
 def init_connections(_self):
     from PyQt4 import QtCore
+    import gui_helper
+    
     QtCore.QObject.connect(_self.ui.btnHistogramStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_Histogram)
     QtCore.QObject.connect(_self.ui.btnIVStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_IV)  
     
-    QtCore.QObject.connect(_self.ui.btnBStart, QtCore.SIGNAL("clicked()"), _self.magnet_goto)   
-    QtCore.QObject.connect(_self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), _self.magnet_init)    
-    QtCore.QObject.connect(_self.ui.btnBZeroMagnet, QtCore.SIGNAL("clicked()"), _self.magnet_zero)   
-    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOn, QtCore.SIGNAL("clicked()"), _self.switchheater_on)  
-    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOff, QtCore.SIGNAL("clicked()"), _self.switchheater_off)  
+    QtCore.QObject.connect(_self.ui.btnBStart, QtCore.SIGNAL("clicked()"), gui_helper.magnet_goto)   
+    QtCore.QObject.connect(_self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_init)    
+    QtCore.QObject.connect(_self.ui.btnBZeroMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_zero)   
+    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOn, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_on)  
+    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOff, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_off)  
     
-    QtCore.QObject.connect(_self.ui.btnMeasurementStop, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Stop)
+    QtCore.QObject.connect(_self.ui.btnMeasurementStop, QtCore.SIGNAL("clicked()"), gui_helper.measurement_btn_Stop)
     
-    QtCore.QObject.connect(_self.ui.btnUnbreak, QtCore.SIGNAL("clicked()"), _self.motor_unbreak)
-    QtCore.QObject.connect(_self.ui.btnBreak, QtCore.SIGNAL("clicked()"), _self.motor_break)
-    QtCore.QObject.connect(_self.ui.btnStop, QtCore.SIGNAL("clicked()"), _self.motor_stop)
-    QtCore.QObject.connect(_self.ui.btnMotorHome, QtCore.SIGNAL("clicked()"), _self.motor_home)
-    QtCore.QObject.connect(_self.ui.btnMotorSetLimit, QtCore.SIGNAL("clicked()"), _self.motor_set_limit) 
+    QtCore.QObject.connect(_self.ui.btnUnbreak, QtCore.SIGNAL("clicked()"), gui_helper.motor_unbreak)
+    QtCore.QObject.connect(_self.ui.btnBreak, QtCore.SIGNAL("clicked()"), gui_helper.motor_break)
+    QtCore.QObject.connect(_self.ui.btnStop, QtCore.SIGNAL("clicked()"), gui_helper.motor_stop)
+    QtCore.QObject.connect(_self.ui.btnMotorHome, QtCore.SIGNAL("clicked()"), gui_helper.motor_home)
+    QtCore.QObject.connect(_self.ui.btnMotorSetLimit, QtCore.SIGNAL("clicked()"), gui_helper.motor_set_limit) 
     
-    QtCore.QObject.connect(_self.ui.btnSetBias, QtCore.SIGNAL("clicked()"), _self.set_bias) 
+    QtCore.QObject.connect(_self.ui.btnSetBias, QtCore.SIGNAL("clicked()"), gui_helper.set_bias) 
     
-    QtCore.QObject.connect(_self.ui.btnChAUp, QtCore.SIGNAL("clicked()"), _self.ch_a_up) 
-    QtCore.QObject.connect(_self.ui.btnChADown, QtCore.SIGNAL("clicked()"), _self.ch_a_down) 
-    QtCore.QObject.connect(_self.ui.btnChBUp, QtCore.SIGNAL("clicked()"), _self.ch_b_up) 
-    QtCore.QObject.connect(_self.ui.btnChBDown, QtCore.SIGNAL("clicked()"), _self.ch_b_down) 
+    QtCore.QObject.connect(_self.ui.btnChAUp, QtCore.SIGNAL("clicked()"), gui_helper.ch_a_up) 
+    QtCore.QObject.connect(_self.ui.btnChADown, QtCore.SIGNAL("clicked()"), gui_helper.ch_a_down) 
+    QtCore.QObject.connect(_self.ui.btnChBUp, QtCore.SIGNAL("clicked()"), gui_helper.ch_b_up) 
+    QtCore.QObject.connect(_self.ui.btnChBDown, QtCore.SIGNAL("clicked()"), gui_helper.ch_b_down) 
     
-    QtCore.QObject.connect(_self.ui.btnSaveStart, QtCore.SIGNAL("clicked()"), _self.save_btn_Start)
-    QtCore.QObject.connect(_self.ui.btnSaveStop, QtCore.SIGNAL("clicked()"), _self.close_files)
-    QtCore.QObject.connect(_self.ui.btnSaveDescription, QtCore.SIGNAL("clicked()"), _self.save_description)
+    QtCore.QObject.connect(_self.ui.btnSaveStart, QtCore.SIGNAL("clicked()"), open_files)
+    QtCore.QObject.connect(_self.ui.btnSaveStop, QtCore.SIGNAL("clicked()"), close_files)
+    QtCore.QObject.connect(_self.ui.btnSaveDescription, QtCore.SIGNAL("clicked()"), gui_helper.save_description)
     
     QtCore.QObject.connect(_self.ui.btnOffset, QtCore.SIGNAL("clicked()"), _self.offset_correct)
-    QtCore.QObject.connect(_self.ui.btnLockinSet, QtCore.SIGNAL("clicked()"), _self.lockin_set)
-    QtCore.QObject.connect(_self.ui.btnLIReadPhase, QtCore.SIGNAL("clicked()"), _self.lockin_read_phase)
-    QtCore.QObject.connect(_self.ui.btnLIZeroPhase, QtCore.SIGNAL("clicked()"), _self.lockin_set_phase)
+    QtCore.QObject.connect(_self.ui.btnLockinSet, QtCore.SIGNAL("clicked()"), gui_helper.lockin_set)
+    QtCore.QObject.connect(_self.ui.btnLIReadPhase, QtCore.SIGNAL("clicked()"), gui_helper.lockin_read_phase)
+    QtCore.QObject.connect(_self.ui.btnLIZeroPhase, QtCore.SIGNAL("clicked()"), gui_helper.lockin_set_phase)
     
-    QtCore.QObject.connect(_self.ui.btnTempSet, QtCore.SIGNAL("clicked()"), _self.set_temp_parameters)
+    QtCore.QObject.connect(_self.ui.btnTempSet, QtCore.SIGNAL("clicked()"), gui_helper.set_temp_parameters)
     QtCore.QObject.connect(_self.ui.btnTempSweep, QtCore.SIGNAL("clicked()"), _self.temp_sweep)
-    QtCore.QObject.connect(_self.ui.btnTempSweepStop, QtCore.SIGNAL("clicked()"), _self.temp_sweep_stop)
-    QtCore.QObject.connect(_self.ui.btnTemperatureCustom, QtCore.SIGNAL("clicked()"), _self.temp_custom)
+    QtCore.QObject.connect(_self.ui.btnTempSweepStop, QtCore.SIGNAL("clicked()"), gui_helper.temp_sweep_stop)
+    QtCore.QObject.connect(_self.ui.btnTemperatureCustom, QtCore.SIGNAL("clicked()"), gui_helper.temp_custom)
     
-    QtCore.QObject.connect(_self.ui.btnExecute, QtCore.SIGNAL("clicked()"), _self.execute)
+    QtCore.QObject.connect(_self.ui.btnExecute, QtCore.SIGNAL("clicked()"), gui_helper.execute)
