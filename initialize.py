@@ -112,6 +112,7 @@ def init_curvewidgets(_self):
     _self.ui.cw4.plot.set_axis_title(_self.ui.cw4.plot.Y_LEFT, "Resistance (Ohm)")
     _self.ui.cw4.plot.set_axis_title(_self.ui.cw4.plot.Y_RIGHT, "Conductance (Go)")
     _self.ui.cw4.plot.set_axis_color(_self.ui.cw4.plot.Y_RIGHT, "MediumBlue")
+    _self.ui.cw4.plot.set_axis_scale(_self.ui.cw4.plot.Y_RIGHT, "log")
     _self.ui.cw5.plot.set_axis_title(_self.ui.cw5.plot.Y_LEFT, "I (A)")
     _self.ui.cw5.plot.set_axis_title(_self.ui.cw5.plot.X_BOTTOM, "Voltage (V)") 
     _self.ui.cw6.plot.set_axis_title(_self.ui.cw6.plot.Y_LEFT, "dI/dV")
@@ -146,6 +147,7 @@ def init_variables(_self):
     _self._start_time = time.time()
     _self.plot_data = {}
     _self.plot_data["new"] = [False,False,False,False]
+    _self.plot_data["save"] = False
     _self.plot_data["x1"] = []
     _self.plot_data["y1"] = []
     _self.plot_data["x3"] = []
@@ -213,6 +215,8 @@ def init_variables(_self):
     _self.automatic_gain = False
     _self.average_value = 100
     _self._excluded_splits = ["timestamp","li","femto"]
+    
+    _self.checkHistogramEscape = False
 
 
 def init_shutdowns(_self):

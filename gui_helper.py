@@ -10,20 +10,24 @@ from functions import log
 global _self
 _self = None
 
-
-
+def send_to_nature():
+    from PyQt4 import QtGui
+    QtGui.QMessageBox.question(_self, 'Export',
+            "Upload in progress......", QtGui.QMessageBox.Ok)
 
 # motor
-def motor_break(speed=None):
+def motor_break(speed=None, quiet=False):
     if speed == None:
         speed = float(_self.ui.editSpeed.text())
     DEV.motor.set_velocity(-speed)
-    log("Motor break with %f"%(-speed))
-def motor_unbreak(speed=None):
+    if not quiet:
+        log("Motor break with %f"%(-speed))
+def motor_unbreak(speed=None, quiet=False):
     if speed == None:
         speed = float(_self.ui.editSpeed.text())
     DEV.motor.set_velocity(speed)
-    log("Motor unbreak with %f"%(speed))
+    if not quiet:
+        log("Motor unbreak with %f"%(speed))
 def motor_stop():
     DEV.motor.set_velocity(0)
     log("Motor stop")

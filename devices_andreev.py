@@ -644,7 +644,7 @@ class ZURICH:
         
         thread.start_new_thread(self.lockin_thread, ())
     
-    def initialize(self, frequency=1111.1, ampl=0.1, order=4, tc=0.2, rate=14391):
+    def initialize(self, frequency=1111.1, ampl=0.1, order=4, tc=0.2, rate=100):
         general_setting = [
 
                 [["/", self.device, "/sigins/0/diff"],0.0],
@@ -708,7 +708,7 @@ class ZURICH:
         self.daq.set(general_setting)
 
     
-    def set_rate(self, rate=115000):
+    def set_rate(self, rate=100):
         general_setting = [
                 [["/", self.device, "/demods/0/rate"],rate],
                 [["/", self.device, "/demods/1/rate"],rate],
@@ -795,11 +795,11 @@ class ZURICH:
         finally:
             self.daq.unsubscribe("*")
             
-    def get_data_list(self, erase=True, averages=100):
+    def get_data_list(self, erase=True, averages=10):
         """returns all the gathered data in one bunch
         and erases the list """
-        if averages < 10:
-            averages = 10
+        #if averages < 10:
+        #    averages = 10
   
         self.data_lock.acquire()
         return_data = self.data.copy()
@@ -951,7 +951,7 @@ class MOTOR:
         self._mpos = 0
         self._v = 0
         self._current = 0
-        self._current_limit = 100
+        self._current_limit = 150
         self._gv = self.update_set_velocity()
         log("Motor initialized")
     

@@ -30,11 +30,17 @@ def refresh_display():
         step = int(_self.ui.editViewStep.text()) 
         interval = int(_self.ui.editTimerInterval.text())
         
-        _self.average_value = int(_self.ui.editAverage.text())
-        _self.automatic_gain = _self.ui.checkAutomaticGain.isChecked()
-        _self.editHistogramLower = float(_self.ui.editHistogramLower.text())
-        _self.editHistogramUpper = float(_self.ui.editHistogramUpper.text())
-        _self.editHistogramBias = float(_self.ui.editHistogramBias.text())
+        try: # updating ui data
+            _self.average_value = int(_self.ui.editAverage.text())
+            _self.automatic_gain = _self.ui.checkAutomaticGain.isChecked()
+            _self.editHistogramLower = float(_self.ui.editHistogramLower.text())
+            _self.editHistogramUpper = float(_self.ui.editHistogramUpper.text())
+            _self.editHistogramBias = float(_self.ui.editHistogramBias.text())
+            _self.checkHistogramEscape = _self.ui.checkHistogramEscape.isChecked()
+            _self.editHistogramOpeningSpeed = float(_self.ui.editHistogramOpeningSpeed.text())
+            _self.editHistogramClosingSpeed = float(_self.ui.editHistogramClosingSpeed.text())
+        except Exception,e:
+            log("Failed updating ui parameters",e)
         
         max_datalength = int(_self.ui.editMaximumValues.text())
         for k,v in _self.data.items():
@@ -48,7 +54,7 @@ def refresh_display():
             _low = float(_self.ui.editIVMin.text())
             _high = float(_self.ui.editIVMax.text())
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
-            _self.ui.editIVTimeEstimate.setText("%i s"%(round(_delay*(abs(_high-_low)/_steps)))) 
+            _self.ui.editIVTimeEstimate.setText("%i s"%(round((0.05+_delay)*(abs(_high-_low)/_steps)))) 
             _self.ui.editIVMinEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _low * 1e3))
             _self.ui.editIVMaxEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _high * 1e3))
             _self.ui.editIVStepsEstimate.setText("%f uV"%((_sample_res/(_sample_res+_self.rref)) * _steps * 1e6))
@@ -63,6 +69,10 @@ def refresh_display():
                 saving = False
             else:
                 saves = saves + "c"
+            if not (_self.f_agilent_voltage and _self.f_agilent_current):
+                saving = False
+            else:
+                saves = saves + "a"
             if not _self.f_ips:
                 saving = False
             else:
@@ -92,6 +102,10 @@ def refresh_display():
                 _self.ui.btnStatusLockin.setStyleSheet('QPushButton {color: grey}')
             else:
                 _self.ui.btnStatusLockin.setStyleSheet('QPushButton {color: green}')
+            if DEV.agilent_new == None or DEV.agilent_old == None:
+                _self.ui.btnStatusAgilents.setStyleSheet('QPushButton {color: grey}')
+            else:
+                _self.ui.btnStatusAgilents.setStyleSheet('QPushButton {color: green}')
             if DEV.lakeshore == None:
                 _self.ui.btnStatusTemperatur.setStyleSheet('QPushButton {color: grey}')
             else:
@@ -195,10 +209,16 @@ def refresh_display():
                 try:
                     min_index = min(len(voltage),len(current))-1
                     r_y = voltage[0:min_index]/current[0:min_index]*_self.rref
-                    _self.data_curve7.set_data(resistance_x, r_y)   
+                    _self.data_curve7.set_data(resistance_x, r_y)
+                    if _self.ui.checkViewConductance.isChecked():
+                        try:
+                            g_y = 1.0/r_y*12900.0
+                            _self.data_curve8.set_data(resistance_x, g_y) 
+                        except Exception,e:
+                            log("Conductance calculation failed",e)
                     _self.ui.cw4.plot.do_autoscale()
                 except Exception,e:
-                    log("lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
+                    log("Lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
                     log("Resistance Calculation failed",e)
             
         except Exception,e:
@@ -216,7 +236,16 @@ def refresh_display():
             if _self.plot_data["new"][3]:
                 _self.data_curve12.set_data(np.array(_self.plot_data["x4"]),np.array(_self.plot_data["y4"]))                
                 _self.ui.cw6.plot.do_autoscale()
-                _self.plot_data["new"][3] = False
+                _self.plot_data["new"][3] = False     
+            if _self.plot_data["save"]:
+                # save bitmap
+                _self.plot_data["save"] = False
+                d = str(_self.ui.editSetupDir.text())+str(_self.ui.editHeader.text())+"\\" 
+                file_string = "iv_%s.png"%(_self.last_iv_name)
+                _self.ui.cw5.plot.save_widget(d+file_string)
+                file_string = "iv_%s_lockin.png"%(_self.last_iv_name)
+                _self.ui.cw6.plot.save_widget(d+file_string)
+                
         except Exception,e:
             log("Extra",e)            
     except Exception,e:

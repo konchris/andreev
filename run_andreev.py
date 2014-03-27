@@ -148,55 +148,75 @@ class main_program(QtGui.QMainWindow):
   
     def aquire_histogram(self):
         self.stop_measure = False
-        
-        #self.offset_correct()
-        
         # init bias        
-        bias = float(self.ui.editHistogramBias.text())
+        bias = self.editHistogramBias
+
         DEV.yoko.set_voltage(bias)
         DEV.yoko.output(True)
         
-        # calculate conductance
-        #resistance = self.data["li_aux0"][-1] / self.data["li_aux1"][-1] / self.rref
-        resistance = self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref
-        # check if conductance high -> break, else close first
-        if resistance > upper_res:
-            self.motor_break()
-        else:
-            self.motor_unbreak()
-                 
-        while not self.stop_measure:
-            try:
-                # update values
-                lower_cond = self.editHistogramLower
-                upper_cond = self.editHistogramUpper
-                bias = self.editHistogramBias
-                DEV.yoko.set_voltage(bias)
-                
-                # if conductance hits upper limit, break again
-                if conductance > upper_cond:
-                    self.motor_break()
-                # at lower limit, close again, in between: nothing
-                if conductance < lower_cond:
-                    self.motor_unbreak()
-                
-                # if escape on motor limit hit
-                if self.ui.checkHistogramEscape.isChecked():
-                    if DEV.motor.higher_bound or DEV.motor.lower_bound:
-                        log("Motor reached its bounds, escaping histogram!")
-                        break
-                else:
-                    if DEV.motor.higher_bound:
-                        log("Motor reached its bounds, trying to break again!")
-                        self.motor_break()
-                    if DEV.motor.lower_bound:
-                        log("Motor reached its bounds, trying to close again!")
-                        self.motor_unbreak()
-            except Exception,e:
-                log("Histogram failure",e)
-            time.sleep(0.01) 
-            
+        
+        
+        log("Histogram Start")
+        breaking = True
+        
+        begin_time = time.time()
+        if not self.f_config == None:
+            self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(begin_time))
+        try:         
+            while not self.stop_measure:
+                try:
+                    # update values
+                    resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
+                    lower_res = self.editHistogramLower
+                    upper_res = self.editHistogramUpper
+                    bias = self.editHistogramBias
+                    DEV.yoko.set_voltage(bias)
+                    
+                    # if conductance hits upper limit, close again
+                    if resistance > upper_res:            
+                        if breaking == True: 
+                            begin_time = time.time()
+                            if not self.f_config == None:
+                                self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(begin_time))
+                            
+                        breaking = False
+                    # at lower limit, break again, in between: set speed
+                    if resistance < lower_res:
+                        if breaking == False: 
+                            begin_time = time.time()
+                            if not self.f_config == None:
+                                self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(begin_time))
+                            
+                        breaking = True
+                    
+                    if breaking:
+                        gui_helper.motor_break(self.editHistogramOpeningSpeed, quiet=True)
+                    else:
+                        gui_helper.motor_unbreak(self.editHistogramClosingSpeed, quiet=True)
+                        
+                    # if escape on motor limit hit
+                    if self.checkHistogramEscape:
+                        if DEV.motor.higher_bound or DEV.motor.lower_bound:
+                            log("Motor reached its bounds, escaping histogram!")
+                            break
+                    else:
+                        if DEV.motor.higher_bound:
+                            log("Motor reached its bounds, trying to break again in 10s!")
+                            time.sleep(10)
+                            breaking = True
+                        if DEV.motor.lower_bound:
+                            log("Motor reached its bounds, trying to close again in 10s!")
+                            time.sleep(10)
+                            breaking = False
+                except Exception,e:
+                    log("Histogram inner failure",e)
+                time.sleep(0.1) 
+        except Exception,e:
+            log("Histogram outer failure",e)
+        finally:
+            DEV.motor.stop()
         DEV.motor.stop()
+        log("Histogram Stop")
 
 
     
@@ -213,7 +233,7 @@ class main_program(QtGui.QMainWindow):
         
         DEV.yoko.set_voltage(step_list[0])
         DEV.yoko.output(True)
-        time.sleep(0.5)
+        time.sleep(3)
         
         # note down begin of sweep
         begin_time = time.time()
@@ -256,40 +276,46 @@ class main_program(QtGui.QMainWindow):
                     li_3_timestamp = np.array(self.data["li_timestamp_3"])
                     li_4_timestamp = np.array(self.data["li_timestamp_4"])           
                     
-                    #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
-                    min_0 = min(len(li_0_timestamp),len(li_0_x))-1
-                    li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
-                    li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
-                    min_1 = min(len(li_1_x),len(li_1_timestamp))-1
-                    li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
-                    li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
-                    min_3 = min(len(li_3_x),len(li_3_timestamp))-1
-                    li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
-                    li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
-                    min_4 = min(len(li_4_x),len(li_4_timestamp))-1
-                    li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
-                    li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+                    try:
+                        #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
+                        min_0 = min(len(li_0_timestamp),len(li_0_x))-1
+                        li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
+                        li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
+                        min_1 = min(len(li_1_x),len(li_1_timestamp))-1
+                        li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
+                        li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
+                        min_3 = min(len(li_3_x),len(li_3_timestamp))-1
+                        li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
+                        li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
+                        min_4 = min(len(li_4_x),len(li_4_timestamp))-1
+                        li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
+                        li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+                        
+                        li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                        li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                        li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                        li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                        li_first = li_3_r/self.rref/li_0_r    # first
+                        li_second = li_4_r/self.rref/li_1_r   # second
+                        
+                        self.plot_data["x3"] = voltage_list[:]
+                        self.plot_data["y3"] = li_first[:]
+                        
+                        self.plot_data["x4"] = voltage_list[:]
+                        self.plot_data["y4"] = li_second[:]
+                        
+                        self.plot_data["new"][2] = True
+                        self.plot_data["new"][3] = True
+                    except Exception,e:
+                        log("IV interpolation failed",e)
                     
-                    li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-                    li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
-                    li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-                    li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-                    li_first = li_3_r/self.rref/li_0_r    # first
-                    li_second = li_4_r/self.rref/li_1_r   # second
                     
+                    self.plot_data["new"][0] = True                    
             
                     self.plot_data["x1"] = voltage_list[:]
                     self.plot_data["y1"] = current_list[:]
                     
-                    self.plot_data["x3"] = voltage_list[:]
-                    self.plot_data["y3"] = li_first[:]
                     
-                    self.plot_data["x4"] = voltage_list[:]
-                    self.plot_data["y4"] = li_second[:]
-                    
-                    self.plot_data["new"][0] = True
-                    self.plot_data["new"][2] = True
-                    self.plot_data["new"][3] = True
                     
                 finally:
                     self.data_lock.release()
@@ -302,7 +328,7 @@ class main_program(QtGui.QMainWindow):
         # note down end of iv sweep
         end_time = time.time()
         if not self.f_config == None:
-                self.f_config.write("IV_START\t%15.15f\t\n"%(end_time))
+                self.f_config.write("IV_STOP\t%15.15f\t\n"%(end_time))
                 
         time.sleep(0.5)        
         # switch back voltage
@@ -369,6 +395,7 @@ class main_program(QtGui.QMainWindow):
             self.plot_data["x4"] = voltage_list[:]
             self.plot_data["y4"] = li_second[:]
             
+            # refresh plots and save them
             self.plot_data["new"][0] = True
             self.plot_data["new"][2] = True
             self.plot_data["new"][3] = True
@@ -379,13 +406,26 @@ class main_program(QtGui.QMainWindow):
                 d_name = os.path.dirname(d)
                 if not os.path.exists(d_name):
                     os.makedirs(d_name)
-                file_string = "iv_%i.txt"%(round(time.time()))
+                time_string = str(int(round(time.time())))
+                file_string = "iv_%s.txt"%(time_string)
                 f_iv = open(d+file_string, 'a')
+                try:
+                    for k,v in self.data.items():
+                        try:
+                            f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
+                        except Exception,e:
+                            pass
+                except Exception,e:
+                    log("IV Parameter Save failed",e)
                 save_data(f_iv, saving_data)
                 f_iv.close()
                 self.ui.editLastIV.setText(file_string)
+                
+                self.last_iv_name = time_string
             except Exception,e:
                 log("Failed to Save IV",e)
+            
+            self.plot_data["save"] = True
         except Exception,e:
             log("IV Calculation Failed",e)
         finally:
@@ -438,8 +478,8 @@ class main_program(QtGui.QMainWindow):
     def aquire_b_sweep(self):
         self.stop_measure = False
                
-        min = float(self.ui.editBMin.text())
-        max = float(self.ui.editBMax.text())
+        _min = float(self.ui.editBMin.text())
+        _max = float(self.ui.editBMax.text())
         rate = float(self.ui.editBRate.text())
         bias = float(self.ui.editBBias.text())
         
@@ -448,12 +488,7 @@ class main_program(QtGui.QMainWindow):
         
         DEV.yoko.set_voltage(bias)
         DEV.yoko.output(True)
-        
-        DEV.agilent_new.setup_dc()
-        DEV.agilent_new.set_nplc(1)
-        
-        DEV.agilent_old.setup_dc()
-        DEV.agilent_old.set_nplc(1)               
+                  
         
         while not self.stop_measure:
             if self.data["magnet_field"][-1] == fields[field_index]:

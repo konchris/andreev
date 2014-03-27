@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>6</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -108,7 +108,7 @@
            <x>20</x>
            <y>20</y>
            <width>391</width>
-           <height>201</height>
+           <height>211</height>
           </rect>
          </property>
          <layout class="QFormLayout" name="formLayout">
@@ -171,6 +171,13 @@
            <widget class="QPushButton" name="btnSaveDescription">
             <property name="text">
              <string>Save Description</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QPushButton" name="btnNature">
+            <property name="text">
+             <string>Send to Nature</string>
             </property>
            </widget>
           </item>
@@ -1658,8 +1665,8 @@
         <widget class="QGroupBox" name="groupBox_3">
          <property name="geometry">
           <rect>
-           <x>300</x>
-           <y>50</y>
+           <x>250</x>
+           <y>10</y>
            <width>181</width>
            <height>151</height>
           </rect>
@@ -1771,6 +1778,22 @@
            <string>3a</string>
           </property>
          </widget>
+        </widget>
+        <widget class="QCheckBox" name="checkViewConductance">
+         <property name="geometry">
+          <rect>
+           <x>280</x>
+           <y>220</y>
+           <width>111</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Conductance</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
         </widget>
        </widget>
        <widget class="QWidget" name="tab_11">
