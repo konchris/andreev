@@ -39,6 +39,9 @@ def refresh_display():
             _self.checkHistogramEscape = _self.ui.checkHistogramEscape.isChecked()
             _self.editHistogramOpeningSpeed = float(_self.ui.editHistogramOpeningSpeed.text())
             _self.editHistogramClosingSpeed = float(_self.ui.editHistogramClosingSpeed.text())
+            
+            _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
+            _self.factor_current = float(_self.ui.editFactorCurrent.text())
         except Exception,e:
             log("Failed updating ui parameters",e)
         
@@ -59,7 +62,7 @@ def refresh_display():
             _self.ui.editIVMaxEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _high * 1e3))
             _self.ui.editIVStepsEstimate.setText("%f uV"%((_sample_res/(_sample_res+_self.rref)) * _steps * 1e6))
         except Exception,e:
-            log("IV Time",e)
+            log("Refresh Variables Failed",e)
             
         try:
             # saving button
@@ -208,21 +211,36 @@ def refresh_display():
                 resistance_x = np.array(voltage_timestamp)-_self._start_time
                 try:
                     min_index = min(len(voltage),len(current))-1
-                    r_y = voltage[0:min_index]/current[0:min_index]*_self.rref
+                    r_y = abs(voltage[0:min_index]/current[0:min_index]*_self.rref)
                     _self.data_curve7.set_data(resistance_x, r_y)
-                    if _self.ui.checkViewConductance.isChecked():
-                        try:
-                            g_y = 1.0/r_y*12900.0
-                            _self.data_curve8.set_data(resistance_x, g_y) 
-                        except Exception,e:
-                            log("Conductance calculation failed",e)
-                    _self.ui.cw4.plot.do_autoscale()
                 except Exception,e:
+                    _self.data_curve7.set_data([0,1,2],[3,1,2]) 
                     log("Lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
                     log("Resistance Calculation failed",e)
+                    
+                #a = str(int(time.time()))[-1]
+                #if  a == "1":
+                #    print a
+                #    print resistance_x
+                #    print r_y
+                    
+                if _self.ui.checkViewConductance.isChecked():
+                    try:
+                        g_y = 12900.0/r_y
+                        _self.data_curve8.set_data(resistance_x, g_y)
+                    except Exception,e:
+                        log("Conductance calculation failed",e)
+                        _self.data_curve8.set_data([0,1,2],[1,5,2])
+                else:
+                    _self.data_curve8.set_data([0,1,2],[1,5,2])
+                    
+                try:
+                    _self.ui.cw4.plot.do_autoscale()
+                except Exception,e:
+                    log("Autoscale CW4 failed",e)
             
         except Exception,e:
-            log("Displaying Lockin 2",e)
+            log("Displaying Agilents Resistance",e)
  
         try:
             if _self.plot_data["new"][0]:

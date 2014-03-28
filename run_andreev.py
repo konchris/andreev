@@ -51,12 +51,23 @@ class main_program(QtGui.QMainWindow):
         initialize.init_shutdowns(self)
         initialize.init_validators(self)
         
-       
+        
+        #gui_helper.motor_set_limit()        # sets limits for motor
+        #gui_helper.lockin_set()             # sets lockin parameters
+        #gui_helper.lockin_read_phase()  
+        #gui_helper.lockin_set_phase()       # set phase to zero
+        #gui_helper.set_bias()               # sets bias to last value
+        #gui_helper.set_bias()
+        #########################################################
+        ##############    REFRESH DISPLAY     ###################
+        #########################################################
         # periodic timer for refresh, value is changed by gui   
         self.timer_display = QTimer()
         self.timer_display.timeout.connect(refresh_display.refresh_display)
         self.timer_display.start(250)
         
+       
+       
        
         #########################################################
         ############## MEASUREMENT PARAMETERS ###################
@@ -64,9 +75,13 @@ class main_program(QtGui.QMainWindow):
         #self.rref = 122120.0 # grounded one
         self.rref = 100000.0 # floating one
         self.wiring = 620.0
-        self.factor_aux0 = 1.0    # real absolute voltage
-        self.factor_aux1 = 1.0
 
+
+
+
+        #########################################################
+        ##############   MEASUREMENT THREAD   ###################
+        #########################################################
         # lock to synchronize access
         self.data_lock = thread.allocate_lock()
         thread.start_new_thread(self.measurement_thread,())    
@@ -83,6 +98,8 @@ class main_program(QtGui.QMainWindow):
         for i in range(10):
                 app.processEvents()
                 time.sleep(0.1)
+        
+        # flush cache
         DEV.lockin.get_data_list(averages=10)
         DEV.agilent_new.get_data_list()
         DEV.agilent_old.get_data_list()
@@ -227,100 +244,122 @@ class main_program(QtGui.QMainWindow):
         delay = float(self.ui.editIVDelay.text())
         
         self.stop_measure = False        
-        step_list = voltage_ramp(_min,_max,steps,_circular=False)
+        #step_list = voltage_ramp(_min,_max,steps,_circular=False)
         
         bias = DEV.yoko.get_voltage()
         
-        DEV.yoko.set_voltage(step_list[0])
+        #DEV.yoko.set_voltage(step_list[0])
+        #DEV.yoko.output(True)
+        #time.sleep(3)
+        
+       
+        
+        
+        # set up yoko program for sweep
+        slope_time = abs(_max-_min)/steps * delay
+        
+        DEV.yoko.program_set_interval_time(slope_time) 
+        DEV.yoko.program_set_slope_time(slope_time) 
+        DEV.yoko.program_set_repeat("OFF")      
+            
+        DEV.yoko.program_edit_start()
+        DEV.yoko.program_set_function("VOLT")
+        #DEV.yoko.program_set_level_auto(_min)
+        DEV.yoko.program_set_level_auto(_max)
+        DEV.yoko.program_edit_end()
+        DEV.yoko.program_is_end()   # clear status register
+        
+        DEV.yoko.set_voltage(_min)
         DEV.yoko.output(True)
-        time.sleep(3)
+        time.sleep(2)       
         
         # note down begin of sweep
         begin_time = time.time()
         if not self.f_config == None:
                 self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
         
+        # start sweep
+        DEV.yoko.program_start()        
+        
         # last_time is used for display updating        
         last_time = time.time()          
-        for _voltage in step_list:
-                DEV.yoko.set_voltage(_voltage)
+        while not DEV.yoko.program_is_end():
+                #DEV.yoko.set_voltage(_voltage)
                 
                 if time.time() - last_time > 1: # check if update needed
                     last_time = time.time()
 
-                try:
-                    self.data_lock.acquire()
-                    
-                    x0 = find_min(self.data["agilent_voltage_timestamp"],begin_time)
-                    x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
-            
-                    voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
-                    voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
-                    current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
-                    current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
-          
-                    
-                    # lockin data refurbishment
-                    li_0_x = np.array(self.data["li_0_x"])        # voltage first
-                    li_1_x = np.array(self.data["li_1_x"])        # voltage second
-                    li_3_x = np.array(self.data["li_3_x"])        # current first
-                    li_4_x = np.array(self.data["li_4_x"])        # current second
-                    
-                    li_0_y = np.array(self.data["li_0_y"])        # voltage first
-                    li_1_y = np.array(self.data["li_1_y"])        # voltage second
-                    li_3_y = np.array(self.data["li_3_y"])        # current first
-                    li_4_y = np.array(self.data["li_4_y"])        # current second
-            
-                    li_0_timestamp = np.array(self.data["li_timestamp_0"])
-                    li_1_timestamp = np.array(self.data["li_timestamp_1"])
-                    li_3_timestamp = np.array(self.data["li_timestamp_3"])
-                    li_4_timestamp = np.array(self.data["li_timestamp_4"])           
-                    
                     try:
-                        #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
-                        min_0 = min(len(li_0_timestamp),len(li_0_x))-1
-                        li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
-                        li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
-                        min_1 = min(len(li_1_x),len(li_1_timestamp))-1
-                        li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
-                        li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
-                        min_3 = min(len(li_3_x),len(li_3_timestamp))-1
-                        li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
-                        li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
-                        min_4 = min(len(li_4_x),len(li_4_timestamp))-1
-                        li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
-                        li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+                        self.data_lock.acquire()
                         
-                        li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-                        li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
-                        li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-                        li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-                        li_first = li_3_r/self.rref/li_0_r    # first
-                        li_second = li_4_r/self.rref/li_1_r   # second
+                        x0 = find_min(self.data["agilent_voltage_timestamp"],begin_time)
+                        x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
+                
+                        voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
+                        voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
+                        current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
+                        current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
+              
                         
-                        self.plot_data["x3"] = voltage_list[:]
-                        self.plot_data["y3"] = li_first[:]
+                        # lockin data refurbishment
+                        li_0_x = np.array(self.data["li_0_x"])        # voltage first
+                        li_1_x = np.array(self.data["li_1_x"])        # voltage second
+                        li_3_x = np.array(self.data["li_3_x"])        # current first
+                        li_4_x = np.array(self.data["li_4_x"])        # current second
                         
-                        self.plot_data["x4"] = voltage_list[:]
-                        self.plot_data["y4"] = li_second[:]
+                        li_0_y = np.array(self.data["li_0_y"])        # voltage first
+                        li_1_y = np.array(self.data["li_1_y"])        # voltage second
+                        li_3_y = np.array(self.data["li_3_y"])        # current first
+                        li_4_y = np.array(self.data["li_4_y"])        # current second
+                
+                        li_0_timestamp = np.array(self.data["li_timestamp_0"])
+                        li_1_timestamp = np.array(self.data["li_timestamp_1"])
+                        li_3_timestamp = np.array(self.data["li_timestamp_3"])
+                        li_4_timestamp = np.array(self.data["li_timestamp_4"])           
                         
-                        self.plot_data["new"][2] = True
-                        self.plot_data["new"][3] = True
-                    except Exception,e:
-                        log("IV interpolation failed",e)
-                    
-                    
-                    self.plot_data["new"][0] = True                    
-            
-                    self.plot_data["x1"] = voltage_list[:]
-                    self.plot_data["y1"] = current_list[:]
-                    
-                    
-                    
-                finally:
-                    self.data_lock.release()
-                   
-                time.sleep(delay)
+                        try:
+                            #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
+                            min_0 = min(len(li_0_timestamp),len(li_0_x))-1
+                            li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
+                            li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
+                            min_1 = min(len(li_1_x),len(li_1_timestamp))-1
+                            li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
+                            li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
+                            min_3 = min(len(li_3_x),len(li_3_timestamp))-1
+                            li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
+                            li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
+                            min_4 = min(len(li_4_x),len(li_4_timestamp))-1
+                            li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
+                            li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+                            
+                            li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                            li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                            li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                            li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                            li_first = li_3_r/self.rref/li_0_r    # first
+                            li_second = li_4_r/self.rref/li_1_r   # second
+                            
+                            self.plot_data["x3"] = voltage_list[:]
+                            self.plot_data["y3"] = li_first[:]
+                            
+                            self.plot_data["x4"] = voltage_list[:]
+                            self.plot_data["y4"] = li_second[:]
+                            
+                            self.plot_data["new"][2] = True
+                            self.plot_data["new"][3] = True
+                        except Exception,e:
+                            log("IV interpolation failed",e)
+                        
+                        
+                        self.plot_data["new"][0] = True                    
+                
+                        self.plot_data["x1"] = voltage_list[:]
+                        self.plot_data["y1"] = current_list[:]
+                        
+                    finally:
+                        self.data_lock.release()
+                
+                time.sleep(0.02)
                 app.processEvents()
                 if self.stop_measure:
                     break
@@ -332,6 +371,7 @@ class main_program(QtGui.QMainWindow):
                 
         time.sleep(0.5)        
         # switch back voltage
+        DEV.yoko.program_hold()
         DEV.yoko.set_voltage(bias)
         
        
@@ -349,15 +389,15 @@ class main_program(QtGui.QMainWindow):
             current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
             
             # lockin data refurbishment
-            li_0_x = np.array(self.data["li_0_x"])        # voltage first
-            li_1_x = np.array(self.data["li_1_x"])        # voltage second
-            li_3_x = np.array(self.data["li_3_x"])        # current first
-            li_4_x = np.array(self.data["li_4_x"])        # current second
+            li_0_x = np.array(self.data["li_0_x"])/self.factor_voltage        # voltage first
+            li_1_x = np.array(self.data["li_1_x"])/self.factor_voltage        # voltage second
+            li_3_x = np.array(self.data["li_3_x"])/self.factor_current*self.rref        # current first
+            li_4_x = np.array(self.data["li_4_x"])/self.factor_current*self.rref        # current second
             
-            li_0_y = np.array(self.data["li_0_y"])        # voltage first
-            li_1_y = np.array(self.data["li_1_y"])        # voltage second
-            li_3_y = np.array(self.data["li_3_y"])        # current first
-            li_4_y = np.array(self.data["li_4_y"])        # current second
+            li_0_y = np.array(self.data["li_0_y"])/self.factor_voltage        # voltage first
+            li_1_y = np.array(self.data["li_1_y"])/self.factor_voltage        # voltage second
+            li_3_y = np.array(self.data["li_3_y"])/self.factor_current*self.rref        # current first
+            li_4_y = np.array(self.data["li_4_y"])/self.factor_current*self.rref        # current second
     
             li_0_timestamp = np.array(self.data["li_timestamp_0"])
             li_1_timestamp = np.array(self.data["li_timestamp_1"])
@@ -538,8 +578,8 @@ class main_program(QtGui.QMainWindow):
                             lockin_data = DEV.lockin.get_data_list(averages=self.average_value)
         
                             li_timestamp_0 = average_chunks(lockin_data["0"]["timestamp"],self.average_value)
-                            li_aux0 =  [(x - self.config_data["offset_aux0"][0])*(self.factor_aux0) for x in average_chunks(lockin_data["0"]["auxin0"],self.average_value)] 
-                            li_aux1 =  [(x - self.config_data["offset_aux1"][0])*(self.factor_aux1) for x in average_chunks(lockin_data["0"]["auxin1"],self.average_value)]
+                            li_aux0 =  [(x - self.config_data["offset_aux0"][0])/(self.factor_voltage) for x in average_chunks(lockin_data["0"]["auxin0"],self.average_value)] 
+                            li_aux1 =  [(x - self.config_data["offset_aux1"][0])/(self.factor_current) for x in average_chunks(lockin_data["0"]["auxin1"],self.average_value)]
                             li_0_x =  average_chunks(lockin_data["0"]["x"],self.average_value)
                             li_0_y =  average_chunks(lockin_data["0"]["y"],self.average_value)
                             li_timestamp_1 = average_chunks(lockin_data["1"]["timestamp"],self.average_value)
@@ -600,7 +640,7 @@ class main_program(QtGui.QMainWindow):
                         if DEV.agilent_new != None:
                             agilent_new_data = DEV.agilent_new.get_data_list()   
                             agilent_voltage_timestamp = agilent_new_data["timestamp"]
-                            agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"][0]) for x in agilent_new_data["voltage"]] 
+                            agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"][0])/self.factor_voltage for x in agilent_new_data["voltage"]] 
                     except Exception,e:
                         log("Agilent New failed DAQ",e)
                        
@@ -616,7 +656,7 @@ class main_program(QtGui.QMainWindow):
                         if DEV.agilent_old != None:
                             agilent_old_data = DEV.agilent_old.get_data_list()   
                             agilent_current_timestamp = agilent_old_data["timestamp"]
-                            agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"][0]) for x in agilent_old_data["voltage"]] 
+                            agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"][0])/self.factor_current for x in agilent_old_data["voltage"]] 
                     except Exception,e:
                         log("Agilent old failed DAQ",e)
                        

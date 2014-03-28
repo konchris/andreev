@@ -93,7 +93,7 @@ def init_curvewidgets(_self):
     _self.data_curve6 = make.curve([],[], yaxis="right", color="b")
     _self.data_curve6b = make.curve([],[], yaxis="right", color="b")
     _self.data_curve7 = make.curve([],[])
-    _self.data_curve8 = make.curve([],[], yaxis="right", color="b")
+    _self.data_curve8 = make.curve([1],[1], yaxis="right", color="b")
     _self.data_curve9 = make.curve([],[], linestyle="NoPen", marker="Rect",  markersize=3, markeredgecolor="k", markerfacecolor="b") # SolidLine NoPen
     #_self.data_curve10 = make.curve([],[],yaxis="right",color="b")
     _self.data_curve11 = make.curve([],[], linestyle="NoPen", marker="Rect" ,markersize=3, markeredgecolor="k", markerfacecolor="k") # SolidLine NoPen
@@ -212,6 +212,9 @@ def init_variables(_self):
     _self.ui.editOffsetAux1_2.setText(str(0.0))
     _self.ui.editOffsetAux1_3.setText(str(0.0))
     
+    _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
+    _self.factor_current = float(_self.ui.editFactorCurrent.text())
+    
     _self.automatic_gain = False
     _self.average_value = 100
     _self._excluded_splits = ["timestamp","li","femto"]
@@ -274,6 +277,9 @@ def init_validators(_self):
     _self.ui.editLIAmpl.setValidator(doubleValidator)
     _self.ui.editAverage.setValidator(intValidator)
     _self.ui.editRate.setValidator(intValidator)
+    # setup
+    _self.ui.editFactorVoltage.setValidator(intValidator)
+    _self.ui.editFactorCurrent.setValidator(intValidator)
 
 
 def init_connections(_self):

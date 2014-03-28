@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>6</number>
+        <number>8</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -1952,7 +1952,7 @@
            <x>20</x>
            <y>20</y>
            <width>201</width>
-           <height>181</height>
+           <height>231</height>
           </rect>
          </property>
          <property name="title">
@@ -1962,7 +1962,7 @@
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>50</y>
+            <y>120</y>
             <width>118</width>
             <height>23</height>
            </rect>
@@ -1984,7 +1984,7 @@
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>110</y>
+            <y>160</y>
             <width>118</width>
             <height>23</height>
            </rect>
@@ -2006,33 +2006,33 @@
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>30</y>
+            <y>20</y>
             <width>46</width>
             <height>13</height>
            </rect>
           </property>
           <property name="text">
-           <string>Sample</string>
+           <string>Voltage</string>
           </property>
          </widget>
          <widget class="QLabel" name="label_33">
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>90</y>
+            <y>70</y>
             <width>46</width>
             <height>13</height>
            </rect>
           </property>
           <property name="text">
-           <string>RRef</string>
+           <string>Current</string>
           </property>
          </widget>
          <widget class="QToolButton" name="btnChAUp">
           <property name="geometry">
            <rect>
             <x>140</x>
-            <y>40</y>
+            <y>110</y>
             <width>25</width>
             <height>19</height>
            </rect>
@@ -2045,7 +2045,7 @@
           <property name="geometry">
            <rect>
             <x>140</x>
-            <y>60</y>
+            <y>130</y>
             <width>25</width>
             <height>19</height>
            </rect>
@@ -2058,7 +2058,7 @@
           <property name="geometry">
            <rect>
             <x>140</x>
-            <y>120</y>
+            <y>170</y>
             <width>25</width>
             <height>19</height>
            </rect>
@@ -2071,7 +2071,7 @@
           <property name="geometry">
            <rect>
             <x>140</x>
-            <y>100</y>
+            <y>150</y>
             <width>25</width>
             <height>19</height>
            </rect>
@@ -2084,7 +2084,7 @@
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>150</y>
+            <y>200</y>
             <width>131</width>
             <height>17</height>
            </rect>
@@ -2094,6 +2094,38 @@
           </property>
           <property name="checked">
            <bool>false</bool>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="editFactorVoltage">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>40</y>
+            <width>61</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>10</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="editFactorCurrent">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>61</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>10</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </widget>
@@ -2243,8 +2275,8 @@
         <widget class="QLineEdit" name="editRRef">
          <property name="geometry">
           <rect>
-           <x>50</x>
-           <y>240</y>
+           <x>270</x>
+           <y>250</y>
            <width>113</width>
            <height>20</height>
           </rect>
@@ -2256,8 +2288,8 @@
         <widget class="QLabel" name="label_57">
          <property name="geometry">
           <rect>
-           <x>40</x>
-           <y>220</y>
+           <x>260</x>
+           <y>230</y>
            <width>46</width>
            <height>13</height>
           </rect>

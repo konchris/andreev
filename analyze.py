@@ -14,7 +14,9 @@ from scipy.constants import *
 
 # 
 rref = 100000.0
-filename = r"140318_ivs_4"
+filename = r"140326_hist_4"
+server = True
+
 femto_factor_u = 10.0
 femto_factor_i = 10.0
 
@@ -24,14 +26,16 @@ max_res = 0
 stepsize = 0.1
 
 
-#hist=False
+hist=True
 
 
 
 
 g0 = 2.0*e*e/h
-#filename = "Z:\dweber\data_p5\\" + filename + "\\"
-filename = "D:\Desktop\data_p5\\" + filename + "\\"
+if server:
+    filename = "Z:\dweber\data_p5\\" + filename + "\\"
+else:
+    filename = "D:\Desktop\data_p5\\" + filename + "\\"
 print filename
 file_li_0 = filename+"li0.txt"
 file_li_1 = filename+"li1.txt"
@@ -66,6 +70,8 @@ ax_cond = fig.add_subplot(2,3,5, sharex=ax_v)
 
 ax_didv = fig.add_subplot(2,3,4, sharex=ax_v)
 ax_d2idv2 = ax_didv.twinx()
+
+ax_hist = fig.add_subplot(2,3,6)
 
 """
 
@@ -103,7 +109,7 @@ except Exception,e:
     print e
 """    
 try:
-    #print "Agilents"
+    print "Agilents"
     ag_old = scipy.loadtxt(file_agilent_old,unpack=True)
     ag_old_t = ag_old[0]
     ag_old_v = ag_old[1]
@@ -133,6 +139,13 @@ try:
     ax_cond.set_ylabel("Conductance / S")
     ax_cond.grid()
     ax_cond.set_xlabel("Time / s")
+    
+    ax_hist.hist(cond, bins=np.logspace(-4, 1, 50))
+    ax_hist.set_xscale("log")
+    ax_hist.grid()
+    #ax_hist.hist(cond, bins=100, log=False, range=(0,5)) #  range=(0,10)
+    #np.histogram(cond, )
+    
 except Exception,e:
     print e
 

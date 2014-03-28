@@ -455,11 +455,12 @@ class LAKESHORE_USB:
 class GS200:
     def __init__(self, GPIB_No=14):
         #self.yoko=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.05, term_chars='\n')
-        self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n')
+        self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n', timeout=10)
         self.initialize()
    
     def initialize(self):
-        """get current set point, set default parameters, ranges etc"""        
+        """get current set point, set default parameters, ranges etc""" 
+        self.yoko.write("*CLS") # clear status
         self.set_function("VOLT")
         self.set_limits(0.1,2)
         self.set_voltage(0.0000)
@@ -473,6 +474,57 @@ class GS200:
         else:
             _state = "OFF"
         self.yoko.write(":OUTP %s"%(_state))
+    
+    def get_errors(self):
+        try:
+            answer = self.yoko.ask(":SYST:ERR?")
+            log(answer)
+        except Exception,e:
+            log("Yoko no Status Answer",e)
+    
+    def display_set_text(self, text="GS200"):
+        """Displays desired text"""
+        self.yoko.write(":SYST:DISP:TEXT \"%s\""%(text))
+    def display_main_screen(self):
+        """Sets Display back to normal"""
+        self.yoko.write(":SYST:DISP:NORM")
+   
+    
+    # programs
+    def program_set_interval_time(self, _time=0.1):
+        """sets the execution time per step"""
+        self.yoko.write(":PROG:INT %f"%(_time))
+    def program_set_slope_time(self, _time=0.1):
+        """sets the execution time per step"""
+        self.yoko.write(":PROG:SLOP %f"%(_time))
+    def program_set_repeat(self, state="OFF"):
+        self.yoko.write(":PROGram:REPeat %s"%(state))
+    def program_edit_start(self):
+        self.yoko.write(":PROGram:EDIT:STARt")
+    def program_edit_end(self):
+        self.yoko.write(":PROGram:EDIT:END")
+    def program_set_function(self, func="VOLT"):
+        """VOLTage or CURRent"""
+        self.yoko.write(":SOURce:FUNCtion %s"%(func))
+    def program_set_range(self, voltage=1):
+        self.yoko.write(":SOURce:RANGe %f"%(voltage))
+    def program_set_level_auto(self, voltage=1):
+        self.yoko.write(":SOURce:LEVel:AUTO %f"%(voltage))
+    def program_start(self):
+        self.yoko.write(":PROGram:RUN")
+    def program_hold(self):
+        self.yoko.write(":PROGram:HOLD")
+    def program_is_end(self):
+        status = self.yoko.ask(":STAT:EVEN?")
+        if int(status) & (1 << 7): # check if End of Program is set
+            return True
+        else:
+            return False
+    
+     #:SOURce:RANGe <voltage>|MINimum|MAXimum|UP|DOWN
+    #:SOURce:LEVel[:FIX] <voltage>|MINimum|MAXimum
+    #:SOURce:LEVel:AUTO <voltage>|MINimum|MAXimum
+    # end program stuff
     
     def set_function(self,function="VOLT"):
         """sets the function of the device.
@@ -494,7 +546,7 @@ class GS200:
         """sets the new level in fixed range"""
         #self.yoko.write(":SOUR:LEV:AUTO %f"%(value))
         self.voltage = value
-        self.yoko.write(":SOUR:LEV:FIX %f"%(value))
+        self.yoko.write(":SOUR:LEV:AUTO %f"%(value))
     
     def get_voltage(self):
         """returns the last set value"""
@@ -530,6 +582,9 @@ class Agilent34410A:
         
     def get(self):
         return float(self.Agilent.ask("READ?"))
+    
+    def set_nplc(self, NPLC=1,):
+        self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         
         
     def initializeVOLTDCarray(self, NPLC=0.2, DISPLAY ="OFF"):
@@ -649,8 +704,8 @@ class ZURICH:
 
                 [["/", self.device, "/sigins/0/diff"],0.0],
                 [["/", self.device, "/sigins/1/diff"],0.0],
-                [["/", self.device, "/sigins/0/ac"],1],
-                [["/", self.device, "/sigins/1/ac"],1],
+                #[["/", self.device, "/sigins/0/ac"],1],
+                #[["/", self.device, "/sigins/1/ac"],1],
 
                 [["/", self.device, "/demods/0/rate"],rate],
                 [["/", self.device, "/demods/1/rate"],rate],
@@ -1330,6 +1385,27 @@ log("Device Threads Initalized")
 
 
 if __name__ == "__main__":
+    
+    """
+    while yoko==None:
+        time.sleep(0.1)
+    print yoko.program_is_end()
+    yoko.program_set_interval_time(1) 
+    yoko.program_set_slope_time(1) 
+    yoko.program_set_repeat("OFF")      
+    print yoko.program_is_end()
+    yoko.program_edit_start()
+    yoko.program_set_function("VOLT")
+    #yoko.program_set_level_auto(0)
+    yoko.program_set_level_auto(-0.01)
+    yoko.program_set_level_auto(0.01)
+    yoko.program_edit_end()
+    print yoko.program_is_end()
+    
+    yoko.program_start() 
+    print yoko.program_is_end() 
+    """
+
     while False:
         try:
             print agilent_new.get_data_list()
