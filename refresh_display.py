@@ -57,7 +57,7 @@ def refresh_display():
             _low = float(_self.ui.editIVMin.text())
             _high = float(_self.ui.editIVMax.text())
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
-            _self.ui.editIVTimeEstimate.setText("%i s"%(round((0.05+_delay)*(abs(_high-_low)/_steps)))) 
+            _self.ui.editIVTimeEstimate.setText("%i s"%(round((_delay)*(abs(_high-_low)/_steps)))) 
             _self.ui.editIVMinEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _low * 1e3))
             _self.ui.editIVMaxEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _high * 1e3))
             _self.ui.editIVStepsEstimate.setText("%f uV"%((_sample_res/(_sample_res+_self.rref)) * _steps * 1e6))

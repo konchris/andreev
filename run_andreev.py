@@ -248,26 +248,8 @@ class main_program(QtGui.QMainWindow):
         
         bias = DEV.yoko.get_voltage()
         
-        #DEV.yoko.set_voltage(step_list[0])
-        #DEV.yoko.output(True)
-        #time.sleep(3)
-        
-       
-        
-        
-        # set up yoko program for sweep
-        slope_time = abs(_max-_min)/steps * delay
-        
-        DEV.yoko.program_set_interval_time(slope_time) 
-        DEV.yoko.program_set_slope_time(slope_time) 
-        DEV.yoko.program_set_repeat("OFF")      
-            
-        DEV.yoko.program_edit_start()
-        DEV.yoko.program_set_function("VOLT")
-        #DEV.yoko.program_set_level_auto(_min)
-        DEV.yoko.program_set_level_auto(_max)
-        DEV.yoko.program_edit_end()
-        DEV.yoko.program_is_end()   # clear status register
+
+
         
         DEV.yoko.set_voltage(_min)
         DEV.yoko.output(True)
@@ -277,10 +259,16 @@ class main_program(QtGui.QMainWindow):
         begin_time = time.time()
         if not self.f_config == None:
                 self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
+
+        # set up yoko program for sweep
+        slope_time = abs(_max-_min)/steps * delay 
+        print "before goto_ramp errors:"
+        DEV.yoko.get_errors()
+        print "start program now:"
+        DEV.yoko.program_goto_ramp(_max, slope_time)      
         
-        # start sweep
-        DEV.yoko.program_start()        
-        
+        print "after goto_ramp errors:"
+        DEV.yoko.get_errors()
         # last_time is used for display updating        
         last_time = time.time()          
         while not DEV.yoko.program_is_end():
@@ -336,43 +324,55 @@ class main_program(QtGui.QMainWindow):
                             li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
                             li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
                             li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-                            li_first = li_3_r/self.rref/li_0_r    # first
-                            li_second = li_4_r/self.rref/li_1_r   # second
                             
+                            li_first = li_3_r/li_0_r    # first
+                            li_second = li_4_r/li_1_r   # second
+                            
+                                                        
                             self.plot_data["x3"] = voltage_list[:]
-                            self.plot_data["y3"] = li_first[:]
+                            self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
                             
                             self.plot_data["x4"] = voltage_list[:]
-                            self.plot_data["y4"] = li_second[:]
+                            self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
                             
                             self.plot_data["new"][2] = True
                             self.plot_data["new"][3] = True
                         except Exception,e:
                             log("IV interpolation failed",e)
-                        
-                        
-                        self.plot_data["new"][0] = True                    
+          
                 
                         self.plot_data["x1"] = voltage_list[:]
-                        self.plot_data["y1"] = current_list[:]
+                        self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
+                        self.plot_data["new"][0] = True 
                         
                     finally:
                         self.data_lock.release()
                 
-                time.sleep(0.02)
+                time.sleep(0.1)
                 app.processEvents()
                 if self.stop_measure:
+                    DEV.yoko.program_hold()
                     break
 
         # note down end of iv sweep
         end_time = time.time()
         if not self.f_config == None:
                 self.f_config.write("IV_STOP\t%15.15f\t\n"%(end_time))
-                
+        
+        print "after iv loop errors:"
+        DEV.yoko.get_errors()
+        
         time.sleep(0.5)        
+        
+        print "after hold errors:"
+        DEV.yoko.get_errors()
+        
+        time.sleep(0.1)
         # switch back voltage
-        DEV.yoko.program_hold()
         DEV.yoko.set_voltage(bias)
+        
+        print "after set voltage bias errors:"
+        DEV.yoko.get_errors()
         
        
 
@@ -391,13 +391,13 @@ class main_program(QtGui.QMainWindow):
             # lockin data refurbishment
             li_0_x = np.array(self.data["li_0_x"])/self.factor_voltage        # voltage first
             li_1_x = np.array(self.data["li_1_x"])/self.factor_voltage        # voltage second
-            li_3_x = np.array(self.data["li_3_x"])/self.factor_current*self.rref        # current first
-            li_4_x = np.array(self.data["li_4_x"])/self.factor_current*self.rref        # current second
+            li_3_x = np.array(self.data["li_3_x"])/self.factor_current        # current first
+            li_4_x = np.array(self.data["li_4_x"])/self.factor_current        # current second
             
             li_0_y = np.array(self.data["li_0_y"])/self.factor_voltage        # voltage first
             li_1_y = np.array(self.data["li_1_y"])/self.factor_voltage        # voltage second
-            li_3_y = np.array(self.data["li_3_y"])/self.factor_current*self.rref        # current first
-            li_4_y = np.array(self.data["li_4_y"])/self.factor_current*self.rref        # current second
+            li_3_y = np.array(self.data["li_3_y"])/self.factor_current        # current first
+            li_4_y = np.array(self.data["li_4_y"])/self.factor_current        # current second
     
             li_0_timestamp = np.array(self.data["li_timestamp_0"])
             li_1_timestamp = np.array(self.data["li_timestamp_1"])
@@ -422,18 +422,18 @@ class main_program(QtGui.QMainWindow):
             li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
             li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
             li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-            li_first = li_3_r/self.rref/li_0_r    # first
-            li_second = li_4_r/self.rref/li_1_r   # second
+            li_first = li_3_r/li_0_r    # first
+            li_second = li_4_r/li_1_r   # second
             
             
             self.plot_data["x1"] = voltage_list[:]
-            self.plot_data["y1"] = current_list[:]
+            self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
             
             self.plot_data["x3"] = voltage_list[:]
-            self.plot_data["y3"] = li_first[:]
+            self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
             
             self.plot_data["x4"] = voltage_list[:]
-            self.plot_data["y4"] = li_second[:]
+            self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
             
             # refresh plots and save them
             self.plot_data["new"][0] = True
@@ -455,6 +455,7 @@ class main_program(QtGui.QMainWindow):
                             f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
                         except Exception,e:
                             pass
+                    f_iv.write("\n")
                 except Exception,e:
                     log("IV Parameter Save failed",e)
                 save_data(f_iv, saving_data)
@@ -576,21 +577,21 @@ class main_program(QtGui.QMainWindow):
                     try:
                         if DEV.lockin != None:
                             lockin_data = DEV.lockin.get_data_list(averages=self.average_value)
-        
-                            li_timestamp_0 = average_chunks(lockin_data["0"]["timestamp"],self.average_value)
-                            li_aux0 =  [(x - self.config_data["offset_aux0"][0])/(self.factor_voltage) for x in average_chunks(lockin_data["0"]["auxin0"],self.average_value)] 
-                            li_aux1 =  [(x - self.config_data["offset_aux1"][0])/(self.factor_current) for x in average_chunks(lockin_data["0"]["auxin1"],self.average_value)]
-                            li_0_x =  average_chunks(lockin_data["0"]["x"],self.average_value)
-                            li_0_y =  average_chunks(lockin_data["0"]["y"],self.average_value)
-                            li_timestamp_1 = average_chunks(lockin_data["1"]["timestamp"],self.average_value)
-                            li_1_x =  average_chunks(lockin_data["1"]["x"],self.average_value)
-                            li_1_y =  average_chunks(lockin_data["1"]["y"],self.average_value)
-                            li_timestamp_3 = average_chunks(lockin_data["3"]["timestamp"],self.average_value)
-                            li_3_x =  average_chunks(lockin_data["3"]["x"],self.average_value)
-                            li_3_y =  average_chunks(lockin_data["3"]["y"],self.average_value)
-                            li_timestamp_4 = average_chunks(lockin_data["4"]["timestamp"],self.average_value)
-                            li_4_x =  average_chunks(lockin_data["4"]["x"],self.average_value)
-                            li_4_y =  average_chunks(lockin_data["4"]["y"],self.average_value)
+                            
+                            li_timestamp_0 = lockin_data["0"]["timestamp"]
+                            li_aux0 =  [(x - self.config_data["offset_aux0"][0])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
+                            li_aux1 =  [(x - self.config_data["offset_aux1"][0])/self.factor_current for x in lockin_data["0"]["auxin1"]]
+                            li_0_x =  [x / self.factor_voltage for x in lockin_data["0"]["x"]]
+                            li_0_y =  [x / self.factor_voltage for x in lockin_data["0"]["y"]]
+                            li_timestamp_1 = lockin_data["1"]["timestamp"]
+                            li_1_x =  [x / self.factor_voltage for x in lockin_data["1"]["x"]]
+                            li_1_y =  [x / self.factor_voltage for x in lockin_data["1"]["y"]]
+                            li_timestamp_3 = lockin_data["3"]["timestamp"]
+                            li_3_x =  [x / self.factor_voltage for x in lockin_data["3"]["x"]]
+                            li_3_y =  [x / self.factor_voltage for x in lockin_data["3"]["y"]]
+                            li_timestamp_4 = lockin_data["4"]["timestamp"]
+                            li_4_x =  [x / self.factor_voltage for x in lockin_data["4"]["x"]]
+                            li_4_y =  [x / self.factor_voltage for x in lockin_data["4"]["y"]]
                             
                             femto_timestamp = lockin_data["femto"]["timestamp"]
                             femto_channela = lockin_data["femto"]["channela"]

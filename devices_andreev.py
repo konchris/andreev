@@ -455,7 +455,7 @@ class LAKESHORE_USB:
 class GS200:
     def __init__(self, GPIB_No=14):
         #self.yoko=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.05, term_chars='\n')
-        self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n', timeout=10)
+        self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n', timeout=5)
         self.initialize()
    
     def initialize(self):
@@ -476,11 +476,18 @@ class GS200:
         self.yoko.write(":OUTP %s"%(_state))
     
     def get_errors(self):
-        try:
-            answer = self.yoko.ask(":SYST:ERR?")
-            log(answer)
-        except Exception,e:
-            log("Yoko no Status Answer",e)
+        i = 10
+        while i > 0:
+            try:
+                answer = self.yoko.ask(":SYST:ERR?")
+                print answer
+                if answer[0] == "0":
+                    i = 0
+            except Exception,e:
+                print "Yoko no Status Answer"
+                print e
+            finally:
+                i = i-1
     
     def display_set_text(self, text="GS200"):
         """Displays desired text"""
@@ -515,13 +522,42 @@ class GS200:
     def program_hold(self):
         self.yoko.write(":PROGram:HOLD")
     def program_is_end(self):
-        status = self.yoko.ask(":STAT:EVEN?")
-        if int(status) & (1 << 7): # check if End of Program is set
-            return True
-        else:
+        try:
+            status = self.yoko.ask(":STAT:EVEN?")
+            if int(status) & (1 << 7): # check if End of Program is set
+                return True
+            else:
+                return False
+        except Exception,e:
+            log("Yoko program_is_end",e)
             return False
+    def program_goto_ramp(self, voltage=0.0, slope_time=1):
+        """ramps voltage to given voltage in given time"""
+        #self.program_hold()
+        print "program is hold"
+        
+        self.program_set_interval_time(slope_time) 
+        self.program_set_slope_time(slope_time) 
+        self.program_set_repeat("OFF")      
+           
+        # edit program
+        self.program_edit_start()
+        print "edit started"
+        self.program_set_function("VOLT")
+        #print "volt"
+        self.program_set_level_auto(voltage)
+        #print "set_level"
+        self.program_edit_end()
+        #print "edit_end"
+        self.program_is_end()   # clear status register
+        #print "check status"
+        time.sleep(0.1)
+
+        # start sweep
+        self.program_start() 
+        print "started"
     
-     #:SOURce:RANGe <voltage>|MINimum|MAXimum|UP|DOWN
+    #:SOURce:RANGe <voltage>|MINimum|MAXimum|UP|DOWN
     #:SOURce:LEVel[:FIX] <voltage>|MINimum|MAXimum
     #:SOURce:LEVel:AUTO <voltage>|MINimum|MAXimum
     # end program stuff
