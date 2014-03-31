@@ -220,6 +220,9 @@ def init_variables(_self):
     _self._excluded_splits = ["timestamp","li","femto"]
     
     _self.checkHistogramEscape = False
+    
+    _self.histogram_in_progress = False
+    _self.iv_in_progress = False
 
 
 def init_shutdowns(_self):
@@ -286,6 +289,7 @@ def init_connections(_self):
     from PyQt4 import QtCore
     import gui_helper
     
+    QtCore.QObject.connect(_self.ui.btnUltraStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_Ultra)
     QtCore.QObject.connect(_self.ui.btnHistogramStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_Histogram)
     QtCore.QObject.connect(_self.ui.btnIVStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_IV)  
     

@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>5</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -207,6 +207,127 @@
          </property>
         </widget>
        </widget>
+       <widget class="QWidget" name="tab_12">
+        <attribute name="title">
+         <string>Ultra</string>
+        </attribute>
+        <widget class="QWidget" name="gridLayoutWidget_6">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>30</y>
+           <width>191</width>
+           <height>123</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_100">
+            <property name="text">
+             <string>Cold Time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_99">
+            <property name="text">
+             <string>Stabilize Time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_89">
+            <property name="text">
+             <string>Max IV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_78">
+            <property name="text">
+             <string>Ohm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_97">
+            <property name="text">
+             <string>s</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="editUltraColdTime">
+            <property name="text">
+             <string>10</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_32">
+            <property name="text">
+             <string>Min IV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editUltraMin">
+            <property name="text">
+             <string>6000</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="editUltraMax">
+            <property name="text">
+             <string>15000</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_92">
+            <property name="text">
+             <string>Ohm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="editUltraStabilizeTime">
+            <property name="text">
+             <string>5</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_98">
+            <property name="text">
+             <string>s</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_111">
+            <property name="text">
+             <string>Parameter</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QPushButton" name="btnUltraStart">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>70</y>
+           <width>91</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+       </widget>
        <widget class="QWidget" name="tab_2">
         <attribute name="title">
          <string>Hist</string>
@@ -232,8 +353,8 @@
           <rect>
            <x>40</x>
            <y>20</y>
-           <width>230</width>
-           <height>241</height>
+           <width>211</width>
+           <height>171</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout">
@@ -351,137 +472,52 @@
           </item>
          </layout>
         </widget>
-        <widget class="QCheckBox" name="checkBox">
-         <property name="geometry">
-          <rect>
-           <x>310</x>
-           <y>50</y>
-           <width>70</width>
-           <height>17</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>CheckBox</string>
-         </property>
-        </widget>
        </widget>
        <widget class="QWidget" name="tab_6">
         <attribute name="title">
          <string>IV</string>
         </attribute>
-        <widget class="QWidget" name="formLayoutWidget_4">
+        <widget class="QCheckBox" name="checkIVGap">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
-           <x>50</x>
-           <y>40</y>
-           <width>129</width>
-           <height>174</height>
+           <x>350</x>
+           <y>70</y>
+           <width>101</width>
+           <height>17</height>
           </rect>
          </property>
-         <layout class="QFormLayout" name="formLayout_4">
-          <property name="fieldGrowthPolicy">
-           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-          </property>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_64">
-            <property name="text">
-             <string>Sweep</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_18">
-            <property name="text">
-             <string>Min</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="editIVMin">
-            <property name="text">
-             <string>-0.1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Voltage -&gt; Gap</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="gridLayoutWidget_7">
+         <property name="geometry">
+          <rect>
+           <x>180</x>
+           <y>40</y>
+           <width>111</width>
+           <height>131</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="2" column="1">
+           <widget class="QLabel" name="label_87">
             <property name="text">
              <string>Max</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="editIVMax">
-            <property name="text">
-             <string>0.1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_20">
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_88">
             <property name="text">
              <string>Steps</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="editIVSteps">
-            <property name="text">
-             <string>100</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_23">
-            <property name="text">
-             <string>Delay</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="editIVDelay">
-            <property name="text">
-             <string>0.1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QPushButton" name="btnIVStart">
-            <property name="text">
-             <string>Start</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="formLayoutWidget_5">
-         <property name="geometry">
-          <rect>
-           <x>200</x>
-           <y>40</y>
-           <width>129</width>
-           <height>174</height>
-          </rect>
-         </property>
-         <layout class="QFormLayout" name="formLayout_5">
-          <property name="fieldGrowthPolicy">
-           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-          </property>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_90">
-            <property name="text">
-             <string>Estimation Sample</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_39">
-            <property name="text">
-             <string>Min</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
+          <item row="1" column="2">
            <widget class="QLineEdit" name="editIVMinEstimate">
             <property name="enabled">
              <bool>false</bool>
@@ -491,14 +527,14 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_87">
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_39">
             <property name="text">
-             <string>Max</string>
+             <string>Min</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="2" column="2">
            <widget class="QLineEdit" name="editIVMaxEstimate">
             <property name="enabled">
              <bool>false</bool>
@@ -508,14 +544,14 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_88">
-            <property name="text">
-             <string>Steps</string>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="editIVTimeEstimate">
+            <property name="enabled">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="3" column="2">
            <widget class="QLineEdit" name="editIVStepsEstimate">
             <property name="enabled">
              <bool>false</bool>
@@ -525,33 +561,143 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_90">
+            <property name="text">
+             <string>Estimation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
            <widget class="QLabel" name="label_91">
             <property name="text">
              <string>Time</string>
             </property>
            </widget>
           </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="gridLayoutWidget_8">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>122</width>
+           <height>161</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="label_23">
+            <property name="text">
+             <string>Delay</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLineEdit" name="editIVDelay">
+            <property name="text">
+             <string>0.1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="editIVMax">
+            <property name="text">
+             <string>0.1</string>
+            </property>
+           </widget>
+          </item>
           <item row="4" column="1">
-           <widget class="QLineEdit" name="editIVTimeEstimate">
-            <property name="enabled">
-             <bool>false</bool>
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Steps</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="editIVSteps">
+            <property name="text">
+             <string>0.1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="editIVMin">
+            <property name="text">
+             <string>-0.1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QPushButton" name="btnIVStart">
+            <property name="text">
+             <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLabel" name="label_93">
+            <property name="text">
+             <string>V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_64">
+            <property name="text">
+             <string>Sweep</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="label_94">
+            <property name="text">
+             <string>V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3">
+           <widget class="QLabel" name="label_95">
+            <property name="text">
+             <string>V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="3">
+           <widget class="QLabel" name="label_96">
+            <property name="text">
+             <string>s</string>
             </property>
            </widget>
           </item>
          </layout>
         </widget>
-        <widget class="QCheckBox" name="checkIVGap">
+        <widget class="QCheckBox" name="checkIVSample">
          <property name="geometry">
           <rect>
-           <x>360</x>
-           <y>70</y>
-           <width>101</width>
+           <x>350</x>
+           <y>50</y>
+           <width>70</width>
            <height>17</height>
           </rect>
          </property>
          <property name="text">
-          <string>Voltage -&gt; Gap</string>
+          <string>Vsample</string>
          </property>
         </widget>
        </widget>

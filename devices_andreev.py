@@ -533,29 +533,20 @@ class GS200:
             return False
     def program_goto_ramp(self, voltage=0.0, slope_time=1):
         """ramps voltage to given voltage in given time"""
-        #self.program_hold()
-        print "program is hold"
-        
         self.program_set_interval_time(slope_time) 
         self.program_set_slope_time(slope_time) 
         self.program_set_repeat("OFF")      
            
         # edit program
         self.program_edit_start()
-        print "edit started"
         self.program_set_function("VOLT")
-        #print "volt"
         self.program_set_level_auto(voltage)
-        #print "set_level"
         self.program_edit_end()
-        #print "edit_end"
         self.program_is_end()   # clear status register
-        #print "check status"
         time.sleep(0.1)
 
         # start sweep
         self.program_start() 
-        print "started"
     
     #:SOURce:RANGe <voltage>|MINimum|MAXimum|UP|DOWN
     #:SOURce:LEVel[:FIX] <voltage>|MINimum|MAXimum
@@ -735,7 +726,7 @@ class ZURICH:
         
         thread.start_new_thread(self.lockin_thread, ())
     
-    def initialize(self, frequency=1111.1, ampl=0.1, order=4, tc=0.2, rate=100):
+    def initialize(self, frequency=2222.222, ampl=0.01, order=4, tc=0.1, rate=14):
         general_setting = [
 
                 [["/", self.device, "/sigins/0/diff"],0.0],
@@ -743,19 +734,19 @@ class ZURICH:
                 #[["/", self.device, "/sigins/0/ac"],1],
                 #[["/", self.device, "/sigins/1/ac"],1],
 
-                [["/", self.device, "/demods/0/rate"],rate],
-                [["/", self.device, "/demods/1/rate"],rate],
-                [["/", self.device, "/demods/2/rate"],0.0],
-                [["/", self.device, "/demods/3/rate"],rate],
-                [["/", self.device, "/demods/4/rate"],rate],
-                [["/", self.device, "/demods/5/rate"],0.0],
+                #[["/", self.device, "/demods/0/rate"],rate],
+                #[["/", self.device, "/demods/1/rate"],rate],
+                #[["/", self.device, "/demods/2/rate"],0.0],
+                #[["/", self.device, "/demods/3/rate"],rate],
+                #[["/", self.device, "/demods/4/rate"],rate],
+                #[["/", self.device, "/demods/5/rate"],0.0],
 
-                [["/", self.device, "/demods/0/phaseshift"],0.0],
-                [["/", self.device, "/demods/1/phaseshift"],0.0],
-                [["/", self.device, "/demods/2/phaseshift"],0.0],
-                [["/", self.device, "/demods/3/phaseshift"],0.0],
-                [["/", self.device, "/demods/4/phaseshift"],0.0],
-                [["/", self.device, "/demods/5/phaseshift"],0.0],
+                #[["/", self.device, "/demods/0/phaseshift"],0.0],
+                #[["/", self.device, "/demods/1/phaseshift"],0.0],
+                #[["/", self.device, "/demods/2/phaseshift"],0.0],
+                #[["/", self.device, "/demods/3/phaseshift"],0.0],
+                #[["/", self.device, "/demods/4/phaseshift"],0.0],
+                #[["/", self.device, "/demods/5/phaseshift"],0.0],
 
                 [["/", self.device, "/demods/0/trigger"],0.0],
                 [["/", self.device, "/demods/1/trigger"],0.0],
@@ -767,15 +758,15 @@ class ZURICH:
                 [["/", self.device, "/demods/3/order"],order],
                 [["/", self.device, "/demods/4/order"],order],
 
-                [["/", self.device, "/demods/0/timeconstant"],tc],
-                [["/", self.device, "/demods/1/timeconstant"],tc],
-                [["/", self.device, "/demods/3/timeconstant"],tc],
-                [["/", self.device, "/demods/4/timeconstant"],tc],
+                #[["/", self.device, "/demods/0/timeconstant"],tc],
+                #[["/", self.device, "/demods/1/timeconstant"],tc],
+                #[["/", self.device, "/demods/3/timeconstant"],tc],
+                #[["/", self.device, "/demods/4/timeconstant"],tc],
 
                 [["/", self.device, "/sigouts/0/on"],1.0],  # off
-                [["/", self.device, "/sigouts/0/range"],0.1],
-                [["/", self.device, "/sigouts/0/amplitudes/6"],ampl],
-                [["/", self.device, "/oscs/0/freq"],frequency],
+                #[["/", self.device, "/sigouts/0/range"],0.1],
+                #[["/", self.device, "/sigouts/0/amplitudes/6"],ampl],
+                #[["/", self.device, "/oscs/0/freq"],frequency],
                 [["/", self.device, "/plls/1/enable"],0.0],
 
                 [["/", self.device, "/demods/0/oscselect"],0.0],
@@ -1037,12 +1028,12 @@ class MOTOR:
         self.motor.write('SP%i'%(max_rpm))    # maximum rpm
         self.motor.write('EN')                # enable movement
         
-        self.limit_low = -28
+        self.limit_low = -25
         self.limit_high = 0
         self._mpos = 0
         self._v = 0
         self._current = 0
-        self._current_limit = 150
+        self.set_current(150)
         self._gv = self.update_set_velocity()
         log("Motor initialized")
     
@@ -1110,11 +1101,7 @@ class MOTOR:
     def set_current(self, limit=50):
         """sets the current limit in mA"""
         self.motor.write('LCC%i'%(int(limit))) 
-    
-    def set_current_limit(self, limit=100):
-        """sets the current limit in mA"""
-        self._current_limit = limit
-    
+        
     def get_current(self):
         """returns current"""
         return self._current
@@ -1126,7 +1113,7 @@ class MOTOR:
         self.motor.write('LA'+str(newpos))
         self.motor.write('M')
     
-    def set_lower_limit(self, limit=28):
+    def set_lower_limit(self, limit=-25):
         self.limit_low = limit
     
     def set_upper_limit(self, limit=0):
@@ -1152,6 +1139,7 @@ class MOTOR:
 # thread
     def motor_thread(self, delay=0.05):
         log("Motor Thread started!")
+        speed_check_count = 0
         while not stop:
             try:            
                 answer = self.motor.ask('GN')   # update speed            
@@ -1159,25 +1147,21 @@ class MOTOR:
             except:
                 self._v=-1
                 log("Bad Answer Velocity")
-                print answer
-            
-            
+                log(answer)
             try:
                 answer = self.motor.ask('POS')  # update position
                 self._mpos=float(answer.strip())
             except:
                 self._mpos=-1
                 log("Bad Answer Position")
-                print answer
-            
-            
+                log(answer)
             try:
                 answer = self.motor.ask("GRC")  # update current
                 self._current=float(answer.strip())
             except:
                 self._current=-1
                 log("Bad Answer Current")
-                print answer
+                log(answer)
 
             # append gathered data to internal data dictionary
             self.data_lock.acquire()
@@ -1210,12 +1194,16 @@ class MOTOR:
                     
                 # check for bad speed values
                 try:
-                    v_ratio = abs(self._v)/abs(self._gv)
-                except:
-                    v_ratio = 1
-                if  v_ratio < 0.8:
-                    #self.stop()
-                    log("Motor rpm too low! %f"%(v_ratio))
+                    if abs(self._v) > 10:
+                        v_ratio = abs(self._v)/abs(self._gv)
+                        if  v_ratio < 0.8:
+                            speed_check_count += 1
+                        else:
+                            speed_check_count = 0
+                        if speed_check_count > 10:
+                            log("Motor rpm too low!")
+                except Exception,e:
+                    log("Motor speed check failed",e)
                     
             time.sleep(delay)
             

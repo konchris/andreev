@@ -165,16 +165,15 @@ class main_program(QtGui.QMainWindow):
   
     def aquire_histogram(self):
         self.stop_measure = False
+        self.histogram_in_progress = True
         # init bias        
         bias = self.editHistogramBias
 
         DEV.yoko.set_voltage(bias)
         DEV.yoko.output(True)
-        
-        
-        
+    
         log("Histogram Start")
-        breaking = True
+        breaking = True         # sets direction of motor
         
         begin_time = time.time()
         if not self.f_config == None:
@@ -195,15 +194,14 @@ class main_program(QtGui.QMainWindow):
                             begin_time = time.time()
                             if not self.f_config == None:
                                 self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(begin_time))
-                            
                         breaking = False
+                        
                     # at lower limit, break again, in between: set speed
                     if resistance < lower_res:
                         if breaking == False: 
                             begin_time = time.time()
                             if not self.f_config == None:
-                                self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(begin_time))
-                            
+                                self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(begin_time))   
                         breaking = True
                     
                     if breaking:
@@ -233,27 +231,135 @@ class main_program(QtGui.QMainWindow):
         finally:
             DEV.motor.stop()
         DEV.motor.stop()
+        self.histogram_in_progress = False
         log("Histogram Stop")
+    
+    
+    
+    
+    def aquire_ultra(self):
+        self.stop_measure = False
+        self.histogram_in_progress = True
+        # init bias        
+        bias = self.editHistogramBias
+
+        DEV.yoko.set_voltage(bias)
+        DEV.yoko.output(True)
+    
+        log("Ultra Start")
+        breaking = True         # sets direction of motor
+        last_engage = 0
+        ultra_sleep = 0.05
+        
+        begin_time = time.time()
+        if not self.f_config == None:
+            self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(begin_time))     
+        while not self.stop_measure:
+            try:
+                # update values
+                resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
+                lower_res = self.editHistogramLower
+                upper_res = self.editHistogramUpper
+
+                if not self.iv_in_progress and last_engage > self.editUltraColdTime:
+                    if resistance < self.editUltraMax and resistance > self.editUltraMin:
+                        log("Found desired Resistance for IV Sweep")
+                        log("Stopping Motor, Starting IV")
+                        last_engage = 0
+                        self.iv_in_progress = True
+                        DEV.motor.stop()
+                        time.sleep(self.editUltraStabilizeTime)
+                        resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
+                        if resistance < self.editUltraMax and resistance > self.editUltraMin:
+                            thread.start_new_thread(self.aquire_iv,())
+                        else:
+                            self.iv_in_progress = True
+                            
+
+                # pause histogram while doing iv
+                if not self.iv_in_progress: 
+                    last_engage = last_engage + ultra_sleep # increase variable only when not iv
+                    bias = self.editHistogramBias
+                    DEV.yoko.set_voltage(bias)
+                    # if conductance hits upper limit, close again
+                    if resistance > upper_res:            
+                        if breaking == True: 
+                            begin_time = time.time()
+                            if not self.f_config == None:
+                                self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(begin_time))
+                        breaking = False
+                        
+                    # at lower limit, break again, in between: set speed
+                    if resistance < lower_res:
+                        if breaking == False: 
+                            begin_time = time.time()
+                            if not self.f_config == None:
+                                self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(begin_time))   
+                        breaking = True
+
+                    if breaking:
+                        gui_helper.motor_break(self.editHistogramOpeningSpeed, quiet=True)
+                    else:
+                        gui_helper.motor_unbreak(self.editHistogramClosingSpeed, quiet=True)
+                    
+                # if escape on motor limit hit
+                if self.checkHistogramEscape:
+                    if DEV.motor.higher_bound or DEV.motor.lower_bound:
+                        log("Motor reached its bounds, escaping histogram!")
+                        break
+                else:
+                    if DEV.motor.higher_bound:
+                        log("Motor reached its bounds, trying to break again in 10s!")
+                        time.sleep(10)
+                        breaking = True
+                    if DEV.motor.lower_bound:
+                        log("Motor reached its bounds, trying to close again in 10s!")
+                        time.sleep(10)
+                        breaking = False
+                time.sleep(ultra_sleep)
+            except Exception,e:
+                log("Histogram inner failure",e)
+                DEV.motor.stop()
+                break
+        DEV.motor.stop()
+        self.histogram_in_progress = False
+        log("Ultra Stop")
 
 
     
     def aquire_iv(self):
-        _min = float(self.ui.editIVMin.text())
-        _max = float(self.ui.editIVMax.text())
-        steps = float(self.ui.editIVSteps.text())
-        delay = float(self.ui.editIVDelay.text())
+        log("IV Sweep Starting") 
+        self.stop_measure = False
+        self.iv_in_progress = True   
         
-        self.stop_measure = False        
-        #step_list = voltage_ramp(_min,_max,steps,_circular=False)
+        try:
+            sample_res = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
+            sample_factor = sample_res/(sample_res+self.rref)
+        except Exception,e:
+            sample_factor = 1000.0
+            log("IV voltage calculation failed",e)
+            
+        _delay = self.editIVDelay
+        if self.checkIVSample:
+            _min = self.editIVMin / sample_factor
+            _max = self.editIVMax / sample_factor
+            _steps = self.editIVSteps / sample_factor  
+        else:
+            _min = self.editIVMin
+            _max = self.editIVMax
+            _steps = self.editIVSteps
         
+        # range maximum protection
+        _voltage_limits = 2.0
+        _min = max(-_voltage_limits, min(_min, _voltage_limits))
+        _max = max(-_voltage_limits, min(_max, _voltage_limits))
+        _steps = max(-_voltage_limits, min(_steps, _voltage_limits))
+                
         bias = DEV.yoko.get_voltage()
-        
-
-
         
         DEV.yoko.set_voltage(_min)
         DEV.yoko.output(True)
-        time.sleep(2)       
+        time.sleep(1)       
         
         # note down begin of sweep
         begin_time = time.time()
@@ -261,121 +367,104 @@ class main_program(QtGui.QMainWindow):
                 self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
 
         # set up yoko program for sweep
-        slope_time = abs(_max-_min)/steps * delay 
-        print "before goto_ramp errors:"
-        DEV.yoko.get_errors()
-        print "start program now:"
+        slope_time = abs(_max-_min)/_steps * _delay 
         DEV.yoko.program_goto_ramp(_max, slope_time)      
         
-        print "after goto_ramp errors:"
-        DEV.yoko.get_errors()
         # last_time is used for display updating        
         last_time = time.time()          
         while not DEV.yoko.program_is_end():
-                #DEV.yoko.set_voltage(_voltage)
-                
-                if time.time() - last_time > 1: # check if update needed
-                    last_time = time.time()
+            if time.time() - last_time > 1: # check if update needed
+                last_time = time.time()
 
-                    try:
-                        self.data_lock.acquire()
-                        
-                        x0 = find_min(self.data["agilent_voltage_timestamp"],begin_time)
-                        x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
-                
-                        voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
-                        voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
-                        current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
-                        current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
-              
-                        
-                        # lockin data refurbishment
-                        li_0_x = np.array(self.data["li_0_x"])        # voltage first
-                        li_1_x = np.array(self.data["li_1_x"])        # voltage second
-                        li_3_x = np.array(self.data["li_3_x"])        # current first
-                        li_4_x = np.array(self.data["li_4_x"])        # current second
-                        
-                        li_0_y = np.array(self.data["li_0_y"])        # voltage first
-                        li_1_y = np.array(self.data["li_1_y"])        # voltage second
-                        li_3_y = np.array(self.data["li_3_y"])        # current first
-                        li_4_y = np.array(self.data["li_4_y"])        # current second
-                
-                        li_0_timestamp = np.array(self.data["li_timestamp_0"])
-                        li_1_timestamp = np.array(self.data["li_timestamp_1"])
-                        li_3_timestamp = np.array(self.data["li_timestamp_3"])
-                        li_4_timestamp = np.array(self.data["li_timestamp_4"])           
-                        
-                        try:
-                            #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
-                            min_0 = min(len(li_0_timestamp),len(li_0_x))-1
-                            li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
-                            li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
-                            min_1 = min(len(li_1_x),len(li_1_timestamp))-1
-                            li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
-                            li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
-                            min_3 = min(len(li_3_x),len(li_3_timestamp))-1
-                            li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
-                            li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
-                            min_4 = min(len(li_4_x),len(li_4_timestamp))-1
-                            li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
-                            li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
-                            
-                            li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-                            li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
-                            li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-                            li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-                            
-                            li_first = li_3_r/li_0_r    # first
-                            li_second = li_4_r/li_1_r   # second
-                            
-                                                        
-                            self.plot_data["x3"] = voltage_list[:]
-                            self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
-                            
-                            self.plot_data["x4"] = voltage_list[:]
-                            self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
-                            
-                            self.plot_data["new"][2] = True
-                            self.plot_data["new"][3] = True
-                        except Exception,e:
-                            log("IV interpolation failed",e)
+                try:
+                    self.data_lock.acquire()
+                    
+                    x0 = find_min(self.data["agilent_voltage_timestamp"],begin_time)
+                    x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
+            
+                    voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
+                    voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
+                    current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
+                    current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
           
-                
-                        self.plot_data["x1"] = voltage_list[:]
-                        self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
-                        self.plot_data["new"][0] = True 
+                    
+                    # lockin data refurbishment
+                    li_0_x = np.array(self.data["li_0_x"])        # voltage first
+                    li_1_x = np.array(self.data["li_1_x"])        # voltage second
+                    li_3_x = np.array(self.data["li_3_x"])        # current first
+                    li_4_x = np.array(self.data["li_4_x"])        # current second
+                    
+                    li_0_y = np.array(self.data["li_0_y"])        # voltage first
+                    li_1_y = np.array(self.data["li_1_y"])        # voltage second
+                    li_3_y = np.array(self.data["li_3_y"])        # current first
+                    li_4_y = np.array(self.data["li_4_y"])        # current second
+            
+                    li_0_timestamp = np.array(self.data["li_timestamp_0"])
+                    li_1_timestamp = np.array(self.data["li_timestamp_1"])
+                    li_3_timestamp = np.array(self.data["li_timestamp_3"])
+                    li_4_timestamp = np.array(self.data["li_timestamp_4"])           
+                    
+                    try:
+                        #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
+                        min_0 = min(len(li_0_timestamp),len(li_0_x))-1
+                        li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
+                        li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
+                        min_1 = min(len(li_1_x),len(li_1_timestamp))-1
+                        li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
+                        li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
+                        min_3 = min(len(li_3_x),len(li_3_timestamp))-1
+                        li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
+                        li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
+                        min_4 = min(len(li_4_x),len(li_4_timestamp))-1
+                        li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
+                        li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
                         
-                    finally:
-                        self.data_lock.release()
-                
-                time.sleep(0.1)
-                app.processEvents()
-                if self.stop_measure:
-                    DEV.yoko.program_hold()
-                    break
+                        li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                        li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                        li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                        li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                        
+                        li_first = li_3_r/li_0_r    # first
+                        li_second = li_4_r/li_1_r   # second
+                        
+                                                    
+                        self.plot_data["x3"] = voltage_list[:]
+                        self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                        
+                        self.plot_data["x4"] = voltage_list[:]
+                        self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                        
+                        self.plot_data["new"][2] = True
+                        self.plot_data["new"][3] = True
+                    except Exception,e:
+                        log("IV interpolation failed",e)
+      
+            
+                    self.plot_data["x1"] = voltage_list[:]
+                    self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
+                    self.plot_data["new"][0] = True 
+                    
+                finally:
+                    self.data_lock.release()
+            
+            time.sleep(0.1)
+            app.processEvents()
+            if self.stop_measure:
+                DEV.yoko.program_hold()
+                break
 
         # note down end of iv sweep
         end_time = time.time()
         if not self.f_config == None:
                 self.f_config.write("IV_STOP\t%15.15f\t\n"%(end_time))
-        
-        print "after iv loop errors:"
-        DEV.yoko.get_errors()
-        
-        time.sleep(0.5)        
-        
-        print "after hold errors:"
-        DEV.yoko.get_errors()
-        
-        time.sleep(0.1)
-        # switch back voltage
-        DEV.yoko.set_voltage(bias)
-        
-        print "after set voltage bias errors:"
-        DEV.yoko.get_errors()
-        
-       
 
+        time.sleep(0.25)        
+        DEV.yoko.set_voltage(bias)
+        time.sleep(0.25)
+        log("IV Sweep finished")
+        self.iv_in_progress = False
+        
+        
 
         try:
             self.data_lock.acquire()
@@ -456,6 +545,7 @@ class main_program(QtGui.QMainWindow):
                         except Exception,e:
                             pass
                     f_iv.write("\n")
+                    f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
                 except Exception,e:
                     log("IV Parameter Save failed",e)
                 save_data(f_iv, saving_data)
@@ -544,8 +634,6 @@ class main_program(QtGui.QMainWindow):
              
         # switch off voltage
         DEV.yoko.set_voltage(0)   
-   
-   
    
 
    
@@ -736,6 +824,8 @@ class main_program(QtGui.QMainWindow):
     
     #def measurement_btn_IV_Sweep(self):
     #     thread.start_new_thread(self.measurement_IV_Sweep,())
+    def measurement_btn_Acquire_Ultra(self):
+        thread.start_new_thread(self.aquire_ultra,())
     def measurement_btn_Acquire_Histogram(self):
         thread.start_new_thread(self.aquire_histogram,())
     def measurement_btn_Acquire_IV(self):

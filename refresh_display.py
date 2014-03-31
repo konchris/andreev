@@ -40,6 +40,19 @@ def refresh_display():
             _self.editHistogramOpeningSpeed = float(_self.ui.editHistogramOpeningSpeed.text())
             _self.editHistogramClosingSpeed = float(_self.ui.editHistogramClosingSpeed.text())
             
+            # iv
+            _self.editIVDelay = float(_self.ui.editIVDelay.text())
+            _self.editIVSteps = float(_self.ui.editIVSteps.text())
+            _self.editIVMin = float(_self.ui.editIVMin.text())
+            _self.editIVMax = float(_self.ui.editIVMax.text())
+            _self.checkIVSample = bool(_self.ui.checkIVSample.isChecked())
+            
+            # ultra
+            _self.editUltraMin = float(_self.ui.editUltraMin.text())
+            _self.editUltraMax = float(_self.ui.editUltraMax.text())
+            _self.editUltraStabilizeTime = float(_self.ui.editUltraStabilizeTime.text())
+            _self.editUltraColdTime = float(_self.ui.editUltraColdTime.text())
+            
             _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
             _self.factor_current = float(_self.ui.editFactorCurrent.text())
         except Exception,e:
@@ -49,20 +62,22 @@ def refresh_display():
         for k,v in _self.data.items():
             _self.data[k] = v[-max_datalength:]
         
-        _self.ui.labSample.setText(str(len(_self.data["li_timestamp_0"])))
+        _self.ui.labSample.setText(str(len(_self.data["agilent_voltage_timestamp"])))
         
         try:
-            _delay = float(_self.ui.editIVDelay.text())
-            _steps = float(_self.ui.editIVSteps.text())
-            _low = float(_self.ui.editIVMin.text())
-            _high = float(_self.ui.editIVMax.text())
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
-            _self.ui.editIVTimeEstimate.setText("%i s"%(round((_delay)*(abs(_high-_low)/_steps)))) 
-            _self.ui.editIVMinEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _low * 1e3))
-            _self.ui.editIVMaxEstimate.setText("%f mV"%((_sample_res/(_sample_res+_self.rref)) * _high * 1e3))
-            _self.ui.editIVStepsEstimate.setText("%f uV"%((_sample_res/(_sample_res+_self.rref)) * _steps * 1e6))
+            sample_factor = _sample_res/(_sample_res+_self.rref)
+            _self.ui.editIVTimeEstimate.setText("%i s"%(round((_self.editIVDelay)*(abs(_self.editIVMax-_self.editIVMin)/_self.editIVSteps)))) 
+            if _self.checkIVSample:
+                _self.ui.editIVMinEstimate.setText("%f mV"%(_self.editIVMin / sample_factor * 1e3))
+                _self.ui.editIVMaxEstimate.setText("%f mV"%(_self.editIVMax / sample_factor * 1e3))
+                _self.ui.editIVStepsEstimate.setText("%f uV"%(_self.editIVSteps / sample_factor * 1e6))
+            else:
+                _self.ui.editIVMinEstimate.setText("%f mV"%(sample_factor * _self.editIVMin * 1e3))
+                _self.ui.editIVMaxEstimate.setText("%f mV"%(sample_factor * _self.editIVMax * 1e3))
+                _self.ui.editIVStepsEstimate.setText("%f uV"%(sample_factor * _self.editIVSteps * 1e6))
         except Exception,e:
-            log("Refresh Variables Failed",e)
+            log("Refresh Estimate Failed",e)
             
         try:
             # saving button
@@ -218,12 +233,6 @@ def refresh_display():
                     log("Lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
                     log("Resistance Calculation failed",e)
                     
-                #a = str(int(time.time()))[-1]
-                #if  a == "1":
-                #    print a
-                #    print resistance_x
-                #    print r_y
-                    
                 if _self.ui.checkViewConductance.isChecked():
                     try:
                         g_y = 12900.0/r_y
@@ -232,7 +241,7 @@ def refresh_display():
                         log("Conductance calculation failed",e)
                         _self.data_curve8.set_data([0,1,2],[1,5,2])
                 else:
-                    _self.data_curve8.set_data([0,1,2],[1,5,2])
+                    _self.data_curve8.set_data([],[])
                     
                 try:
                     _self.ui.cw4.plot.do_autoscale()

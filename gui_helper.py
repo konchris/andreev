@@ -39,7 +39,6 @@ def motor_set_limit():
     DEV.motor.set_lower_limit(float(_self.ui.editLowerLimit.text()))
     DEV.motor.set_upper_limit(float(_self.ui.editUpperLimit.text()))
     DEV.motor.set_current(int(_self.ui.editMotorCurrent.text()))
-    DEV.motor.set_current_limit(int(_self.ui.editMotorCurrentLimit.text()))
     log("Motor set limits %f,%f"%(float(_self.ui.editLowerLimit.text()),
                                   float(_self.ui.editUpperLimit.text())))
 
