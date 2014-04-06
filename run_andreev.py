@@ -1,4 +1,9 @@
-#!/usr/bin/python -d
+# -*- coding: utf-8 -*-
+"""
+All rights reserved by David Weber
+@author: David Weber
+"""
+
 import sys
 import os
 from PyQt4 import QtCore, QtGui
@@ -11,7 +16,7 @@ import numpy as np
 
 from guidata.qt.QtCore import QTimer#,SIGNAL
 #from guiqwt.plot import CurveWidget
-from guiqwt.builder import make
+#from guiqwt.builder import make
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -105,10 +110,10 @@ class main_program(QtGui.QMainWindow):
         DEV.agilent_old.get_data_list()
         
         # backup recent values
-        (a,b) = DEV.lockin.femto_get()
+        #(a,b) = DEV.lockin.femto_get()
         
         # sets femto to 20dB
-        DEV.lockin.femto_reset()
+        """DEV.lockin.femto_reset()
         for amplification in range(1):
             time.sleep(0.1)
             
@@ -117,7 +122,7 @@ class main_program(QtGui.QMainWindow):
                 time.sleep(delay/10.0)
             offset_timestamp = time.time()
     
-            lockin_data = DEV.lockin.get_data_list(averages=10)
+            
             offset_aux0 = np.average(lockin_data["0"]["auxin0"])
             offset_aux1 = np.average(lockin_data["0"]["auxin1"])
 
@@ -131,7 +136,8 @@ class main_program(QtGui.QMainWindow):
             
             DEV.lockin.femto_increase_amplification(channel=0)
             DEV.lockin.femto_increase_amplification(channel=1)
-            time.sleep(delay/10.0)
+            time.sleep(delay/10.0)"""
+        time.sleep(0.5)
         
         new_data = DEV.agilent_new.get_data_list()
         offset_new = np.average(new_data["voltage"])
@@ -145,8 +151,9 @@ class main_program(QtGui.QMainWindow):
         
         time.sleep(delay/10.0)
         # restore recent values
-        DEV.lockin.femto_set(a,b)            
+        #DEV.lockin.femto_set(a,b)            
         
+        """
         self.ui.editOffsetAux0_0.setText(str(round(self.config_data["offset_aux0"][0],6)))
         self.ui.editOffsetAux0_1.setText(str(round(self.config_data["offset_aux0"][1],6)))
         self.ui.editOffsetAux0_2.setText(str(round(self.config_data["offset_aux0"][2],6)))
@@ -155,11 +162,14 @@ class main_program(QtGui.QMainWindow):
         self.ui.editOffsetAux1_1.setText(str(round(self.config_data["offset_aux1"][1],6)))
         self.ui.editOffsetAux1_2.setText(str(round(self.config_data["offset_aux1"][2],6)))
         self.ui.editOffsetAux1_3.setText(str(round(self.config_data["offset_aux1"][3],6)))
+        """
         
         DEV.yoko.set_voltage(bias)
-        time.sleep(0.1)
+        time.sleep(0.2)
         # flush data to /dev/null
-        DEV.lockin.get_data_list(averages=10)
+        DEV.lockin.get_data_list(averages=1)
+        DEV.agilent_new.get_data_list()
+        DEV.agilent_old.get_data_list()
         self.offset_in_progress = False
 
   
@@ -270,10 +280,11 @@ class main_program(QtGui.QMainWindow):
                         DEV.motor.stop()
                         time.sleep(self.editUltraStabilizeTime)
                         resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
-                        if resistance < self.editUltraMax and resistance > self.editUltraMin:
-                            thread.start_new_thread(self.aquire_iv,())
-                        else:
-                            self.iv_in_progress = True
+                        #if resistance < self.editUltraMax and resistance > self.editUltraMin:
+                        #    thread.start_new_thread()
+                        #else:
+                        #    self.iv_in_progress = True
+                        self.aquire_iv()
                             
 
                 # pause histogram while doing iv
@@ -327,7 +338,7 @@ class main_program(QtGui.QMainWindow):
 
 
     
-    def aquire_iv(self):
+    def aquire_iv(self, _min=None, _max=None, _time=None):
         log("IV Sweep Starting") 
         self.stop_measure = False
         self.iv_in_progress = True   
@@ -364,7 +375,7 @@ class main_program(QtGui.QMainWindow):
         # note down begin of sweep
         begin_time = time.time()
         if not self.f_config == None:
-                self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
+            self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
 
         # set up yoko program for sweep
         slope_time = abs(_max-_min)/_steps * _delay 

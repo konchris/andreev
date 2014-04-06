@@ -1,4 +1,9 @@
 # -*- coding: latin1 -*-
+"""
+Some parts copyright by David Weber
+@author: David Weber
+"""
+
 import visa
 import numpy as np
 import time
@@ -7,10 +12,10 @@ from functions import log
 #import struct   # ascii to single/double
 import thread
 #import threading
-from nidaqmx import AnalogInputTask
+#from nidaqmx import AnalogInputTask
 # ZURICH INSTRUMENTS
 import zhinst.ziPython, zhinst.utils
-import matplotlib as mpl
+#import matplotlib as mpl
 
 # stops all threads
 stop = False
@@ -295,8 +300,6 @@ class LAKESHORE:
         self.lakeshore.write(command)
         self.gpib_lock.release()
     
-        
-    
     # data handling
     def get_data_list(self, erase=True):
         """returns all the gathered data in one bunch
@@ -320,7 +323,7 @@ class LAKESHORE:
             try:
                 self.gpib_lock.acquire()
                 temperature1 = float(self.lakeshore.ask('KRDG? A'))            
-                temperature2 = float(self.lakeshore.ask('KRDG? B'))
+                temperature2 = float(self.lakeshore.ask('SRDG? B'))
                 self.gpib_lock.release()
             except Exception,e:
                 log("Temperature Acquire Failed",e)
@@ -463,7 +466,7 @@ class GS200:
         self.yoko.write("*CLS") # clear status
         self.set_function("VOLT")
         self.set_limits(0.1,2)
-        self.set_voltage(0.0000)
+        self.set_voltage(0.001)
         self.output(True)
 
     def output(self,state=True):
@@ -826,6 +829,39 @@ class ZURICH:
                ]
         self.daq2.set(general_setting)
         log("Phase Correction: %f, %f, %f, %f"%(phase_0,phase_1,phase_3,phase_4))
+    
+    def set_frequency(self, freq=111.1, tc=0.5, order=4):
+        """takes the frequency, order and timeconstant (in s) of the filters"""
+        order = max(1, min(order, 8))
+        fo = [1.0, 0.644, 0.51, 0.435, 0.386, 0.350, 0.323, 0.301]  # order factors
+        tc = tc * fo[order-1]
+        general_setting = [
+                [["/", self.device, "/demods/0/timeconstant"],tc],
+                [["/", self.device, "/demods/1/timeconstant"],tc],
+                [["/", self.device, "/demods/3/timeconstant"],tc],
+                [["/", self.device, "/demods/4/timeconstant"],tc],
+                
+                [["/", self.device, "/demods/0/order"],order],
+                [["/", self.device, "/demods/1/order"],order],
+                [["/", self.device, "/demods/3/order"],order],
+                [["/", self.device, "/demods/4/order"],order],
+
+                [["/", self.device, "/oscs/0/freq"],freq],
+               ]
+        self.daq2.set(general_setting)
+        log("Values: TC %f s, Order %i, Frequency %f Hz"%(tc,order,freq))
+    
+    def set_ac(self, ac_coupling=True):
+        """sets autorange and ac"""
+        general_setting = [
+                [["/", self.device, "/sigins/0/ac"],ac_coupling],
+                [["/", self.device, "/sigins/1/ac"],ac_coupling],
+               ]
+        self.daq2.set(general_setting)
+        if ac_coupling:
+            log("Lockin AC Coupling ON")
+        else:
+            log("Lockin AC Coupling OFF")
     
 
     def lockin_thread(self):
@@ -1194,7 +1230,7 @@ class MOTOR:
                     
                 # check for bad speed values
                 try:
-                    if abs(self._v) > 10:
+                    if abs(self._v) > 10 and abs(self._gv) > 5:
                         v_ratio = abs(self._v)/abs(self._gv)
                         if  v_ratio < 0.8:
                             speed_check_count += 1

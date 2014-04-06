@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Mar 18 20:24:26 2013
-
+All rights reserved by David Weber
 @author: David Weber
 """
 

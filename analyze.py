@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Spyder Editor
-
+All rights reserved by David Weber
 Analyze MAR
 """
 

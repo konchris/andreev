@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 22 15:16:08 2014
-
+All rights reserved by David Weber
 @author: David Weber
 """
 import devices_andreev as DEV
@@ -102,8 +102,14 @@ def switchheater_off():
 def lockin_set():
     rate = int(_self.ui.editRate.text())
     amplitude = float(_self.ui.editLIAmpl.text())
+    tc = float(_self.ui.editLITC.text())
+    freq = float(_self.ui.editLIFreq.text())
+    order = _self.ui.comboLIOrder.currentIndex()+1
+    coupling = _self.ui.checkLIAC.isChecked()
     DEV.lockin.set_rate(rate)
     DEV.lockin.set_amplitude(amplitude)
+    DEV.lockin.set_frequency(freq,tc,order)
+    DEV.lockin.set_ac(coupling)
 
 def lockin_read_phase():
     import numpy as np

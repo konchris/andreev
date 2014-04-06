@@ -3,7 +3,7 @@
 Initialization Scripts for a thousand of init lines
 
 Created on Sat Mar 22 13:05:08 2014
-
+All rights reserved by David Weber
 @author: David Weber
 """
 global _self
@@ -276,7 +276,7 @@ def init_validators(_self):
     _self.ui.editBBias.setValidator(doubleValidator)  
     # lockin
     _self.ui.editLIFreq.setValidator(doubleValidator)
-    _self.ui.editLIBW.setValidator(doubleValidator)
+    _self.ui.editLITC.setValidator(doubleValidator)
     _self.ui.editLIAmpl.setValidator(doubleValidator)
     _self.ui.editAverage.setValidator(intValidator)
     _self.ui.editRate.setValidator(intValidator)

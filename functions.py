@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar 15 12:23:15 2012
-
+All rights reserved by David Weber
 @author: David Weber
 """
 
@@ -17,7 +17,8 @@ from configobj import ConfigObj
 import winsound
 #import tables
 
-
+def round_to_digits(x, digits=1):
+    return round(x, -int(np.floor(np.log10(abs(x)))) + (digits - 1))
 
 def export_html(parent, path="C:\wamp\www\\"):
     #from PyQt4.QtCore import QPoint

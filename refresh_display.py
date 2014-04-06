@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 22 14:19:42 2014
-
+All rights reserved by David Weber
 @author: David Weber
 """
 import numpy as np
 import time
-from functions import log, find_min
+from functions import log, find_min, round_to_digits
 from PyQt4 import QtGui
 import devices_andreev as DEV
 
@@ -69,15 +69,15 @@ def refresh_display():
             sample_factor = _sample_res/(_sample_res+_self.rref)
             _self.ui.editIVTimeEstimate.setText("%i s"%(round((_self.editIVDelay)*(abs(_self.editIVMax-_self.editIVMin)/_self.editIVSteps)))) 
             if _self.checkIVSample:
-                _self.ui.editIVMinEstimate.setText("%f mV"%(_self.editIVMin / sample_factor * 1e3))
-                _self.ui.editIVMaxEstimate.setText("%f mV"%(_self.editIVMax / sample_factor * 1e3))
-                _self.ui.editIVStepsEstimate.setText("%f uV"%(_self.editIVSteps / sample_factor * 1e6))
+                _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(_self.editIVMin / sample_factor * 1e3,3)))
+                _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(_self.editIVMax / sample_factor * 1e3,3)))
+                _self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(_self.editIVSteps / sample_factor * 1e6,3)))
             else:
-                _self.ui.editIVMinEstimate.setText("%f mV"%(sample_factor * _self.editIVMin * 1e3))
-                _self.ui.editIVMaxEstimate.setText("%f mV"%(sample_factor * _self.editIVMax * 1e3))
-                _self.ui.editIVStepsEstimate.setText("%f uV"%(sample_factor * _self.editIVSteps * 1e6))
+                _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(sample_factor * _self.editIVMin * 1e3,3)))
+                _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(sample_factor * _self.editIVMax * 1e3,3)))
+                _self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(sample_factor * _self.editIVSteps * 1e6,3)))
         except Exception,e:
-            log("Refresh Estimate Failed",e)
+            log("Refresh Estimate Failed",e)#$(time::%d.%m.%y)
             
         try:
             # saving button
