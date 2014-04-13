@@ -57,12 +57,6 @@ class main_program(QtGui.QMainWindow):
         initialize.init_validators(self)
         
         
-        #gui_helper.motor_set_limit()        # sets limits for motor
-        #gui_helper.lockin_set()             # sets lockin parameters
-        #gui_helper.lockin_read_phase()  
-        #gui_helper.lockin_set_phase()       # set phase to zero
-        #gui_helper.set_bias()               # sets bias to last value
-        #gui_helper.set_bias()
         #########################################################
         ##############    REFRESH DISPLAY     ###################
         #########################################################
@@ -153,16 +147,16 @@ class main_program(QtGui.QMainWindow):
         # restore recent values
         #DEV.lockin.femto_set(a,b)            
         
-        """
-        self.ui.editOffsetAux0_0.setText(str(round(self.config_data["offset_aux0"][0],6)))
-        self.ui.editOffsetAux0_1.setText(str(round(self.config_data["offset_aux0"][1],6)))
-        self.ui.editOffsetAux0_2.setText(str(round(self.config_data["offset_aux0"][2],6)))
-        self.ui.editOffsetAux0_3.setText(str(round(self.config_data["offset_aux0"][3],6)))
-        self.ui.editOffsetAux1_0.setText(str(round(self.config_data["offset_aux1"][0],6)))
-        self.ui.editOffsetAux1_1.setText(str(round(self.config_data["offset_aux1"][1],6)))
-        self.ui.editOffsetAux1_2.setText(str(round(self.config_data["offset_aux1"][2],6)))
-        self.ui.editOffsetAux1_3.setText(str(round(self.config_data["offset_aux1"][3],6)))
-        """
+        
+        self.ui.editOffsetAux0_0.setText(str(round(self.config_data["offset_agilent_voltage"][0],6)))
+        #self.ui.editOffsetAux0_1.setText(str(round(self.config_data["offset_aux0"][1],6)))
+        #self.ui.editOffsetAux0_2.setText(str(round(self.config_data["offset_aux0"][2],6)))
+        #self.ui.editOffsetAux0_3.setText(str(round(self.config_data["offset_aux0"][3],6)))
+        self.ui.editOffsetAux1_0.setText(str(round(self.config_data["offset_agilent_current"][0],6)))
+        #self.ui.editOffsetAux1_1.setText(str(round(self.config_data["offset_aux1"][1],6)))
+        #self.ui.editOffsetAux1_2.setText(str(round(self.config_data["offset_aux1"][2],6)))
+        #self.ui.editOffsetAux1_3.setText(str(round(self.config_data["offset_aux1"][3],6)))
+        
         
         DEV.yoko.set_voltage(bias)
         time.sleep(0.2)
@@ -284,7 +278,8 @@ class main_program(QtGui.QMainWindow):
                         #    thread.start_new_thread()
                         #else:
                         #    self.iv_in_progress = True
-                        self.aquire_iv()
+                        self.aquire_iv(_min=-0.006, _max=0.006, _time=200, _sample=True)
+                        self.aquire_iv(_min=-0.1, _max=0.1, _time=200, _sample=True)
                             
 
                 # pause histogram while doing iv
@@ -338,7 +333,7 @@ class main_program(QtGui.QMainWindow):
 
 
     
-    def aquire_iv(self, _min=None, _max=None, _time=None):
+    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None):
         log("IV Sweep Starting") 
         self.stop_measure = False
         self.iv_in_progress = True   
@@ -349,19 +344,29 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             sample_factor = 1000.0
             log("IV voltage calculation failed",e)
-            
-        _delay = self.editIVDelay
-        if self.checkIVSample:
-            _min = self.editIVMin / sample_factor
-            _max = self.editIVMax / sample_factor
-            _steps = self.editIVSteps / sample_factor  
-        else:
-            _min = self.editIVMin
-            _max = self.editIVMax
-            _steps = self.editIVSteps
         
+        
+        _delay = self.editIVDelay
+        _steps = self.editIVSteps
+        
+        if _sample == None:
+            sample_voltage = self.checkIVSample
+        else:
+            sample_voltage = _sample
+        
+        if _min == None:
+            _min = self.editIVMin
+        
+        if _max == None:
+            _max = self.editIVMax
+        
+        if sample_voltage:
+            _min = _min / sample_factor
+            _max = _max / sample_factor
+            _steps = _steps / sample_factor  
+
         # range maximum protection
-        _voltage_limits = 2.0
+        _voltage_limits = 1.0
         _min = max(-_voltage_limits, min(_min, _voltage_limits))
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
         _steps = max(-_voltage_limits, min(_steps, _voltage_limits))
@@ -378,8 +383,10 @@ class main_program(QtGui.QMainWindow):
             self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
 
         # set up yoko program for sweep
-        slope_time = abs(_max-_min)/_steps * _delay 
-        DEV.yoko.program_goto_ramp(_max, slope_time)      
+        if _time == None:
+            _time = abs(_max-_min)/_steps * _delay 
+
+        DEV.yoko.program_goto_ramp(_max, _time)      
         
         # last_time is used for display updating        
         last_time = time.time()          
@@ -435,8 +442,8 @@ class main_program(QtGui.QMainWindow):
                         li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
                         li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
                         
-                        li_first = li_3_r/li_0_r    # first
-                        li_second = li_4_r/li_1_r   # second
+                        li_first = li_3_r/li_0_r*12900    # first
+                        li_second = li_4_r/li_1_r*12900   # second
                         
                                                     
                         self.plot_data["x3"] = voltage_list[:]
@@ -522,8 +529,8 @@ class main_program(QtGui.QMainWindow):
             li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
             li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
             li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-            li_first = li_3_r/li_0_r    # first
-            li_second = li_4_r/li_1_r   # second
+            li_first = li_3_r/li_0_r*12900    # first
+            li_second = li_4_r/li_1_r*12900   # second
             
             
             self.plot_data["x1"] = voltage_list[:]

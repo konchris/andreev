@@ -14,6 +14,15 @@ def send_to_nature():
     from PyQt4 import QtGui
     QtGui.QMessageBox.question(_self, 'Export',
             "Upload in progress......", QtGui.QMessageBox.Ok)
+            
+            
+def init_device_parameters():
+    motor_set_limit()        # sets limits for motor
+    lockin_set()             # sets lockin parameters
+    lockin_read_phase()  
+    lockin_set_phase()       # set phase to zero
+    set_bias()               # sets bias to last value
+    _self.offset_correct()
 
 # motor
 def motor_break(speed=None, quiet=False):

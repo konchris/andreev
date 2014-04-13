@@ -675,6 +675,7 @@ class Agilent34410A:
                 log("34410a Measurement Thread")
                     
             time.sleep(delay)
+        self.Agilent.write("*RST")
 
 
 
