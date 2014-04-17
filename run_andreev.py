@@ -15,8 +15,7 @@ import time
 import numpy as np
 
 from guidata.qt.QtCore import QTimer#,SIGNAL
-#from guiqwt.plot import CurveWidget
-#from guiqwt.builder import make
+
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -27,6 +26,8 @@ from functions import *
 
 # exported functions
 import initialize,refresh_display,gui_helper
+
+myapp = None
 
 
 class main_program(QtGui.QMainWindow):
@@ -557,7 +558,9 @@ class main_program(QtGui.QMainWindow):
                 file_string = "iv_%s.txt"%(time_string)
                 f_iv = open(d+file_string, 'a')
                 try:
-                    for k,v in self.data.items():
+                    params = self.data.copy()
+                    params.update(DEV.lockin.get_param())
+                    for k,v in params.items():
                         try:
                             f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
                         except Exception,e:
@@ -627,8 +630,6 @@ class main_program(QtGui.QMainWindow):
     def aquire_b_sweep(self):
         self.stop_measure = False
                
-        _min = float(self.ui.editBMin.text())
-        _max = float(self.ui.editBMax.text())
         rate = float(self.ui.editBRate.text())
         bias = float(self.ui.editBBias.text())
         
@@ -878,7 +879,6 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     global myapp
     myapp = main_program()
-   
     myapp.show()
 
     sys.exit(app.exec_())

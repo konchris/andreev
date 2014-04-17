@@ -679,8 +679,6 @@ class Agilent34410A:
 
 
 
-
-
 class ZURICH:
     def __init__(self):
         # Open connection to ziServer
@@ -732,25 +730,10 @@ class ZURICH:
     
     def initialize(self, frequency=2222.222, ampl=0.01, order=4, tc=0.1, rate=14):
         general_setting = [
-
                 [["/", self.device, "/sigins/0/diff"],0.0],
                 [["/", self.device, "/sigins/1/diff"],0.0],
                 #[["/", self.device, "/sigins/0/ac"],1],
                 #[["/", self.device, "/sigins/1/ac"],1],
-
-                #[["/", self.device, "/demods/0/rate"],rate],
-                #[["/", self.device, "/demods/1/rate"],rate],
-                #[["/", self.device, "/demods/2/rate"],0.0],
-                #[["/", self.device, "/demods/3/rate"],rate],
-                #[["/", self.device, "/demods/4/rate"],rate],
-                #[["/", self.device, "/demods/5/rate"],0.0],
-
-                #[["/", self.device, "/demods/0/phaseshift"],0.0],
-                #[["/", self.device, "/demods/1/phaseshift"],0.0],
-                #[["/", self.device, "/demods/2/phaseshift"],0.0],
-                #[["/", self.device, "/demods/3/phaseshift"],0.0],
-                #[["/", self.device, "/demods/4/phaseshift"],0.0],
-                #[["/", self.device, "/demods/5/phaseshift"],0.0],
 
                 [["/", self.device, "/demods/0/trigger"],0.0],
                 [["/", self.device, "/demods/1/trigger"],0.0],
@@ -761,11 +744,6 @@ class ZURICH:
                 [["/", self.device, "/demods/1/order"],order],
                 [["/", self.device, "/demods/3/order"],order],
                 [["/", self.device, "/demods/4/order"],order],
-
-                #[["/", self.device, "/demods/0/timeconstant"],tc],
-                #[["/", self.device, "/demods/1/timeconstant"],tc],
-                #[["/", self.device, "/demods/3/timeconstant"],tc],
-                #[["/", self.device, "/demods/4/timeconstant"],tc],
 
                 [["/", self.device, "/sigouts/0/on"],1.0],  # off
                 #[["/", self.device, "/sigouts/0/range"],0.1],
@@ -787,12 +765,9 @@ class ZURICH:
                 [["/", self.device, "/demods/4/harmonic"],2.0],
                 [["/", self.device, "/demods/5/harmonic"],3.0],
 
-
                 [["/", self.device, "/dios/0/drive"],1]
                ]
-
-        self.daq.set(general_setting)
-
+        self.daq2.set(general_setting)
     
     def set_rate(self, rate=100):
         general_setting = [
@@ -863,6 +838,16 @@ class ZURICH:
             log("Lockin AC Coupling ON")
         else:
             log("Lockin AC Coupling OFF")
+    
+    def get_param(self):
+        _range =        self.daq2.getDouble('/'+self.device+'/sigouts/0/range')
+        _amplitude =    self.daq2.getDouble('/'+self.device+'/sigouts/0/amplitudes/6')
+        sigin_0 =       self.daq2.getDouble('/'+self.device+'/sigins/0/range')
+        sigin_1 =       self.daq2.getDouble('/'+self.device+'/sigins/1/range')
+        sigout_on =     self.daq2.getDouble('/'+self.device+'/sigouts/0/on')
+        ac = _range*_amplitude
+        return {"ac amplitude": [ac], "sigout on": [sigout_on],"input 0 range": [sigin_0],"input 1 range": [sigin_1]}
+        
     
 
     def lockin_thread(self):
