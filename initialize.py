@@ -19,6 +19,7 @@ def init_files(_self):
     _self.f_motor = None
     _self.f_temp = None
     _self.f_ips = None
+    _self.f_ips_2 = None
     _self.f_femto = None
     _self.f_config = None
     
@@ -37,6 +38,7 @@ def open_files():
         _self.f_temp.close()
         _self.f_femto.close()
         _self.f_ips.close()
+        _self.f_ips_2.close()
         _self.f_config.close()
     close_logfile()
         
@@ -44,7 +46,7 @@ def open_files():
     d_name = os.path.dirname(d)
     if not os.path.exists(d_name):
         os.makedirs(d_name)
-    _self.f_li0 = open(d+"li0.txt", 'a')
+    _self.f_li0 = open(d+"li0.txt", 'a')    # TODO os.path.join()
     _self.f_li1 = open(d+"li1.txt", 'a')
     _self.f_li3 = open(d+"li3.txt", 'a')
     _self.f_li4 = open(d+"li4.txt", 'a')
@@ -54,6 +56,7 @@ def open_files():
     _self.f_motor = open(d+"motor.txt", 'a')
     _self.f_temp = open(d+"temp.txt", 'a')
     _self.f_ips = open(d+"ips.txt", 'a') 
+    _self.f_ips_2 = open(d+"ips_2.txt", 'a') 
     _self.f_config = open(d+"config.txt", 'a')
     set_logfile(d+"log.txt")      
     
@@ -68,6 +71,7 @@ def close_files():
         _self.f_motor.close()
         _self.f_temp.close()
         _self.f_ips.close()
+        _self.f_ips_2.close()
         _self.f_config.close()
         _self.f_li0 = None
         _self.f_li1 = None
@@ -79,8 +83,9 @@ def close_files():
         _self.f_motor = None
         _self.f_temp = None
         _self.f_ips = None
+        _self.f_ips_2 = None
         _self.f_config = None
-        close_logfile()
+    close_logfile()
 
 def init_curvewidgets(_self):
     from guiqwt.builder import make
@@ -90,6 +95,7 @@ def init_curvewidgets(_self):
     _self.data_curve3 = make.curve([],[])
     _self.data_curve4 = make.curve([],[], yaxis="right", color="b")
     _self.data_curve5 = make.curve([],[])
+    _self.data_curve5b = make.curve([],[])
     _self.data_curve6 = make.curve([],[], yaxis="right", color="b")
     _self.data_curve6b = make.curve([],[], yaxis="right", color="b")
     _self.data_curve7 = make.curve([],[])
@@ -125,6 +131,7 @@ def init_curvewidgets(_self):
     _self.ui.cw2.plot.add_item(_self.data_curve3)
     _self.ui.cw2.plot.add_item(_self.data_curve4)
     _self.ui.cw3.plot.add_item(_self.data_curve5)
+    _self.ui.cw3.plot.add_item(_self.data_curve5b)
     _self.ui.cw3.plot.add_item(_self.data_curve6)
     _self.ui.cw3.plot.add_item(_self.data_curve6b)
     _self.ui.cw4.plot.add_item(_self.data_curve7)
@@ -191,6 +198,9 @@ def init_variables(_self):
     
     _self.data["ips_timestamp"] = []
     _self.data["ips_mfield"] = []
+    
+    _self.data["ips_2_timestamp"] = []
+    _self.data["ips_2_mfield"] = []
     
     _self.data["femto_timestamp"] = []
     _self.data["femto_channela"] = []
@@ -297,7 +307,13 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_init)    
     QtCore.QObject.connect(_self.ui.btnBZeroMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_zero)   
     QtCore.QObject.connect(_self.ui.btnSwitchHeaterOn, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_on)  
-    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOff, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_off)  
+    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOff, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_off) 
+    
+    QtCore.QObject.connect(_self.ui.btnBStart_2, QtCore.SIGNAL("clicked()"), gui_helper.magnet_goto_2)   
+    QtCore.QObject.connect(_self.ui.btnBInitMagnet_2, QtCore.SIGNAL("clicked()"), gui_helper.magnet_init_2)    
+    QtCore.QObject.connect(_self.ui.btnBZeroMagnet_2, QtCore.SIGNAL("clicked()"), gui_helper.magnet_zero_2)   
+    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOn_2, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_on_2)  
+    QtCore.QObject.connect(_self.ui.btnSwitchHeaterOff_2, QtCore.SIGNAL("clicked()"), gui_helper.switchheater_off_2) 
     
     QtCore.QObject.connect(_self.ui.btnMeasurementStop, QtCore.SIGNAL("clicked()"), gui_helper.measurement_btn_Stop)
     

@@ -27,7 +27,7 @@ from functions import *
 # exported functions
 import initialize,refresh_display,gui_helper
 
-myapp = None
+
 
 
 class main_program(QtGui.QMainWindow):
@@ -627,7 +627,7 @@ class main_program(QtGui.QMainWindow):
         log("Temperature Sweep finished")
         
     
-    def aquire_b_sweep(self):
+    def aquire_b_circle(self):
         self.stop_measure = False
                
         rate = float(self.ui.editBRate.text())
@@ -657,7 +657,7 @@ class main_program(QtGui.QMainWindow):
 
    
     def measurement_thread(self):
-        """This thread is measuring data all time"""
+        """This thread is gathering data all time"""
 
         while not self.shutdown:
             try:
@@ -685,61 +685,62 @@ class main_program(QtGui.QMainWindow):
                         if DEV.lockin != None:
                             lockin_data = DEV.lockin.get_data_list(averages=self.average_value)
                             
-                            li_timestamp_0 = lockin_data["0"]["timestamp"]
+                            li_timestamp_0 = lockin_data["0"]["timestamp"][:]
                             li_aux0 =  [(x - self.config_data["offset_aux0"][0])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
                             li_aux1 =  [(x - self.config_data["offset_aux1"][0])/self.factor_current for x in lockin_data["0"]["auxin1"]]
                             li_0_x =  [x / self.factor_voltage for x in lockin_data["0"]["x"]]
                             li_0_y =  [x / self.factor_voltage for x in lockin_data["0"]["y"]]
-                            li_timestamp_1 = lockin_data["1"]["timestamp"]
+                            li_timestamp_1 = lockin_data["1"]["timestamp"][:]
                             li_1_x =  [x / self.factor_voltage for x in lockin_data["1"]["x"]]
                             li_1_y =  [x / self.factor_voltage for x in lockin_data["1"]["y"]]
-                            li_timestamp_3 = lockin_data["3"]["timestamp"]
+                            li_timestamp_3 = lockin_data["3"]["timestamp"][:]
                             li_3_x =  [x / self.factor_voltage for x in lockin_data["3"]["x"]]
                             li_3_y =  [x / self.factor_voltage for x in lockin_data["3"]["y"]]
-                            li_timestamp_4 = lockin_data["4"]["timestamp"]
+                            li_timestamp_4 = lockin_data["4"]["timestamp"][:]
                             li_4_x =  [x / self.factor_voltage for x in lockin_data["4"]["x"]]
                             li_4_y =  [x / self.factor_voltage for x in lockin_data["4"]["y"]]
                             
-                            femto_timestamp = lockin_data["femto"]["timestamp"]
-                            femto_channela = lockin_data["femto"]["channela"]
-                            femto_channelb = lockin_data["femto"]["channelb"]
+                        femto_timestamp = lockin_data["femto"]["timestamp"]
+                        femto_channela = lockin_data["femto"]["channela"]
+                        femto_channelb = lockin_data["femto"]["channelb"]
+                        
+                        self.data["li_timestamp_0"].extend(li_timestamp_0)
+                        self.data["li_aux0"].extend(li_aux0)
+                        self.data["li_aux1"].extend(li_aux1)
+                        self.data["li_0_x"].extend(li_0_x)
+                        self.data["li_0_y"].extend(li_0_y)
+                        
+                        self.data["li_timestamp_1"].extend(li_timestamp_1)
+                        self.data["li_1_x"].extend(li_1_x)
+                        self.data["li_1_y"].extend(li_1_y)
+                        
+                        self.data["li_timestamp_3"].extend(li_timestamp_3)
+                        self.data["li_3_x"].extend(li_3_x)
+                        self.data["li_3_y"].extend(li_3_y)
+                        
+                        self.data["li_timestamp_4"].extend(li_timestamp_4)
+                        self.data["li_4_x"].extend(li_4_x)
+                        self.data["li_4_y"].extend(li_4_y) 
+                        
+                        self.data["femto_timestamp"].extend(femto_timestamp)
+                        self.data["femto_channela"].extend(femto_channela)
+                        self.data["femto_channelb"].extend(femto_channelb)
+                        
+                        saving_data = [li_timestamp_0,li_aux0,li_aux1,li_0_x,li_0_y]
+                        save_data(self.f_li0, saving_data)
+                        saving_data = [li_timestamp_1,li_1_x,li_1_y]
+                        save_data(self.f_li1, saving_data)
+                        saving_data = [li_timestamp_3,li_3_x,li_3_y]
+                        save_data(self.f_li3, saving_data)
+                        saving_data = [li_timestamp_4,li_4_x,li_4_y]
+                        save_data(self.f_li4, saving_data)
+                        
+                        saving_data = [femto_timestamp,femto_channela,femto_channelb]
+                        save_data(self.f_femto, saving_data)
                     except Exception,e:
                         log("LockIn failed DAQ",e)
                         
-                    self.data["li_timestamp_0"].extend(li_timestamp_0)
-                    self.data["li_aux0"].extend(li_aux0)
-                    self.data["li_aux1"].extend(li_aux1)
-                    self.data["li_0_x"].extend(li_0_x)
-                    self.data["li_0_y"].extend(li_0_y)
                     
-                    self.data["li_timestamp_1"].extend(li_timestamp_1)
-                    self.data["li_1_x"].extend(li_1_x)
-                    self.data["li_1_y"].extend(li_1_y)
-                    
-                    self.data["li_timestamp_3"].extend(li_timestamp_3)
-                    self.data["li_3_x"].extend(li_3_x)
-                    self.data["li_3_y"].extend(li_3_y)
-                    
-                    self.data["li_timestamp_4"].extend(li_timestamp_4)
-                    self.data["li_4_x"].extend(li_4_x)
-                    self.data["li_4_y"].extend(li_4_y) 
-                    
-                    self.data["femto_timestamp"].extend(femto_timestamp)
-                    self.data["femto_channela"].extend(femto_channela)
-                    self.data["femto_channelb"].extend(femto_channelb)
-                    
-                    saving_data = [li_timestamp_0,li_aux0,li_aux1,li_0_x,li_0_y]
-                    save_data(self.f_li0, saving_data)
-                    saving_data = [li_timestamp_0,li_1_x,li_1_y]
-                    save_data(self.f_li1, saving_data)
-                    saving_data = [li_timestamp_0,li_3_x,li_3_y]
-                    save_data(self.f_li3, saving_data)
-                    saving_data = [li_timestamp_0,li_4_x,li_4_y]
-                    save_data(self.f_li4, saving_data)
-                    
-                    
-                    saving_data = [femto_timestamp,femto_channela,femto_channelb]
-                    save_data(self.f_femto, saving_data)
                     
                 if not self.offset_in_progress:
                     agilent_voltage_timestamp = []
@@ -749,13 +750,13 @@ class main_program(QtGui.QMainWindow):
                             agilent_new_data = DEV.agilent_new.get_data_list()   
                             agilent_voltage_timestamp = agilent_new_data["timestamp"]
                             agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"][0])/self.factor_voltage for x in agilent_new_data["voltage"]] 
+
+                        self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
+                        self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
+                        saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
+                        save_data(self.f_agilent_voltage, saving_data)   
                     except Exception,e:
                         log("Agilent New failed DAQ",e)
-                       
-                    self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
-                    self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
-                    saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
-                    save_data(self.f_agilent_voltage, saving_data)    
 
                 if not self.offset_in_progress:
                     agilent_current_timestamp = []
@@ -765,13 +766,14 @@ class main_program(QtGui.QMainWindow):
                             agilent_old_data = DEV.agilent_old.get_data_list()   
                             agilent_current_timestamp = agilent_old_data["timestamp"]
                             agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"][0])/self.factor_current for x in agilent_old_data["voltage"]] 
+                    
+                       
+                        self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
+                        self.data["agilent_current_voltage"].extend(agilent_current_voltage)              
+                        saving_data = [agilent_current_timestamp,agilent_current_voltage]
+                        save_data(self.f_agilent_current, saving_data)    
                     except Exception,e:
                         log("Agilent old failed DAQ",e)
-                       
-                    self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
-                    self.data["agilent_current_voltage"].extend(agilent_current_voltage)              
-                    saving_data = [agilent_current_timestamp,agilent_current_voltage]
-                    save_data(self.f_agilent_current, saving_data)    
                     
                  
                 motor_timestamp = []
@@ -785,18 +787,17 @@ class main_program(QtGui.QMainWindow):
                         motor_pos = motor_data["position"]
                         motor_cur = motor_data["current"]
                         motor_vel = motor_data["velocity"]
+                                   
+                    self.data["motor_timestamp"].extend(motor_timestamp)
+                    self.data["motor_pos"].extend(motor_pos)
+                    self.data["motor_cur"].extend(motor_cur)
+                    self.data["motor_vel"].extend(motor_vel)                
+                    
+                    saving_data = [motor_timestamp,motor_pos,motor_cur,motor_vel]
+                    save_data(self.f_motor, saving_data)
                 except Exception,e:
                     log("Motor failed DAQ",e)
-                   
-                self.data["motor_timestamp"].extend(motor_timestamp)
-                self.data["motor_pos"].extend(motor_pos)
-                self.data["motor_cur"].extend(motor_cur)
-                self.data["motor_vel"].extend(motor_vel)                
-                
-                saving_data = [motor_timestamp,motor_pos,motor_cur,motor_vel]
-
-                save_data(self.f_motor, saving_data)
-
+                    
                 temp_timestamp = []
                 temp1 = []
                 temp2 = []
@@ -806,16 +807,15 @@ class main_program(QtGui.QMainWindow):
                         temp_timestamp = temp_data["timestamp"]
                         temp1 = temp_data["temperature1"]
                         temp2 = temp_data["temperature2"]
+
+                    self.data["temp_timestamp"].extend(temp_timestamp)
+                    self.data["temp1"].extend(temp1)
+                    self.data["temp2"].extend(temp2)
+                    
+                    saving_data = [temp_timestamp,temp1,temp2]
+                    save_data(self.f_temp, saving_data)
                 except Exception,e:
                     log("Temperature failed DAQ",e)
-                    
-                self.data["temp_timestamp"].extend(temp_timestamp)
-                self.data["temp1"].extend(temp1)
-                self.data["temp2"].extend(temp2)
-                
-                saving_data = [temp_timestamp,temp1,temp2]
-                save_data(self.f_temp, saving_data)
-   
                 
                 ips_timestamp = []
                 ips_mfield = []
@@ -824,14 +824,33 @@ class main_program(QtGui.QMainWindow):
                         ips_data = DEV.magnet.get_data_list()
                         ips_timestamp = ips_data["timestamp"]
                         ips_mfield = ips_data["field"]
+                
+                    self.data["ips_timestamp"].extend(ips_timestamp)
+                    self.data["ips_mfield"].extend(ips_mfield)
+    
+                    saving_data = [ips_timestamp,ips_mfield]
+                    save_data(self.f_ips, saving_data)
+                
                 except Exception,e:
                     log("Magnet failed DAQ",e)
-                    
-                self.data["ips_timestamp"].extend(ips_timestamp)
-                self.data["ips_mfield"].extend(ips_mfield)
+                
+                
+                ips_2_timestamp = []
+                ips_2_mfield = []
+                try:
+                    if DEV.magnet_2 != None:
+                        ips_2_data = DEV.magnet_2.get_data_list()
+                        ips_2_timestamp = ips_2_data["timestamp"]
+                        ips_2_mfield = ips_2_data["field"]
 
-                saving_data = [ips_timestamp,ips_mfield]
-                save_data(self.f_ips, saving_data)
+                    self.data["ips_2_timestamp"].extend(ips_2_timestamp)
+                    self.data["ips_2_mfield"].extend(ips_2_mfield)
+    
+                    saving_data = [ips_2_timestamp,ips_2_mfield]
+                    save_data(self.f_ips_2, saving_data)
+                
+                except Exception,e:
+                    log("Magnet 2 failed DAQ",e)
             
             except Exception,e:
                 log("Error while handling DAQ",e)
@@ -849,8 +868,8 @@ class main_program(QtGui.QMainWindow):
         thread.start_new_thread(self.aquire_histogram,())
     def measurement_btn_Acquire_IV(self):
         thread.start_new_thread(self.aquire_iv,())
-    def measurement_btn_Acquire_B(self):
-        thread.start_new_thread(self.aquire_b_sweep,())
+    def measurement_btn_Acquire_B_Circle(self):
+        thread.start_new_thread(self.aquire_b_circle,())
             
             
     def closeEvent(self, event):
@@ -874,7 +893,7 @@ class main_program(QtGui.QMainWindow):
             event.ignore()
     
             
-     
+myapp = None     
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     global myapp

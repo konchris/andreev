@@ -48,13 +48,14 @@ class Magnet:
             self.magnet.write('$Q4')     #four digits extended resolution            
             self.magnet.write('$M1')     #set mode, units "tesla", fast   
             time.sleep(0.1)
-            self.magnet.write('$H1')     #switch heater on
-            time.sleep(0.1)
-            self.heater=True
-            print('Magnet Initializing...Please Wait 20s')
-            for i in range (40):
-                time.sleep(0.5)
-                app.processEvents()
+            if not self.heater == None:
+                self.magnet.write('$H1')     #switch heater on
+                time.sleep(0.1)
+                self.heater=True
+                print('Magnet Initializing...Please Wait 20s')
+                for i in range (40):
+                    time.sleep(0.5)
+                    app.processEvents()
                 
             self.magnet.write('$A0')     #hold operation
             return True 
@@ -84,7 +85,13 @@ class Magnet:
             self.activity = int(answer[4])
             self.local = int(answer[6])
             self.heater_status = int(answer[8])
+            
+            if self.heater_status==1:
+                self.heater = True
+            else:
+                self.heater = False
         except Exception,e:
+            print answer
             log("Magnet Status Error",e)
             
             
@@ -97,7 +104,7 @@ class Magnet:
         Cn = {0: "Local&Locked", 1: "Remote&Locked", 2: "Local&Unlocked", 3: "Remote&Unlocked",\
                 4: "Auto-Run-Down", 5: "Auto-Run-Down", 6: "Auto-Run-Down", 7: "Auto-Run-Down"}
         Hn = {0: "Off Magnet at Zero", 1: "On", 2: "Off Magnet at Field", 5: "Heater Fault",\
-                8: "Not Switch Fitted"}    
+                8: "No Switch Fitted"}    
         
         if verbal:
             return {"status_a": Xm[self.status_a], "status_b": Xn[self.status_b], \
@@ -156,6 +163,7 @@ class Magnet:
         settings={'zeroOFF':0, 'ON':1, 'OFF':2}
         if value in settings.keys():
             self.magnet.write('$H%s'%str(settings[value]))
+            print '$H%s'%str(settings[value])
             if value in ['OFF', 'zeroOFF'] and self.heater==True:
                 log('wait for switch heater....cooldown')
                 for i in range (40):
@@ -768,8 +776,12 @@ class ZURICH:
                 [["/", self.device, "/dios/0/drive"],1]
                ]
         self.daq2.set(general_setting)
+        self.set_rate()
+        self.set_ac()
+        self.set_amplitude(0.01)
+        self.set_phases()
     
-    def set_rate(self, rate=100):
+    def set_rate(self, rate=7):
         general_setting = [
                 [["/", self.device, "/demods/0/rate"],rate],
                 [["/", self.device, "/demods/1/rate"],rate],
@@ -899,7 +911,7 @@ class ZURICH:
         finally:
             self.daq.unsubscribe("*")
             
-    def get_data_list(self, erase=True, averages=10):
+    def get_data_list(self, erase=True, averages=1):
         """returns all the gathered data in one bunch
         and erases the list """
         #if averages < 10:
@@ -1333,6 +1345,18 @@ def magnet_starter():
         except:
             #log("Couldn't Find Magnet")
             time.sleep(device_delay)
+
+def magnet_starter_2():
+    found = False
+    while not found and not stop:
+        try:
+            global magnet_2
+            magnet_2 = Magnet(25)
+            log("Found Magnet 2")
+            found = True
+        except:
+            #log("Couldn't Find Magnet")
+            time.sleep(device_delay)
             
 def lakeshore_starter():
     found = False
@@ -1403,6 +1427,7 @@ if False:
     lockin = ZURICH() 
     yoko = GS200() 
     magnet = Magnet() 
+    magnet_2 = Magnet() 
     lakeshore = LAKESHORE() 
     agilent_new = Agilent34410A() 
     agilent_old = Agilent34410A() 
@@ -1411,6 +1436,7 @@ else:
     lockin = None 
     yoko = None 
     magnet = None 
+    magnet_2 = None
     lakeshore = None 
     agilent_new = None 
     agilent_old = None 
@@ -1419,6 +1445,7 @@ thread.start_new_thread(yoko_starter,())
 thread.start_new_thread(motor_starter,())
 thread.start_new_thread(lockin_starter,())
 thread.start_new_thread(magnet_starter,())
+thread.start_new_thread(magnet_starter_2,())
 thread.start_new_thread(lakeshore_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())
@@ -1432,26 +1459,6 @@ log("Device Threads Initalized")
 
 if __name__ == "__main__":
     
-    """
-    while yoko==None:
-        time.sleep(0.1)
-    print yoko.program_is_end()
-    yoko.program_set_interval_time(1) 
-    yoko.program_set_slope_time(1) 
-    yoko.program_set_repeat("OFF")      
-    print yoko.program_is_end()
-    yoko.program_edit_start()
-    yoko.program_set_function("VOLT")
-    #yoko.program_set_level_auto(0)
-    yoko.program_set_level_auto(-0.01)
-    yoko.program_set_level_auto(0.01)
-    yoko.program_edit_end()
-    print yoko.program_is_end()
-    
-    yoko.program_start() 
-    print yoko.program_is_end() 
-    """
-
     while False:
         try:
             print agilent_new.get_data_list()

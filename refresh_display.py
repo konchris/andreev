@@ -153,6 +153,16 @@ def refresh_display():
                     _self.ui.labelSwitchHeater.setText("OFF")
         except Exception,e:
             log("Switch Heater Status Update Error",e)
+        try:
+            if DEV.magnet_2 == None:
+                _self.ui.labelSwitchHeater_2.setText("???")
+            else:
+                if DEV.magnet_2.heater:
+                    _self.ui.labelSwitchHeater_2.setText("ON")
+                else:
+                    _self.ui.labelSwitchHeater_2.setText("OFF")
+        except Exception,e:
+            log("Switch Heater Status Update Error",e)
                 
         # limit range
         interval = max(100, min(interval, 10000))
@@ -196,8 +206,14 @@ def refresh_display():
             x1 = find_min(_self.data["temp_timestamp"],end)                
             
             temp_x = np.array(_self.data["temp_timestamp"][x0:x1:step])-_self._start_time
-            _self.data_curve6.set_data(temp_x, _self.data["temp1"][x0:x1:step])
-            _self.data_curve6b.set_data(temp_x, _self.data["temp2"][x0:x1:step]) 
+            if _self.ui.checkViewT1.isChecked():            
+                _self.data_curve6.set_data(temp_x, _self.data["temp1"][x0:x1:step])
+            else:
+                _self.data_curve6.set_data([],[])
+            if _self.ui.checkViewT2.isChecked():
+                _self.data_curve6b.set_data(temp_x, _self.data["temp2"][x0:x1:step]) 
+            else:
+                _self.data_curve6b.set_data([],[])
             _self.ui.cw3.plot.do_autoscale()
             
             x0 = find_min(_self.data["ips_timestamp"],begin)
@@ -206,6 +222,14 @@ def refresh_display():
             ips_x = np.array(_self.data["ips_timestamp"][x0:x1:step])-_self._start_time
             _self.data_curve5.set_data(ips_x, _self.data["ips_mfield"][x0:x1:step])
             
+            try:
+                x0 = find_min(_self.data["ips_2_timestamp"],begin)
+                x1 = find_min(_self.data["ips_2_timestamp"],end)
+                                
+                ips_x = np.array(_self.data["ips_2_timestamp"][x0:x1:step])-_self._start_time
+                _self.data_curve5.set_data(ips_x, _self.data["ips_2_mfield"][x0:x1:step])
+            except Exception,e:
+                log("IPS 2 Display Failed",e)
             _self.ui.cw3.plot.do_autoscale()
         except Exception,e:
             log("Displaying IPS+TEMP",e)

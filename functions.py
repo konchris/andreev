@@ -211,14 +211,17 @@ def close_logfile():
     logfile = None
     
 def save_data(filename, saving_data):
-    if not filename == None:
-        for i in range(len(saving_data[0])):  # for all new data rows
-            line = ""
-            for j in range(len(saving_data)): # for all columns
-                line = line + "%15.15f\t"%(saving_data[j][i])
-            line = line + "\n"
-            filename.write(line)
-        #filename.flush()
+    try:
+        if not filename == None:
+            for i in range(len(saving_data[0])):  # for all new data rows
+                line = ""
+                for j in range(len(saving_data)): # for all columns
+                    line = line + "%15.15f\t"%(saving_data[j][i])
+                line = line + "\n"
+                filename.write(line)
+    except Exception,e:
+        #print "%i %i %i %i"%(len(saving_data),len(saving_data[0]),len(saving_data[1]),len(saving_data[2]))
+        log("Error while Saving data",e)
         
 
     

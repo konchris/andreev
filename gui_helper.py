@@ -86,6 +86,7 @@ def save_description():
 
 
 # magnet
+# FIRST IPS
 def magnet_goto():
     try:
         field = float(_self.ui.editBMax.text())
@@ -106,7 +107,31 @@ def magnet_zero():
 def switchheater_on():
     DEV.magnet.set_switchheater('ON')
 def switchheater_off():
-    DEV.magnet.set_switchheater('OFF')
+    DEV.magnet.set_switchheater('zeroOFF')
+
+# SECOND IPS
+def magnet_goto_2():
+    try:
+        field = float(_self.ui.editBMax_2.text())
+        rate = float(_self.ui.editBRate_2.text())
+    except:
+        field = 0
+        rate = 0.01
+    print "field: %f, rate: %f"%(field,rate)
+    DEV.magnet_2.SetField(field,rate)
+def magnet_init_2():
+    DEV.magnet_2.initialize()
+def magnet_zero_2():
+    try:
+        rate = float(_self.ui.editBRate_2.text())
+    except:
+        rate = 0.1
+    DEV.magnet_2.ZeroField(rate)
+def switchheater_on_2():
+    DEV.magnet_2.set_switchheater('ON')
+def switchheater_off_2():
+    DEV.magnet_2.set_switchheater('zeroOFF')
+
 
 def lockin_set():
     rate = int(_self.ui.editRate.text())
