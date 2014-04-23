@@ -1241,29 +1241,7 @@ class MOTOR:
                     
             time.sleep(delay)
             
-class ARDUINO:
-    def __init__(self):
-        #self.motor=serial.Serial('COM1',115200,timeout=0) 
-        self.arduino=visa.SerialInstrument("ASRL5",delay=0.00,term_chars='\r\n',timeout=1)
-        #self.arduino.clear()
-        thread.start_new_thread(self.arduino_thread,(0.8,))
 
-    def initialize(self):
-        """activate motor control"""
-        pass
-
-    def arduino_thread(self, delay=0.2):
-        log("Arduino Thread started!")
-        while not stop:
-            answer = "None"
-            try:
-                self.arduino.write("R")
-                print "R"
-                answer = self.arduino.read()
-            except Exception,e:
-                print e
-            print answer
-            time.sleep(delay)
         
     
     
@@ -1370,17 +1348,6 @@ def lakeshore_starter():
             #log("Couldn't Find Lakeshore")
             time.sleep(device_delay)
 
-def arduino_starter():
-    found = False
-    while not found and not stop:
-        try:
-            global arduino
-            arduino = ARDUINO()
-            log("Found Arduino")
-            found = True
-        except Exception,e:
-            log("Couldn't Find Arduino",e)
-            time.sleep(device_delay)
 
 def agilent_34410a_starter_new():
     found = False
@@ -1440,7 +1407,7 @@ else:
     lakeshore = None 
     agilent_new = None 
     agilent_old = None 
-#arduino = None
+
 thread.start_new_thread(yoko_starter,())
 thread.start_new_thread(motor_starter,())
 thread.start_new_thread(lockin_starter,())
@@ -1450,7 +1417,6 @@ thread.start_new_thread(lakeshore_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())
 #thread.start_new_thread(agilent_34401a_starter,())
-#thread.start_new_thread(arduino_starter,())
 
 #a = time.time()
 #while (time.time() < a+10) and 

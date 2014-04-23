@@ -25,7 +25,7 @@ def export_html(parent, path="C:\wamp\www\\"):
     form_objects = inspect.getmembers(parent)
     
     f = open(path+"index.html","w")
-    f.write("<html><head><title>Andreev Measurement</title>")
+    f.write("<html><head><title>Multiple Helium Reflection Measurements</title>")
     f.write("<style type=\"text/css\">\n")
     
     # background
@@ -36,6 +36,9 @@ def export_html(parent, path="C:\wamp\www\\"):
     for element in form_objects:
         try:
             if element[1].__class__.__name__ == 'QLineEdit':
+                f.write("form #%s {position: absolute; top: %ipx; left: %ipx; width: %ipx; height: %ipx}\n"%(
+                    element[1].objectName(),element[1].mapToGlobal(QPoint(0,0)).y(),element[1].mapToGlobal(QPoint(0,0)).x(),int(element[1].width()),int(element[1].height())))
+            if element[1].__class__.__name__ == 'QLabel':
                 f.write("form #%s {position: absolute; top: %ipx; left: %ipx; width: %ipx; height: %ipx}\n"%(
                     element[1].objectName(),element[1].mapToGlobal(QPoint(0,0)).y(),element[1].mapToGlobal(QPoint(0,0)).x(),int(element[1].width()),int(element[1].height())))
             if element[1].__class__.__name__ == 'CurveWidget':
@@ -59,9 +62,12 @@ def export_html(parent, path="C:\wamp\www\\"):
             if element[1].__class__.__name__ == 'QLineEdit':
                 f.write("<div id=\"%s\"><input type=\"text\" name=\"%s\" value=\"%s\" style=\"width: %ipx;\"/></div>\n"%(
                     str(element[1].objectName()),str(element[1].objectName()),str(element[1].text()),element[1].width()))
+            if element[1].__class__.__name__ == 'QLabel':
+                f.write("<div id=\"%s\"><font>%s</font></div>\n"%(
+                    str(element[1].objectName()),str(element[1].text())))
             if element[1].__class__.__name__ == 'CurveWidget':
                 element[1].plot.save_widget(path+str(element[1].objectName())+".png")
-                f.write("<img src="+str(element[1].objectName())+".png\" />\n")
+                f.write("<img id=\"%s\" src=\"%s.png\" />\n"%(str(element[1].objectName()),str(element[1].objectName())))
         except Exception,e:
             log("Failed Writing Objects HTML",e)
         
