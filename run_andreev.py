@@ -391,40 +391,17 @@ class main_program(QtGui.QMainWindow):
             
                     voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
                     voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
-                    current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
-                    current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
-          
-                    
-                    # lockin data refurbishment
-                    li_0_x = np.array(self.data["li_0_x"])        # voltage first
-                    li_1_x = np.array(self.data["li_1_x"])        # voltage second
-                    li_3_x = np.array(self.data["li_3_x"])        # current first
-                    li_4_x = np.array(self.data["li_4_x"])        # current second
-                    
-                    li_0_y = np.array(self.data["li_0_y"])        # voltage first
-                    li_1_y = np.array(self.data["li_1_y"])        # voltage second
-                    li_3_y = np.array(self.data["li_3_y"])        # current first
-                    li_4_y = np.array(self.data["li_4_y"])        # current second
-            
-                    li_0_timestamp = np.array(self.data["li_timestamp_0"])
-                    li_1_timestamp = np.array(self.data["li_timestamp_1"])
-                    li_3_timestamp = np.array(self.data["li_timestamp_3"])
-                    li_4_timestamp = np.array(self.data["li_timestamp_4"])           
                     
                     try:
-                        #print("%i,%i"%(len(li_0_timestamp),len(li_0)))
-                        min_0 = min(len(li_0_timestamp),len(li_0_x))-1
-                        li_0_x_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_x[0:min_0])
-                        li_0_y_interp = np.interp(voltage_timestamp, li_0_timestamp[0:min_0], li_0_y[0:min_0])
-                        min_1 = min(len(li_1_x),len(li_1_timestamp))-1
-                        li_1_x_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_x[0:min_1])
-                        li_1_y_interp = np.interp(voltage_timestamp, li_1_timestamp[0:min_1], li_1_y[0:min_1])
-                        min_3 = min(len(li_3_x),len(li_3_timestamp))-1
-                        li_3_x_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_x[0:min_3])
-                        li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
-                        min_4 = min(len(li_4_x),len(li_4_timestamp))-1
-                        li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
-                        li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+                        current_list = interpolate(voltage_timestamp, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                        li_0_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+                        li_0_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+                        li_1_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+                        li_1_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+                        li_3_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+                        li_3_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+                        li_4_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+                        li_4_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
                         
                         li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                         li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
