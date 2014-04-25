@@ -152,6 +152,8 @@ def init_curvewidgets(_self):
 def init_variables(_self):
     import time
     _self._start_time = time.time()
+    
+    # holds data to plot in specialized plots
     _self.plot_data = {}
     _self.plot_data["new"] = [False,False,False,False]
     _self.plot_data["save"] = False
@@ -162,6 +164,7 @@ def init_variables(_self):
     _self.plot_data["x4"] = []
     _self.plot_data["y4"] = []    
     
+    # holds all the data read from devices
     _self.data = {}
     _self.data["li_timestamp_0"] = []
     _self.data["li_aux0"] = []
@@ -206,12 +209,16 @@ def init_variables(_self):
     _self.data["femto_channela"] = []
     _self.data["femto_channelb"] = []
     
+    # holds some config data like offset
     _self.config_data = {}
     _self.config_data["offset_aux0"] = [0,0,0,0]
     _self.config_data["offset_aux1"] = [0,0,0,0]
     _self.config_data["offset_agilent_voltage"] = [0,0,0,0]
     _self.config_data["offset_agilent_current"] = [0,0,0,0]
     _self.config_data["lockin_phases"] = [0,0,0,0]
+    
+    # holds all the fields and boxes of the form with recent values
+    _self.form_data = {}
     
     _self.ui.editOffsetAux0_0.setText(str(0.0))
     _self.ui.editOffsetAux0_1.setText(str(0.0))

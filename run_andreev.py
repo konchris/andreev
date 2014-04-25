@@ -279,8 +279,8 @@ class main_program(QtGui.QMainWindow):
                         #    thread.start_new_thread()
                         #else:
                         #    self.iv_in_progress = True
-                        self.aquire_iv(_min=-0.006, _max=0.006, _time=200, _sample=True)
-                        self.aquire_iv(_min=-0.1, _max=0.1, _time=200, _sample=True)
+                        self.aquire_iv(_min=-0.006, _max=0.006, _time=200, _sample=True, _double=True)
+                        self.aquire_iv(_min=-0.1, _max=0.1, _time=200, _sample=True, _double=True)
                             
 
                 # pause histogram while doing iv
@@ -334,7 +334,8 @@ class main_program(QtGui.QMainWindow):
 
 
     
-    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None):
+    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None, _double=None):
+        """(self, _min=None, _max=None, _time=None, _sample=None, _double=None)"""
         log("IV Sweep Starting") 
         self.stop_measure = False
         self.iv_in_progress = True   
@@ -346,31 +347,16 @@ class main_program(QtGui.QMainWindow):
             sample_factor = 1000.0
             log("IV voltage calculation failed",e)
         
-        
-        _delay = self.editIVDelay
-        _steps = self.editIVSteps
-        
-        if _sample == None:
-            sample_voltage = self.checkIVSample
-        else:
-            sample_voltage = _sample
-        
-        if _min == None:
-            _min = self.editIVMin
-        
-        if _max == None:
-            _max = self.editIVMax
-        
-        if sample_voltage:
+        if _sample:
             _min = _min / sample_factor
             _max = _max / sample_factor
-            _steps = _steps / sample_factor  
+            #_steps = _steps / sample_factor  
 
         # range maximum protection
         _voltage_limits = 1.0
         _min = max(-_voltage_limits, min(_min, _voltage_limits))
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
-        _steps = max(-_voltage_limits, min(_steps, _voltage_limits))
+        #_steps = max(-_voltage_limits, min(_steps, _voltage_limits))
                 
         bias = DEV.yoko.get_voltage()
         
@@ -383,15 +369,17 @@ class main_program(QtGui.QMainWindow):
         if not self.f_config == None:
             self.f_config.write("IV_START\t%15.15f\n"%(begin_time))
 
-        # set up yoko program for sweep
-        if _time == None:
-            _time = abs(_max-_min)/_steps * _delay 
 
-        DEV.yoko.program_goto_ramp(_max, _time)      
-        
+        # load counter
+        loop_count = 2
         # last_time is used for display updating        
-        last_time = time.time()          
-        while not DEV.yoko.program_is_end():
+        last_time = time.time()       
+        while loop_count > 0:
+            if loop_count % 2: # if not even = odd (2nd/4th run in double)
+                DEV.yoko.program_goto_ramp(_min, _time)
+            else: # if even run (first run)
+                DEV.yoko.program_goto_ramp(_max, _time)            
+            
             if time.time() - last_time > 1: # check if update needed
                 last_time = time.time()
 
@@ -468,9 +456,20 @@ class main_program(QtGui.QMainWindow):
             
             time.sleep(0.1)
             app.processEvents()
-            if self.stop_measure:
+            
+            if self.stop_measure: # check for stop condition
                 DEV.yoko.program_hold()
+                loop_count = 0
                 break
+            
+            if DEV.yoko.program_is_end(): # one sweep done
+                if _double: # if double, only subtract one (odd/even), triangular sweep
+                    loop_count -= 1
+                else: # if not double, sawtooth sweep
+                    loop_count -= 2 
+                    #DEV.yoko.set_voltage(_min) # uncomment for several sweeps
+                    #time.sleep(1)
+                    
 
         # note down end of iv sweep
         end_time = time.time()
@@ -493,10 +492,11 @@ class main_program(QtGui.QMainWindow):
             
             voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
             voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
-            current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
-            current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
+            #current_index = min(len(self.data["agilent_current_timestamp"]),len(self.data["agilent_current_voltage"]))-1
+            #current_list = np.interp(voltage_timestamp,self.data["agilent_current_timestamp"][0:current_index],self.data["agilent_current_voltage"][0:current_index])
             
             # lockin data refurbishment
+            """
             li_0_x = np.array(self.data["li_0_x"])/self.factor_voltage        # voltage first
             li_1_x = np.array(self.data["li_1_x"])/self.factor_voltage        # voltage second
             li_3_x = np.array(self.data["li_3_x"])/self.factor_current        # current first
@@ -524,7 +524,17 @@ class main_program(QtGui.QMainWindow):
             li_3_y_interp = np.interp(voltage_timestamp, li_3_timestamp[0:min_3], li_3_y[0:min_3])
             min_4 = min(len(li_4_x),len(li_4_timestamp))-1
             li_4_x_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_x[0:min_4])
-            li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])
+            li_4_y_interp = np.interp(voltage_timestamp, li_4_timestamp[0:min_4], li_4_y[0:min_4])"""
+            
+            current_list = interpolate(voltage_timestamp, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"], self.factor_voltage)
+            li_0_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+            li_0_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+            li_1_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+            li_1_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+            li_3_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+            li_3_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+            li_4_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+            li_4_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
             
             li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
             li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
@@ -583,7 +593,12 @@ class main_program(QtGui.QMainWindow):
         finally:
             self.data_lock.release()
             
-        
+    
+
+
+    def aquire_b_sweep(self, _min=None, _max=None, _time=None, _sample=None):  
+        """aquire sweep to b field and perhaps back"""
+        pass
 
     
     def temp_sweep(self):       
@@ -867,9 +882,18 @@ class main_program(QtGui.QMainWindow):
     def measurement_btn_Acquire_Histogram(self):
         thread.start_new_thread(self.aquire_histogram,())
     def measurement_btn_Acquire_IV(self):
-        thread.start_new_thread(self.aquire_iv,())
+        _min = self.editIVMin
+        _max = self.editIVMax
+        _time = self.editIVTime
+        _sample = self.checkIVSample
+        _double = self.checkIVDouble
+        #(self, _min=None, _max=None, _time=None, _sample=None, _double=None)
+        thread.start_new_thread(self.aquire_iv,(_min,_max,_time,_sample,_double))
+        
     def measurement_btn_Acquire_B_Circle(self):
         thread.start_new_thread(self.aquire_b_circle,())
+    def measurement_btn_Acquire_B_Sweep(self):
+        thread.start_new_thread(self.aquire_b_s,())
             
             
     def closeEvent(self, event):

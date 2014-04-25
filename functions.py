@@ -17,6 +17,20 @@ from configobj import ConfigObj
 import winsound
 #import tables
 
+
+
+def interpolate(x=[],xp=[],fp=[],scale_y=1.0):
+    """interpolates using np.interp() with some extras"""
+    min_index = min(len(xp),len(fp))-1
+    
+    xp = np.array(xp)
+    fp = np.array(fp)/scale_y
+    
+    interp_array = np.interp(x,xp[0:min_index],fp[0:min_index])
+    return interp_array
+    
+
+
 def round_to_digits(x, digits=1):
     return round(x, -int(np.floor(np.log10(abs(x)))) + (digits - 1))
 

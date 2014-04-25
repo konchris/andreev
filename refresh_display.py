@@ -9,6 +9,7 @@ import time
 from functions import log, find_min, round_to_digits
 from PyQt4 import QtGui
 import devices_andreev as DEV
+import inspect
 
 _self = None
 
@@ -42,10 +43,11 @@ def refresh_display():
             
             # iv
             _self.editIVDelay = float(_self.ui.editIVDelay.text())
-            _self.editIVSteps = float(_self.ui.editIVSteps.text())
+            _self.editIVTime = float(_self.ui.editIVTime.text())
             _self.editIVMin = float(_self.ui.editIVMin.text())
             _self.editIVMax = float(_self.ui.editIVMax.text())
             _self.checkIVSample = bool(_self.ui.checkIVSample.isChecked())
+            _self.checkIVDouble = bool(_self.ui.checkIVDouble.isChecked())
             
             # ultra
             _self.editUltraMin = float(_self.ui.editUltraMin.text())
@@ -55,8 +57,28 @@ def refresh_display():
             
             _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
             _self.factor_current = float(_self.ui.editFactorCurrent.text())
+            
+            form_objects = inspect.getmembers(_self.ui)
+            for element in form_objects:
+                try:
+                    if element[1].__class__.__name__ == 'QLineEdit':
+                        _self.form_data[str(element[1].objectName())] = element[1].text()
+                     
+                    if element[1].__class__.__name__ == 'QTabWidget':
+                        _self.form_data[str(element[1].objectName())] = element[1].currentIndex()
+                    
+                    if element[1].__class__.__name__ == 'QComboBox':
+                        _self.form_data[str(element[1].objectName())] = element[1].currentIndex()
+                    
+                    if element[1].__class__.__name__ == 'QCheckBox':
+                        _self.form_data[str(element[1].objectName())] = element[1].isChecked()
+                        
+                    if element[1].__class__.__name__ == 'QTextEdit':
+                        _self.form_data[str(element[1].objectName())] = element[1].toPlainText()
+                except Exception,e:
+                    print log("Failed to automatically read out the form parameters",e)
         except Exception,e:
-            log("Failed updating ui parameters",e)
+            log("Failed updating form parameters",e)
         
         max_datalength = int(_self.ui.editMaximumValues.text())
         for k,v in _self.data.items():
@@ -67,15 +89,15 @@ def refresh_display():
         try:
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
             sample_factor = _sample_res/(_sample_res+_self.rref)
-            _self.ui.editIVTimeEstimate.setText("%i s"%(round((_self.editIVDelay)*(abs(_self.editIVMax-_self.editIVMin)/_self.editIVSteps)))) 
+            #_self.ui.editIVTimeEstimate.setText("%i s"%(round((_self.editIVDelay)*(abs(_self.editIVMax-_self.editIVMin)/_self.editIVSteps)))) 
             if _self.checkIVSample:
                 _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(_self.editIVMin / sample_factor * 1e3,3)))
                 _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(_self.editIVMax / sample_factor * 1e3,3)))
-                _self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(_self.editIVSteps / sample_factor * 1e6,3)))
+                #_self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(_self.editIVSteps / sample_factor * 1e6,3)))
             else:
                 _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(sample_factor * _self.editIVMin * 1e3,3)))
                 _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(sample_factor * _self.editIVMax * 1e3,3)))
-                _self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(sample_factor * _self.editIVSteps * 1e6,3)))
+                #_self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(sample_factor * _self.editIVSteps * 1e6,3)))
         except Exception,e:
             log("Refresh Estimate Failed",e)#$(time::%d.%m.%y)
             
