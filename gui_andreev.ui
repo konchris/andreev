@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>11</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -1522,7 +1522,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>Goto Sweep</string>
+          <string>Goto Sweep 1</string>
          </property>
         </widget>
         <widget class="QWidget" name="gridLayoutWidget_9">
@@ -1634,7 +1634,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>Goto Sweep</string>
+          <string>Goto Sweep 2</string>
          </property>
         </widget>
        </widget>
@@ -1645,7 +1645,7 @@
         <widget class="QLabel" name="label_110">
          <property name="geometry">
           <rect>
-           <x>280</x>
+           <x>210</x>
            <y>20</y>
            <width>111</width>
            <height>16</height>
@@ -1658,24 +1658,163 @@
         <widget class="QWidget" name="gridLayoutWidget_10">
          <property name="geometry">
           <rect>
-           <x>280</x>
+           <x>210</x>
            <y>40</y>
-           <width>160</width>
-           <height>80</height>
+           <width>141</width>
+           <height>161</height>
           </rect>
          </property>
-         <layout class="QGridLayout" name="gridLayout_10"/>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_117">
+            <property name="text">
+             <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_120">
+            <property name="text">
+             <string>T</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="editBSweepMax_5"/>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_123">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_121">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_122">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_118">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_119">
+            <property name="text">
+             <string>Stepsize</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="editBCircleStart"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QPushButton" name="btnBCircleStart">
+            <property name="text">
+             <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_95">
+            <property name="text">
+             <string>Radius</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="editBCircleRadius"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editBCircleStepsize"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="editBCircleStop"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_124">
+            <property name="text">
+             <string>Stop</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_125">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
         <widget class="QWidget" name="gridLayoutWidget_11">
          <property name="geometry">
           <rect>
            <x>30</x>
            <y>40</y>
-           <width>160</width>
-           <height>80</height>
+           <width>121</width>
+           <height>91</height>
           </rect>
          </property>
-         <layout class="QGridLayout" name="gridLayout_11"/>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editBSweepMax"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboBSweepAxes">
+            <item>
+             <property name="text">
+              <string>IPS 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>IPS 2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Axes</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_91">
+            <property name="text">
+             <string>T</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_88">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="btnBSweepStart">
+            <property name="text">
+             <string>Start</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
         <widget class="QLabel" name="label_116">
          <property name="geometry">
@@ -3152,6 +3291,159 @@
    <header>guiqwt.plot</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>comboBSweepAxes</tabstop>
+  <tabstop>editBSweepMax</tabstop>
+  <tabstop>btnBSweepStart</tabstop>
+  <tabstop>editBCircleRadius</tabstop>
+  <tabstop>editBCircleStepsize</tabstop>
+  <tabstop>editBCircleStart</tabstop>
+  <tabstop>editBCircleStop</tabstop>
+  <tabstop>editBSweepMax_5</tabstop>
+  <tabstop>btnBCircleStart</tabstop>
+  <tabstop>editSetupDir</tabstop>
+  <tabstop>editHeader</tabstop>
+  <tabstop>textDescription</tabstop>
+  <tabstop>btnSaveDescription</tabstop>
+  <tabstop>btnNature</tabstop>
+  <tabstop>editCommand</tabstop>
+  <tabstop>btnExecute</tabstop>
+  <tabstop>editUltraMin</tabstop>
+  <tabstop>editUltraMax</tabstop>
+  <tabstop>editUltraStabilizeTime</tabstop>
+  <tabstop>editUltraColdTime</tabstop>
+  <tabstop>lineEdit_2</tabstop>
+  <tabstop>lineEdit_3</tabstop>
+  <tabstop>btnUltraStart</tabstop>
+  <tabstop>editHistogramBias</tabstop>
+  <tabstop>editHistogramUpper</tabstop>
+  <tabstop>editHistogramLower</tabstop>
+  <tabstop>editHistogramOpeningSpeed</tabstop>
+  <tabstop>editHistogramClosingSpeed</tabstop>
+  <tabstop>btnHistogramStart</tabstop>
+  <tabstop>checkHistogramEscape</tabstop>
+  <tabstop>editIVMin</tabstop>
+  <tabstop>editIVMax</tabstop>
+  <tabstop>editIVTime</tabstop>
+  <tabstop>checkIVDouble</tabstop>
+  <tabstop>btnIVStart</tabstop>
+  <tabstop>editIVMinEstimate</tabstop>
+  <tabstop>editIVMaxEstimate</tabstop>
+  <tabstop>checkIVSample</tabstop>
+  <tabstop>editOffsetAux0_2</tabstop>
+  <tabstop>editIVGap</tabstop>
+  <tabstop>editOffsetAux1_1</tabstop>
+  <tabstop>editOffsetAux1_2</tabstop>
+  <tabstop>btnOffset</tabstop>
+  <tabstop>checkIVGap</tabstop>
+  <tabstop>editTempSetpoint</tabstop>
+  <tabstop>editTempHeater</tabstop>
+  <tabstop>editTempP</tabstop>
+  <tabstop>editTempI</tabstop>
+  <tabstop>editTempD</tabstop>
+  <tabstop>btnTempSet</tabstop>
+  <tabstop>editTempSweepStart</tabstop>
+  <tabstop>editTempSweepStop</tabstop>
+  <tabstop>editTempSweepStep</tabstop>
+  <tabstop>editTempSweepDelay</tabstop>
+  <tabstop>btnTempSweep</tabstop>
+  <tabstop>btnTempSweepStop</tabstop>
+  <tabstop>comboTemperatureDisplay1a</tabstop>
+  <tabstop>comboTemperatureDisplay1b</tabstop>
+  <tabstop>comboTemperatureDisplay2a</tabstop>
+  <tabstop>comboTemperatureDisplay2b</tabstop>
+  <tabstop>comboTemperatureDisplay3a</tabstop>
+  <tabstop>comboTemperatureDisplay3b</tabstop>
+  <tabstop>comboTemperatureDisplay4a</tabstop>
+  <tabstop>comboTemperatureDisplay4b</tabstop>
+  <tabstop>btnTemperatureCustom</tabstop>
+  <tabstop>editBMax</tabstop>
+  <tabstop>editBRate</tabstop>
+  <tabstop>editBBias</tabstop>
+  <tabstop>btnBStart</tabstop>
+  <tabstop>btnBZeroMagnet</tabstop>
+  <tabstop>btnBInitMagnet</tabstop>
+  <tabstop>btnSwitchHeaterOn</tabstop>
+  <tabstop>btnSwitchHeaterOff</tabstop>
+  <tabstop>editBMax_2</tabstop>
+  <tabstop>editBRate_2</tabstop>
+  <tabstop>editBBias_2</tabstop>
+  <tabstop>btnBStart_2</tabstop>
+  <tabstop>btnBZeroMagnet_2</tabstop>
+  <tabstop>btnBInitMagnet_2</tabstop>
+  <tabstop>btnSwitchHeaterOn_2</tabstop>
+  <tabstop>btnSwitchHeaterOff_2</tabstop>
+  <tabstop>editLIFreq</tabstop>
+  <tabstop>editLITC</tabstop>
+  <tabstop>comboLIOrder</tabstop>
+  <tabstop>editLIAmpl</tabstop>
+  <tabstop>editAverage</tabstop>
+  <tabstop>editRate</tabstop>
+  <tabstop>checkLIAC</tabstop>
+  <tabstop>btnLockinSet</tabstop>
+  <tabstop>editLIPhase0</tabstop>
+  <tabstop>editLIPhase1</tabstop>
+  <tabstop>editLIPhase3</tabstop>
+  <tabstop>editLIPhase4</tabstop>
+  <tabstop>btnLIReadPhase</tabstop>
+  <tabstop>btnLIZeroPhase</tabstop>
+  <tabstop>editViewBegin</tabstop>
+  <tabstop>editViewEnd</tabstop>
+  <tabstop>editViewStep</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>editTimerInterval</tabstop>
+  <tabstop>editMaximumValues</tabstop>
+  <tabstop>checkViewConductance</tabstop>
+  <tabstop>checkViewT1</tabstop>
+  <tabstop>checkViewT2</tabstop>
+  <tabstop>checkAuto1a</tabstop>
+  <tabstop>checkAuto1b</tabstop>
+  <tabstop>checkAuto2a</tabstop>
+  <tabstop>checkAuto2b</tabstop>
+  <tabstop>checkAuto3a</tabstop>
+  <tabstop>checkAuto3b</tabstop>
+  <tabstop>checkAuto4a</tabstop>
+  <tabstop>checkAuto4b</tabstop>
+  <tabstop>editFactorVoltage</tabstop>
+  <tabstop>editFactorCurrent</tabstop>
+  <tabstop>editUpperLimit</tabstop>
+  <tabstop>editLowerLimit</tabstop>
+  <tabstop>editMotorCurrent</tabstop>
+  <tabstop>editMotorCurrentLimit</tabstop>
+  <tabstop>btnMotorSetLimit</tabstop>
+  <tabstop>btnMotorHome</tabstop>
+  <tabstop>editRRef</tabstop>
+  <tabstop>btnUnbreak</tabstop>
+  <tabstop>btnStop</tabstop>
+  <tabstop>btnBreak</tabstop>
+  <tabstop>editSpeed</tabstop>
+  <tabstop>btnMeasurementStop</tabstop>
+  <tabstop>editBias</tabstop>
+  <tabstop>btnSetBias</tabstop>
+  <tabstop>btnSaveStart</tabstop>
+  <tabstop>btnSaveStop</tabstop>
+  <tabstop>btnSaving</tabstop>
+  <tabstop>checkAutomaticGain</tabstop>
+  <tabstop>btnChBUp</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>btnStatusLockin</tabstop>
+  <tabstop>btnStatusTemperatur</tabstop>
+  <tabstop>btnStatusAgilents</tabstop>
+  <tabstop>btnStatusYoko</tabstop>
+  <tabstop>btnStatusMotor</tabstop>
+  <tabstop>btnStatusMagnet</tabstop>
+  <tabstop>editLastIV</tabstop>
+  <tabstop>editOffsetAux1_0</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>editOffsetAux0_0</tabstop>
+  <tabstop>btnChAUp</tabstop>
+  <tabstop>btnChADown</tabstop>
+  <tabstop>btnChBDown</tabstop>
+  <tabstop>editOffsetAux0_3</tabstop>
+  <tabstop>editOffsetAux1_3</tabstop>
+  <tabstop>editOffsetAux0_1</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

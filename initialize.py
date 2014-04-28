@@ -273,10 +273,9 @@ def init_validators(_self):
     _self.ui.editTimerInterval.setValidator(intValidator)
     _self.ui.editMaximumValues.setValidator(intValidator)
     # iv
+    _self.ui.editIVTime.setValidator(intValidator)
     _self.ui.editIVMin.setValidator(doubleValidator)
     _self.ui.editIVMax.setValidator(doubleValidator)
-    _self.ui.editIVSteps.setValidator(doubleValidator)
-    _self.ui.editIVDelay.setValidator(doubleValidator) 
     # temperature
     _self.ui.editTempSetpoint.setValidator(doubleValidator)
     _self.ui.editTempHeater.setValidator(intValidator)

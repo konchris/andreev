@@ -23,10 +23,11 @@ app = None
 
 class Magnet:
     def __init__(self, GPIB_No=27):
-        self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.01, term_chars='\r')
+        self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.0, term_chars='\r')
         self.rate=0.1
-        self.max_rate=0.5
-        self.heater=None
+        self.max_rate=2
+        self.set_field = 0
+        self.actual_field = 0
         
         self.status_a = 0
         self.status_b = 0
@@ -64,6 +65,7 @@ class Magnet:
             return False
 
     def ZeroField(self, rate=0.1):
+        self.set_field = 0
         if rate > self.max_rate:
             rate = self.max_rate
         try:            
@@ -117,7 +119,7 @@ class Magnet:
                     
         
     def ReadField(self):
-        return self.data["field"][-1]        
+        return self.actual_field       
 
     def SetField(self, target=0.0, rate=0.1): 
         if rate > self.max_rate:
@@ -125,6 +127,7 @@ class Magnet:
         if not rate is None:
             self.rate=rate
         try:
+            self.set_field = target
             self.magnet.write('$J%f'%target)
             self.magnet.write('$T%f'%self.rate)
             self.magnet.write('$A1')
@@ -132,31 +135,19 @@ class Magnet:
             #sleep(0.2)
         except:
             print('ERROR: Set B field failed')
-            pass       
-        
-    def SetFieldWait(self, target=0.0, rate=0.01):  
-        if rate > self.max_rate:
-            rate = self.max_rate
+            pass     
+    
+    def field_reached(self):
+        """ returns True if the desired field is already reached
+            returns False if not"""
         try:
-            self.SetField(target=target, rate=rate)
-            BField=self.ReadField()            
-            check=False
-            dauer=60*(abs(target-BField)/rate)+1
-            while check!=True:
-                BField=self.ReadField()
-                wartezeit=60*(abs(target-BField)/rate)+1
-                if BField==target:
-                    log('Target Field reached...OK')
-                    check=True
-                    break
-                else:
-                    log('Wait to set field...remaining '+str(int(wartezeit))+' seconds')
-                    time.sleep(dauer/3)
-                    pass
+            if abs(self.actual_field - self.set_field) < 0.0001:
+                return True
+            else:
+                return False
         except Exception,e:
-            log('ERROR: Set B feld failed',e)
-            pass       
-
+            log("Couldn't determine if field reached!",e)
+            return False
 
     def set_switchheater(self, value='ON'):
         """set switch heater 'ON', 'OFF' or 'zeroOFF'"""
@@ -199,15 +190,16 @@ class Magnet:
         log("Magnet Thread started!")
         while not stop:
             try:
-                field=float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
+                #self.magnet.clear()
+                self.actual_field = float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
                 self.ReadStatus()
             except:
-                field=999
+                self.actual_field=999
 
             # append gathered data to internal data dictionary
             self.data_lock.acquire()
             self.data["timestamp"].append(time.time())
-            self.data["field"].append(field)
+            self.data["field"].append(self.actual_field)
             self.data_lock.release()
             
             time.sleep(delay)
@@ -216,17 +208,20 @@ class Magnet:
         
 class LAKESHORE:
     def __init__(self,addr=12):
-        self.lakeshore=visa.instrument("GPIB::%i"%(addr),timeout=0.2)
+        self.lakeshore=visa.instrument("GPIB0::%i"%(addr),timeout=0.1)
         #self.initialize()
         
         self.data = {}
-
+        print "LAKESHORE INIT ---------------"
+        print self.lakeshore.ask("KRDG? B")
         self.gpib_lock = thread.allocate_lock()
         self.data_lock = thread.allocate_lock()
         #self.data_lock.acquire()
         self.data["timestamp"] = []
         self.data["temperature1"] = []
         self.data["temperature2"] = []
+        self.data["sensor1"] = []
+        self.data["sensor2"] = []
         thread.start_new_thread(self.temperature_thread,(0.1,))
 
     def initialize(self):
@@ -321,6 +316,8 @@ class LAKESHORE:
             self.data["timestamp"] = []
             self.data["temperature1"] = []
             self.data["temperature2"] = []
+            self.data["sensor1"] = []
+            self.data["sensor2"] = []
         # release lock
         self.data_lock.release()
         return return_data    
@@ -331,12 +328,16 @@ class LAKESHORE:
             try:
                 self.gpib_lock.acquire()
                 temperature1 = float(self.lakeshore.ask('KRDG? A'))            
-                temperature2 = float(self.lakeshore.ask('SRDG? B'))
+                temperature2 = float(self.lakeshore.ask('KRDG? B'))
+                #sensor1 = 0#float(self.lakeshore.ask('SRDG? A'))            
+                #sensor2 = 0#float(self.lakeshore.ask('SRDG? B'))
                 self.gpib_lock.release()
             except Exception,e:
-                log("Temperature Acquire Failed",e)
+                log("Temperature Aquire Failed",e)
                 temperature1 = 0         
                 temperature2 = 0
+                #sensor1 = 0
+                #sensor2 = 0
 
             # append gathered data to internal data dictionary
             
@@ -344,6 +345,8 @@ class LAKESHORE:
             self.data["timestamp"].append(time.time())
             self.data["temperature1"].append(temperature1)
             self.data["temperature2"].append(temperature2)
+            #self.data["sensor1"].append(sensor1)
+            #self.data["sensor2"].append(sensor2)
             self.data_lock.release()
             
             time.sleep(delay)
@@ -1344,8 +1347,8 @@ def lakeshore_starter():
             lakeshore = LAKESHORE()
             log("Found Lakeshore")
             found = True
-        except:
-            #log("Couldn't Find Lakeshore")
+        except Exception,e:
+            log("Couldn't Find Lakeshore",e)
             time.sleep(device_delay)
 
 

@@ -42,7 +42,6 @@ def refresh_display():
             _self.editHistogramClosingSpeed = float(_self.ui.editHistogramClosingSpeed.text())
             
             # iv
-            _self.editIVDelay = float(_self.ui.editIVDelay.text())
             _self.editIVTime = float(_self.ui.editIVTime.text())
             _self.editIVMin = float(_self.ui.editIVMin.text())
             _self.editIVMax = float(_self.ui.editIVMax.text())
@@ -238,18 +237,21 @@ def refresh_display():
                 _self.data_curve6b.set_data([],[])
             _self.ui.cw3.plot.do_autoscale()
             
-            x0 = find_min(_self.data["ips_timestamp"],begin)
-            x1 = find_min(_self.data["ips_timestamp"],end)
+            try:
+                x0 = find_min(_self.data["ips_timestamp"],begin)
+                x1 = find_min(_self.data["ips_timestamp"],end)
                             
-            ips_x = np.array(_self.data["ips_timestamp"][x0:x1:step])-_self._start_time
-            _self.data_curve5.set_data(ips_x, _self.data["ips_mfield"][x0:x1:step])
+                ips_x = np.array(_self.data["ips_timestamp"][x0:x1:step])-_self._start_time
+                _self.data_curve5.set_data(ips_x, _self.data["ips_mfield"][x0:x1:step])
+            except Exception,e:
+                log("IPS Display Failed",e)
             
             try:
                 x0 = find_min(_self.data["ips_2_timestamp"],begin)
                 x1 = find_min(_self.data["ips_2_timestamp"],end)
                                 
                 ips_x = np.array(_self.data["ips_2_timestamp"][x0:x1:step])-_self._start_time
-                _self.data_curve5.set_data(ips_x, _self.data["ips_2_mfield"][x0:x1:step])
+                _self.data_curve5b.set_data(ips_x, _self.data["ips_2_mfield"][x0:x1:step])
             except Exception,e:
                 log("IPS 2 Display Failed",e)
             _self.ui.cw3.plot.do_autoscale()

@@ -16,6 +16,7 @@ import numpy as np
 import functions
 import visa
 
+
 from guidata.qt.QtCore import QTimer#,SIGNAL
 
 
@@ -40,9 +41,18 @@ class main_program(QtGui.QMainWindow):
             self.volume = int(self.ui.editSetVolume.text())
         except:
             self.volume = 0
-        self.volume_list = []
+        
         self.start_time = time.time()
-        self.volume_time = []
+        
+        
+        try:
+            npzfile = np.load("volume_data.npz")
+            self.volume_list = list(npzfile["volume_list"])
+            self.volume_time = list(npzfile["volume_time"])
+        except Exception,e:
+            self.volume_time = []
+            self.volume_list = []
+            functions.log("Loading Volume failed",e)
         
         self.timer_update = 2
         self.flow_range = 30
@@ -50,14 +60,18 @@ class main_program(QtGui.QMainWindow):
         from guiqwt.builder import make
         self.data_volume = make.curve([],[])
         self.data_flow = make.curve([],[], yaxis="right", color="b")
-        self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.Y_LEFT, "Volume (L)")
-        self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.Y_RIGHT, "Flow (L)")
+        self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.Y_LEFT, "Volume (LHeGas)")
+        self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.Y_RIGHT, "Flow (LLHe/h)")
         self.ui.curvewidget.plot.add_item(self.data_volume)
         self.ui.curvewidget.plot.add_item(self.data_flow)
+        self.ui.curvewidget.plot.enable_used_axes()
         
         self.timer_display = QTimer()
+        self.timer_autosave = QTimer()
         self.timer_display.timeout.connect(self.refresh_display)
-        self.timer_display.start(self.timer_update * 1000)
+        self.timer_display.timeout.connect(self.autosave)
+        self.timer_display.start(1000)
+        self.timer_autosave.start(60*1000)
         
         self.arduino = ARDUINO()
 
@@ -72,10 +86,21 @@ class main_program(QtGui.QMainWindow):
         try:
             min_items = int(self.flow_range / self.timer_update)
             if len(self.volume_list) > min_items+1:
-                p = np.polyfit(np.array(self.volume_time)[-min_items:-1]-self.start_time,self.volume_list[-min_items:-1],1)
-                self.ui.labelFlow.setText("%2.2f LLHe/h"%(p[0]*3600/750))
+                p = np.polyfit(np.array(self.volume_time[-min_items:-1])-self.start_time,self.volume_list[-min_items:-1],1)
+                self.ui.labelFlow.setText("%2.2f LLHe/h"%(p[0]*3600.0/757.0))
             else:
                 self.ui.labelFlow.setText("")
+            
+            i = len(self.volume_list)-1
+            flow = []
+            flow_time = []
+            while i > min_items+1:
+                p = np.polyfit(np.array(self.volume_time[i-min_items:i])-self.start_time, self.volume_list[i-min_items:i], 1)
+                flow.append(p[0]*3600.0/757.0)            
+                flow_time.append(self.volume_time[i-min_items/2])
+                
+                i -= min_items/2
+            self.data_flow.set_data(np.array(flow_time)-self.start_time,flow)
         except Exception, e:
             functions.log("Failed Calculating Flow",e)
             
@@ -87,7 +112,15 @@ class main_program(QtGui.QMainWindow):
         self.timer_update = float(self.ui.editRefresh.text())
         self.timer_display.setInterval(int(self.timer_update * 1000))
         
+    def autosave(self):
+        try:
+            np.savez("volume_data", volume_list=self.volume_list, volume_time=self.volume_time)
+        except Exception,e:
+            functions.log("Saving Volume failed",e)
+        
+        functions.write_config(self.ui)
         functions.export_html(self.ui,"C:\wamp\www\helium\\")
+    
     
     def set_volume(self):
         try:
@@ -105,6 +138,10 @@ class main_program(QtGui.QMainWindow):
         try:
             self.ui.editSetVolume.setText(str(self.volume))
             functions.write_config(self.ui)
+            try:
+                np.savez("volume_data", volume_list=self.volume_list, volume_time=self.volume_time)
+            except Exception,e:
+                functions.log("Saving Volume failed",e)
             functions.log("Exiting")
         except Exception,e:
             print e

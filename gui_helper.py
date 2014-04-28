@@ -177,10 +177,13 @@ def measurement_btn_Stop():
 def temp_sweep_stop():
     _self.temp_sweep_abort = True
     
-def set_bias():     
-    bias = float(_self.ui.editBias.text())
-    DEV.yoko.set_voltage(bias)
-    DEV.yoko.output(True)
+def set_bias():
+    try:     
+        bias = float(_self.ui.editBias.text())
+        DEV.yoko.set_voltage(bias)
+        DEV.yoko.output(True)
+    except Exception,e:
+        log("Failed to set Bias",e)
 
 
 # temp
