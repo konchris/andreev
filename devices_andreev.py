@@ -26,7 +26,7 @@ class Magnet:
         self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.0, term_chars='\r')
         self.rate=0.1
         self.max_rate=2
-        self.set_field = 0
+        self.goto_field = 0
         self.actual_field = 0
         
         self.status_a = 0
@@ -56,8 +56,10 @@ class Magnet:
                 print('Magnet Initializing...Please Wait 20s')
                 for i in range (40):
                     time.sleep(0.5)
-                    app.processEvents()
-                
+                    try:
+                        app.processEvents()
+                    except:
+                        pass
             self.magnet.write('$A0')     #hold operation
             return True 
         except Exception,e:
@@ -65,7 +67,7 @@ class Magnet:
             return False
 
     def ZeroField(self, rate=0.1):
-        self.set_field = 0
+        self.goto_field = 0
         if rate > self.max_rate:
             rate = self.max_rate
         try:            
@@ -121,17 +123,18 @@ class Magnet:
     def ReadField(self):
         return self.actual_field       
 
-    def SetField(self, target=0.0, rate=0.1): 
+    def SetField(self, target=0.0, rate=0.1, verbal=True): 
         if rate > self.max_rate:
             rate = self.max_rate
         if not rate is None:
             self.rate=rate
         try:
-            self.set_field = target
+            self.goto_field = target
             self.magnet.write('$J%f'%target)
             self.magnet.write('$T%f'%self.rate)
             self.magnet.write('$A1')
-            log('Field Set to '+str(target)+'...OK')
+            if verbal:
+                print 'Field Set to %f...OK'%(target)
             #sleep(0.2)
         except:
             print('ERROR: Set B field failed')
@@ -141,7 +144,7 @@ class Magnet:
         """ returns True if the desired field is already reached
             returns False if not"""
         try:
-            if abs(self.actual_field - self.set_field) < 0.0001:
+            if abs(self.actual_field - self.goto_field) < 0.0001:
                 return True
             else:
                 return False
@@ -208,7 +211,7 @@ class Magnet:
         
 class LAKESHORE:
     def __init__(self,addr=12):
-        self.lakeshore=visa.instrument("GPIB0::%i"%(addr),timeout=0.1)
+        self.lakeshore=visa.instrument("GPIB0::%i"%(addr),timeout=0.1, term_chars="\r\n")
         #self.initialize()
         
         self.data = {}
@@ -331,13 +334,14 @@ class LAKESHORE:
                 temperature2 = float(self.lakeshore.ask('KRDG? B'))
                 #sensor1 = 0#float(self.lakeshore.ask('SRDG? A'))            
                 #sensor2 = 0#float(self.lakeshore.ask('SRDG? B'))
-                self.gpib_lock.release()
             except Exception,e:
                 log("Temperature Aquire Failed",e)
                 temperature1 = 0         
                 temperature2 = 0
                 #sensor1 = 0
                 #sensor2 = 0
+            finally:
+                self.gpib_lock.release()
 
             # append gathered data to internal data dictionary
             

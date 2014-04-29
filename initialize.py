@@ -308,7 +308,11 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnUltraStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_Ultra)
     QtCore.QObject.connect(_self.ui.btnHistogramStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_Histogram)
     QtCore.QObject.connect(_self.ui.btnIVStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_IV)  
+    QtCore.QObject.connect(_self.ui.btnBCircleStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_B_Circle)
+    QtCore.QObject.connect(_self.ui.btnBSweepStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_B_Sweep)
     
+    QtCore.QObject.connect(_self.ui.btnNature, QtCore.SIGNAL("clicked()"), gui_helper.send_to_nature)
+
     QtCore.QObject.connect(_self.ui.btnBStart, QtCore.SIGNAL("clicked()"), gui_helper.magnet_goto)   
     QtCore.QObject.connect(_self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_init)    
     QtCore.QObject.connect(_self.ui.btnBZeroMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_zero)   

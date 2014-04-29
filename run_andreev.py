@@ -28,14 +28,12 @@ from functions import *
 import initialize,refresh_display,gui_helper
 
 
-
-
 class main_program(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        DEV.app = myapp
+        DEV.app = app
         
         initialize._self = self
         refresh_display._self = self
@@ -587,9 +585,61 @@ class main_program(QtGui.QMainWindow):
         angles = np.arange(_start,_stop,_stepsize)
         angle_index = 0
 
-        print angles
-             
+        begin_time = time.time()
+        if not self.f_config == None:
+            self.f_config.write("BCIRCLE_START\t%15.15f\n"%(begin_time))
+        log("B Circle %f"%_time) 
+        last_time = time.time()      
         while not self.stop_measure:
+            if time.time() - last_time > 1: # check if update needed
+                last_time = time.time()
+
+                try:
+                    self.data_lock.acquire()
+                    
+                    x_list = np.arange(begin_time,last_time,0.1)
+ 
+                    try:
+                        #voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                        #current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                        li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+                        li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+                        #li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+                        #li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+                        li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+                        li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+                        #li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+                        #li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+                        b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+                        b_2 = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+                        
+                        li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                        #li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                        li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                        #li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                        
+                        li_first = li_3_r/li_0_r*12900    # first
+                        #li_second = li_4_r/li_1_r*12900   # second
+                        
+                                                    
+                        self.plot_data["x3"] = np.arctan(b_1/b_2)
+                        self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                        
+                        #self.plot_data["x4"] = np.arctan(b_1/b_2)
+                        #self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                        
+                        self.plot_data["new"][2] = True
+                        #self.plot_data["new"][3] = True
+                    except Exception,e:
+                        log("IV interpolation failed",e)
+            
+                    self.plot_data["x1"] = b_1[:]
+                    self.plot_data["y1"] = b_2[:]
+                    self.plot_data["new"][0] = True 
+                    
+                finally:
+                    self.data_lock.release()
+                    
             if DEV.magnet.field_reached() and DEV.magnet_2.field_reached():
                 # do whatever
                 
@@ -597,45 +647,48 @@ class main_program(QtGui.QMainWindow):
                 b_1 = np.cos(np.deg2rad(angle))*_radius
                 b_2 = np.sin(np.deg2rad(angle))*_radius 
                 
-                DEV.magnet.set_field(b_1, rate_1)
-                DEV.magnet_2.set_field(b_2, rate_2)
+                DEV.magnet.SetField(b_1, rate_1, verbal=False)
+                DEV.magnet_2.SetField(b_2, rate_2, verbal=False)
                 
-                if angle_index >= len(angles)-1:
+                if angle_index >= len(angles):
                     log("Angles done!")
                     self.stop_measure = True
                 angle_index += 1
             time.sleep(0.01)
+        DEV.magnet.ZeroField(rate_1)
+        DEV.magnet_2.ZeroField(rate_2)
 
    
     def aquire_b_sweep(self, _max=None, _rate=None, _axes=None):  
         """aquire sweep to b field and perhaps back"""
         self.stop_measure = False
-                       
-        fields = [_max,0,-_max,0]
+        _axes += 1              
+        log("B Sweep Started")
+        fields = [_max,-_max,_max,0]
         field_index = 0
-      
+        print fields
+        print _axes
         while not self.stop_measure:
             if _axes == 1:
                 if DEV.magnet.field_reached():
-                    if field_index >= len(fields)-1:
+                    if field_index >= len(fields):
                         log("Fields done!")
                         self.stop_measure = True
                     else:
-                        field_index += 1
                         DEV.magnet.SetField(fields[field_index], _rate) 
+                        field_index += 1
+                        
             
             if _axes == 2:
                 if DEV.magnet_2.field_reached():
-                    if field_index >= len(fields)-1:
+                    if field_index >= len(fields):
                         log("Fields done!")
                         self.stop_measure = True
-                    else:
+                    else:                        
+                        DEV.magnet_2.SetField(fields[field_index], _rate) 
                         field_index += 1
-                        DEV.magnet_2.SetField(fields[field_index], _rate)    
-            time.sleep(0.1)
-             
-        # switch off voltage
-        DEV.yoko.set_voltage(0)
+            time.sleep(0.5)
+        log("B Sweep Done")
 
    
     def measurement_thread(self):
@@ -860,8 +913,8 @@ class main_program(QtGui.QMainWindow):
     def measurement_btn_Acquire_B_Circle(self):
         _radius = float(self.form_data["editBCircleRadius"])
         _stepsize = int(self.form_data["editBCircleStepsize"])     
-        _stepsize = int(self.form_data["editBCircleStart"])
-        _stepsize = int(self.form_data["editBCircleStop"])
+        _start = int(self.form_data["editBCircleStart"])
+        _stop = int(self.form_data["editBCircleStop"])
         
         # self, _radius, _stepsize, _start, _stop)
         thread.start_new_thread(self.aquire_b_circle,(_radius, _stepsize, _start, _stop))
