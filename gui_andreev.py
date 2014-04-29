@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui_andreev.ui'
 #
-# Created: Sun Apr 27 21:18:42 2014
+# Created: Tue Apr 29 10:56:18 2014
 #      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -623,7 +623,7 @@ class Ui_MainWindow(object):
         self.label_110.setGeometry(QtCore.QRect(210, 20, 111, 16))
         self.label_110.setObjectName(_fromUtf8("label_110"))
         self.gridLayoutWidget_10 = QtGui.QWidget(self.tab_13)
-        self.gridLayoutWidget_10.setGeometry(QtCore.QRect(210, 40, 141, 161))
+        self.gridLayoutWidget_10.setGeometry(QtCore.QRect(210, 40, 149, 161))
         self.gridLayoutWidget_10.setObjectName(_fromUtf8("gridLayoutWidget_10"))
         self.gridLayout_10 = QtGui.QGridLayout(self.gridLayoutWidget_10)
         self.gridLayout_10.setMargin(0)
@@ -634,9 +634,10 @@ class Ui_MainWindow(object):
         self.label_120 = QtGui.QLabel(self.gridLayoutWidget_10)
         self.label_120.setObjectName(_fromUtf8("label_120"))
         self.gridLayout_10.addWidget(self.label_120, 0, 2, 1, 1)
-        self.editBSweepMax_5 = QtGui.QLineEdit(self.gridLayoutWidget_10)
-        self.editBSweepMax_5.setObjectName(_fromUtf8("editBSweepMax_5"))
-        self.gridLayout_10.addWidget(self.editBSweepMax_5, 4, 1, 1, 1)
+        self.editBSweepPos = QtGui.QLineEdit(self.gridLayoutWidget_10)
+        self.editBSweepPos.setEnabled(False)
+        self.editBSweepPos.setObjectName(_fromUtf8("editBSweepPos"))
+        self.gridLayout_10.addWidget(self.editBSweepPos, 4, 1, 1, 1)
         self.label_123 = QtGui.QLabel(self.gridLayoutWidget_10)
         self.label_123.setObjectName(_fromUtf8("label_123"))
         self.gridLayout_10.addWidget(self.label_123, 4, 2, 1, 1)
@@ -1214,7 +1215,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuTesttext.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(11)
+        self.tabWidget.setCurrentIndex(6)
         self.comboLIOrder.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.comboBSweepAxes, self.editBSweepMax)
@@ -1223,8 +1224,8 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.editBCircleRadius, self.editBCircleStepsize)
         MainWindow.setTabOrder(self.editBCircleStepsize, self.editBCircleStart)
         MainWindow.setTabOrder(self.editBCircleStart, self.editBCircleStop)
-        MainWindow.setTabOrder(self.editBCircleStop, self.editBSweepMax_5)
-        MainWindow.setTabOrder(self.editBSweepMax_5, self.btnBCircleStart)
+        MainWindow.setTabOrder(self.editBCircleStop, self.editBSweepPos)
+        MainWindow.setTabOrder(self.editBSweepPos, self.btnBCircleStart)
         MainWindow.setTabOrder(self.btnBCircleStart, self.editSetupDir)
         MainWindow.setTabOrder(self.editSetupDir, self.editHeader)
         MainWindow.setTabOrder(self.editHeader, self.textDescription)
@@ -1557,10 +1558,10 @@ class Ui_MainWindow(object):
         self.label_110.setText(QtGui.QApplication.translate("MainWindow", "Circle", None, QtGui.QApplication.UnicodeUTF8))
         self.label_117.setText(QtGui.QApplication.translate("MainWindow", "Start", None, QtGui.QApplication.UnicodeUTF8))
         self.label_120.setText(QtGui.QApplication.translate("MainWindow", "T", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_123.setText(QtGui.QApplication.translate("MainWindow", "Max", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_123.setText(QtGui.QApplication.translate("MainWindow", "°", None, QtGui.QApplication.UnicodeUTF8))
         self.label_121.setText(QtGui.QApplication.translate("MainWindow", "°", None, QtGui.QApplication.UnicodeUTF8))
         self.label_122.setText(QtGui.QApplication.translate("MainWindow", "°", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_118.setText(QtGui.QApplication.translate("MainWindow", "Max", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_118.setText(QtGui.QApplication.translate("MainWindow", "Position", None, QtGui.QApplication.UnicodeUTF8))
         self.label_119.setText(QtGui.QApplication.translate("MainWindow", "Stepsize", None, QtGui.QApplication.UnicodeUTF8))
         self.btnBCircleStart.setText(QtGui.QApplication.translate("MainWindow", "Start", None, QtGui.QApplication.UnicodeUTF8))
         self.label_95.setText(QtGui.QApplication.translate("MainWindow", "Radius", None, QtGui.QApplication.UnicodeUTF8))

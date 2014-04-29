@@ -588,7 +588,7 @@ class main_program(QtGui.QMainWindow):
         begin_time = time.time()
         if not self.f_config == None:
             self.f_config.write("BCIRCLE_START\t%15.15f\n"%(begin_time))
-        log("B Circle %f"%_time) 
+        log("B Circle %f"%(begin_time))
         last_time = time.time()      
         while not self.stop_measure:
             if time.time() - last_time > 1: # check if update needed
@@ -650,7 +650,7 @@ class main_program(QtGui.QMainWindow):
                 DEV.magnet.SetField(b_1, rate_1, verbal=False)
                 DEV.magnet_2.SetField(b_2, rate_2, verbal=False)
                 
-                if angle_index >= len(angles):
+                if angle_index >= len(angles)-1:
                     log("Angles done!")
                     self.stop_measure = True
                 angle_index += 1
