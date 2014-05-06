@@ -21,6 +21,8 @@ import zhinst.ziPython, zhinst.utils
 stop = False
 app = None
 
+gpib_lock = thread.allocate_lock()
+
 class Magnet:
     def __init__(self, GPIB_No=27):
         self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.0, term_chars='\r', timeout=0.2)#VI_EXCLUSIVE_LOCK
@@ -29,13 +31,16 @@ class Magnet:
         self.max_rate=2
         self.goto_field = 0
         self.actual_field = 0
-        
+        #print "a"
         self.status_a = 0
         self.status_b = 0
         self.activity = 0
         self.local = 0
         self.heater = False
-        self.ReadStatus()
+        
+        #print "b"
+        #self.ReadStatus()
+        #print "c"
         
         self.data = {}
         self.data_lock = thread.allocate_lock()
@@ -45,6 +50,7 @@ class Magnet:
 
     def initialize(self):
         try:
+            gpib_lock.acquire()
             self.magnet.write('$C3')     #remote & unlocked        
             time.sleep(0.1)
             self.magnet.write('$Q4')     #four digits extended resolution            
@@ -66,6 +72,8 @@ class Magnet:
         except Exception,e:
             log('ERROR: magnet initialization failed',e)
             return False
+        finally:
+            gpib_lock.release()
 
     def ZeroField(self, rate=0.1):
         self.goto_field = 0
@@ -83,7 +91,9 @@ class Magnet:
     def ReadStatus(self):
         """Saves the Status of the magnet to local variables."""        
         try:
+            #print "try ask x"
             answer = self.magnet.ask('X')
+            #print answer 
             
             self.status_a = int(answer[1])
             self.status_b = int(answer[2])
@@ -194,11 +204,15 @@ class Magnet:
         log("Magnet Thread started!")
         while not stop:
             try:
+                gpib_lock.acquire()
                 #self.magnet.clear()
                 self.actual_field = float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
-                self.ReadStatus()
-            except:
-                self.actual_field=22
+                #self.ReadStatus()
+            except Exception,e:
+                self.actual_field=11
+                log("Magnet Thread Acquire Failed",e)
+            finally:
+                gpib_lock.release()
 
             # append gathered data to internal data dictionary
             self.data_lock.acquire()
@@ -217,8 +231,6 @@ class LAKESHORE:
         
         self.data = {}
         print "LAKESHORE INIT ---------------"
-        print self.lakeshore.ask("KRDG? B")
-        self.gpib_lock = thread.allocate_lock()
         self.data_lock = thread.allocate_lock()
         #self.data_lock.acquire()
         self.data["timestamp"] = []
@@ -330,7 +342,7 @@ class LAKESHORE:
         log("Temperature Thread started!")
         while not stop:
             try:
-                self.gpib_lock.acquire()
+                gpib_lock.acquire()
                 temperature1 = float(self.lakeshore.ask('KRDG? A'))            
                 temperature2 = float(self.lakeshore.ask('KRDG? B'))
                 #sensor1 = 0#float(self.lakeshore.ask('SRDG? A'))            
@@ -342,7 +354,7 @@ class LAKESHORE:
                 #sensor1 = 0
                 #sensor2 = 0
             finally:
-                self.gpib_lock.release()
+                gpib_lock.release()
 
             # append gathered data to internal data dictionary
             
@@ -1341,8 +1353,8 @@ def magnet_starter():
             magnet = Magnet(26)
             log("Found Magnet")
             found = True
-        except:
-            #log("Couldn't Find Magnet")
+        except Exception,e:
+            log("Couldn't Find Magnet",e)
             time.sleep(device_delay)
 
 def magnet_starter_2():
@@ -1353,8 +1365,8 @@ def magnet_starter_2():
             magnet_2 = Magnet(25)
             log("Found Magnet 2")
             found = True
-        except:
-            #log("Couldn't Find Magnet")
+        except Exception,e:
+            log("Couldn't Find Magnet",e)
             time.sleep(device_delay)
             
 def lakeshore_starter():

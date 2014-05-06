@@ -288,6 +288,7 @@ class main_program(QtGui.QMainWindow):
                                 _rate = float(self.form_data["editUltraBSweepRate"])
                                 _ips = int(self.form_data["comboUltraBSweepAxes"])
                                 self.aquire_b_sweep(_max,_rate,_ips)
+                                #self.stop_measure = False
                                 
                             if self.form_data["comboUltraAction"] == 2:
                                 # stretching
@@ -297,6 +298,9 @@ class main_program(QtGui.QMainWindow):
                                 # exit
                                 log("Start Exiting")
                                 self.stop_measure = True
+                                break
+                        
+                            if self.stop_measure:
                                 break
                         else:
                             log("Resuming Ultra")
@@ -381,19 +385,20 @@ class main_program(QtGui.QMainWindow):
         DEV.yoko.program_goto_ramp(_min, 1)
         time.sleep(1)       
         
-        # note down begin of sweep
-        self.begin_time_iv = time.time()
-        if not self.f_config == None:
-            self.f_config.write("IV_START\t%15.15f\n"%(self.begin_time_iv))
-
+        
         log("IV Loop %f"%_time) 
         # load counter
         loop_count = 2
-        # last_time is used for display updating        
+        # last_time is used for display updating 
+        self.begin_time_iv = time.time()
         last_time = time.time() 
         start_sweep_yoko = True
         while loop_count > 0.1:
             if start_sweep_yoko:
+                # note down begin of sweep
+                self.begin_time_iv = time.time()
+                if not self.f_config == None:
+                    self.f_config.write("IV_START\t%15.15f\n"%(self.begin_time_iv))
                 start_sweep_yoko = False
                 if loop_count % 2: # if not even = odd (2nd/4th run in double)
                     DEV.yoko.program_goto_ramp(_min, _time)
@@ -587,6 +592,8 @@ class main_program(QtGui.QMainWindow):
             
             value = value+steps
           
+        if not self.f_config == None:
+            self.f_config.write("TEMPERATURE_START\t%15.15f\t\n"%(time.time()))
         for _temperature in step_list:
                 DEV.lakeshore.set_setpoint(_temperature)
                 _i = delay
@@ -599,6 +606,9 @@ class main_program(QtGui.QMainWindow):
                     
                 if self.temp_sweep_abort:
                         break
+                    
+        if not self.f_config == None:
+            self.f_config.write("TEMPERATURE_STOP\t%15.15f\t\n"%(time.time()))
         log("Temperature Sweep finished")
         
     
@@ -684,6 +694,8 @@ class main_program(QtGui.QMainWindow):
                 if self.stop_measure: # check for stop condition
                     break
             time.sleep(0.01)
+        if not self.f_config == None:
+            self.f_config.write("BCIRCLE_STOP\t%15.15f\n"%(time.time()))
         DEV.magnet.ZeroField(rate_1)
         DEV.magnet_2.ZeroField(rate_2)
         
@@ -714,53 +726,9 @@ class main_program(QtGui.QMainWindow):
                         self.stop_measure = True
                     else:
                         DEV.magnet.SetField(fields[field_index], _rate) 
-                        print fields[field_index]
+                        print "IPS set to %f T"%(fields[field_index])
                         field_index += 1
                 
-                if time.time() - last_time > 1: # check if update needed
-                    last_time = time.time()
-    
-                    try:
-                        self.data_lock.acquire()
-                        
-                        x_list = np.arange(self.begin_time_b2,last_time,0.1)
-                        try:
-                            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
-                            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-                            #li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-                            #li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                            #li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-                            #li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-                            #li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-                            #li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-                            #li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-                            #li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
-                            b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
-                            #b_2 = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
-                            
-                            #li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-                            #li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
-                            #li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-                            #li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-                            
-                            #li_first = li_3_r/li_0_r*12900    # first
-                            #li_second = li_4_r/li_1_r*12900   # second
-                            
-                                                        
-                            self.plot_data["x1"] = b_1
-                            self.plot_data["y1"] = voltage_list/current_list*self.rref
-                            
-                            #self.plot_data["x4"] = np.arctan(b_1/b_2)
-                            #self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
-                            
-                            self.plot_data["new"][0] = True
-                            #self.plot_data["new"][3] = True
-                        except Exception,e:
-                            log("IV interpolation failed",e)
-                            
-                    finally:
-                        self.data_lock.release()
-
             if _axes == 2:
                 if DEV.magnet_2.field_reached():
                     if field_index >= len(fields):
@@ -769,53 +737,83 @@ class main_program(QtGui.QMainWindow):
                     else:                        
                         DEV.magnet_2.SetField(fields[field_index], _rate) 
                         field_index += 1
+                        
+            if time.time() - last_time > 1: # check if update needed
+                    last_time = time.time()
+    
+                    try:
+                        self.data_lock.acquire()
+                        x_list = np.arange(self.begin_time_b2,last_time,0.1)
+
+                        voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                        current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                        
+                        if _axes == 1:
+                            b = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+                        if _axes == 2:
+                            b = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+ 
+                        self.plot_data["x1"] = b
+                        self.plot_data["y1"] = voltage_list/current_list*self.rref
+                        self.plot_data["new"][0] = True
+                    except Exception,e:
+                        log("B Sweep interpolation failed",e)       
+                    finally:
+                        self.data_lock.release()
+                        
             if self.stop_measure: # check for stop condition
                 break
             time.sleep(0.5)
+        end_time = time.time()    
             
+        try:
+            self.data_lock.acquire()
             
-            # saving data
-            """
-            try:        
-                saving_data = [voltage_timestamp, voltage_list, b_1]
-                d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
-                d_name = os.path.dirname(d)
-                if not os.path.exists(d_name):
-                    os.makedirs(d_name)
-                time_string = str(int(round(time.time())))
-                file_string = "bsweep_%s.txt"%(time_string)
-                f_iv = open(d+file_string, 'a')
-                try:
-                    params = self.data.copy()
-                    params.update(DEV.lockin.get_param())
-                    for k,v in params.items():
-                        try:
-                            f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
-                        except Exception,e:
-                            pass
-                    f_iv.write("\n")
-                    f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
-                except Exception,e:
-                    log("IV Parameter Save failed",e)
-                save_data(f_iv, saving_data)
-                f_iv.close()
-                self.ui.editLastIV.setText(file_string)
-                
-                self.last_iv_name = time_string
+            x_list = np.arange(self.begin_time_b2,end_time,0.1)
+            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+            if _axes == 1:
+                b = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+            if _axes == 2:
+                b = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+    
+            self.plot_data["x1"] = b
+            self.plot_data["y1"] = voltage_list/current_list*self.rref
+            self.plot_data["new"][0] = True
+      
+            saving_data = [x_list, voltage_list, current_list, b]
+            d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
+            d_name = os.path.dirname(d)
+            if not os.path.exists(d_name):
+                os.makedirs(d_name)
+            time_string = str(int(round(time.time())))
+            file_string = "bsweep_%s.txt"%(time_string)
+            f_iv = open(d+file_string, 'a')
+            try:
+                params = self.data.copy()
+                params.update(DEV.lockin.get_param())
+                for k,v in params.items():
+                    try:
+                        f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
+                    except Exception,e:
+                        pass
+                f_iv.write("\n")
+                f_iv.write("timestamp, voltage, current, b\n")
             except Exception,e:
-                log("Failed to Save IV",e)
-            """
-            #try:
+                log("B Sweep Parameter Save failed",e)
+            save_data(f_iv, saving_data)
+            f_iv.close()
+            self.ui.editLastIV.setText(file_string)
             
-            
+            self.last_iv_name = time_string
+        except Exception,e:
+            log("B Sweep interpolation and Saving failed",e)     
+        finally:
+            self.data_lock.release()
+
         log("B Sweep Done")
         
-        
-        
-             
 
-
-   
     def measurement_thread(self):
         """This thread is gathering data all time"""
 
@@ -1054,7 +1052,7 @@ class main_program(QtGui.QMainWindow):
         thread.start_new_thread(self.aquire_b_sweep,(_max,_rate,_axes))
             
                     
-    def execute():
+    def execute(self):
         """Executes a command"""
         try:
             exec(str(self.form_data["editCommand"]))
