@@ -75,7 +75,7 @@ def refresh_display():
                     if element[1].__class__.__name__ == 'QTextEdit':
                         _self.form_data[str(element[1].objectName())] = element[1].toPlainText()
                 except Exception,e:
-                    print log("Failed to automatically read out the form parameters",e)
+                    log("Failed to automatically read out the form parameters %s"%(str(element[1].objectName())),e)
         except Exception,e:
             log("Failed updating form parameters",e)
         

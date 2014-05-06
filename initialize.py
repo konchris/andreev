@@ -94,10 +94,10 @@ def init_curvewidgets(_self):
     _self.data_curve2 = make.curve([],[], yaxis="right", color="b")
     _self.data_curve3 = make.curve([],[])
     _self.data_curve4 = make.curve([],[], yaxis="right", color="b")
-    _self.data_curve5 = make.curve([],[])
-    _self.data_curve5b = make.curve([],[])
+    _self.data_curve5 = make.curve([],[]) # magnet
+    _self.data_curve5b = make.curve([],[], color="G")   # magnet 2
     _self.data_curve6 = make.curve([],[], yaxis="right", color="b")
-    _self.data_curve6b = make.curve([],[], yaxis="right", color="b")
+    _self.data_curve6b = make.curve([],[], yaxis="right", color="g")
     _self.data_curve7 = make.curve([],[])
     _self.data_curve8 = make.curve([1],[1], yaxis="right", color="b")
     _self.data_curve9 = make.curve([],[], linestyle="NoPen", marker="Rect",  markersize=3, markeredgecolor="k", markerfacecolor="b") # SolidLine NoPen
@@ -312,6 +312,7 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnBSweepStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_B_Sweep)
     
     QtCore.QObject.connect(_self.ui.btnNature, QtCore.SIGNAL("clicked()"), gui_helper.send_to_nature)
+    QtCore.QObject.connect(_self.ui.btnResetBeginTime, QtCore.SIGNAL("clicked()"), gui_helper.reset_begin_times)
 
     QtCore.QObject.connect(_self.ui.btnBStart, QtCore.SIGNAL("clicked()"), gui_helper.magnet_goto)   
     QtCore.QObject.connect(_self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_init)    
@@ -354,4 +355,4 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnTempSweepStop, QtCore.SIGNAL("clicked()"), gui_helper.temp_sweep_stop)
     QtCore.QObject.connect(_self.ui.btnTemperatureCustom, QtCore.SIGNAL("clicked()"), gui_helper.temp_custom)
     
-    QtCore.QObject.connect(_self.ui.btnExecute, QtCore.SIGNAL("clicked()"), gui_helper.execute)
+    QtCore.QObject.connect(_self.ui.btnExecute, QtCore.SIGNAL("clicked()"), _self.execute)

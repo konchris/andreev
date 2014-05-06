@@ -14,6 +14,15 @@ def send_to_nature():
     from PyQt4 import QtGui
     QtGui.QMessageBox.question(_self, 'Export',
             "Upload in progress......", QtGui.QMessageBox.Ok)
+
+
+def reset_begin_times():
+    import time
+    _self.begin_time_b2 = time.time()
+    _self.begin_time_histogram = time.time()
+    _self.begin_time_ultra = time.time()
+    _self.begin_time_iv = time.time()
+    _self.begin_time_b_circle = time.time()
             
             
 def init_device_parameters():
@@ -221,8 +230,3 @@ def temp_custom():
         log("New Display Setup not accepted",e)
     
     
-def execute():
-    try:
-        exec(str(_self.ui.editCommand.text()))
-    except Exception,e:
-        log("Execution failed",e)

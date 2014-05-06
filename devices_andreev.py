@@ -23,7 +23,8 @@ app = None
 
 class Magnet:
     def __init__(self, GPIB_No=27):
-        self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.0, term_chars='\r')
+        self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.0, term_chars='\r', timeout=0.2)#VI_EXCLUSIVE_LOCK
+        self.magnet.clear()
         self.rate=0.1
         self.max_rate=2
         self.goto_field = 0
@@ -197,7 +198,7 @@ class Magnet:
                 self.actual_field = float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
                 self.ReadStatus()
             except:
-                self.actual_field=999
+                self.actual_field=22
 
             # append gathered data to internal data dictionary
             self.data_lock.acquire()
@@ -605,6 +606,7 @@ class Agilent34410A:
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
         #print "Agilent Created"        
         self.initializeVOLTDC()
+        #self.initialize4WIREOHM()
         #print "Agilent VOLTDC initalized"
         self.data = {}
         self.data_lock = thread.allocate_lock()
@@ -623,7 +625,19 @@ class Agilent34410A:
         self.Agilent.write('VOLT:DC:RANG:AUTO ON') # manual range?
         #inst=self.Agilent.ask('*IDN?')
         #print('%s ... initialized'%str(inst))
-        #print "alias Agilent 34410A"
+        #print "alias Agilent 34410A"FRESistance
+    
+    def initialize4WIREOHM(self, NPLC=1, DISPLAY ="ON"):
+        #self.Agilent.write('*RST')
+        #self.Agilent.write('*CLS')
+        #self.Agilent.write('CONF:VOLT:DC 10') # was 2
+        #self.Agilent.write('DISP '+DISPLAY)
+        #self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
+        self.Agilent.write('FUNC "FRES"')
+        self.Agilent.write('FRES:RANG:AUTO ON') # manual range?
+        #inst=self.Agilent.ask('*IDN?')
+        #print('%s ... initialized'%str(inst))
+        #print "alias Agilent 34410A"FRESistance
         
     def get(self):
         return float(self.Agilent.ask("READ?"))
@@ -1094,7 +1108,7 @@ class MOTOR:
             self.set_velocity(0)
 
     def get_pos(self):
-        """return actual motor position"""
+        """return actual motor position of its encoder"""
         return self._mpos
 
     def get_real_pos(self, counts=None):
@@ -1105,9 +1119,9 @@ class MOTOR:
             position = float(counts)
         return float(position/self._gearfact)
     
-    def get_counts(self, turns):
-        """converts encoder counts to turns of the screw"""
-        return int(turns*self._gearfact)
+    #def get_counts(self, turns):
+    #    """converts encoder counts to turns of the screw"""
+    #    return int(turns*self._gearfact)
   
     def get_velocity(self):
         """return the current velocity"""
@@ -1419,7 +1433,7 @@ thread.start_new_thread(yoko_starter,())
 thread.start_new_thread(motor_starter,())
 thread.start_new_thread(lockin_starter,())
 thread.start_new_thread(magnet_starter,())
-thread.start_new_thread(magnet_starter_2,())
+#thread.start_new_thread(magnet_starter_2,())
 thread.start_new_thread(lakeshore_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())
