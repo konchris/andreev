@@ -22,6 +22,11 @@ stop = False
 app = None
 
 gpib_lock = thread.allocate_lock()
+try:
+    board_0 = visa.Gpib(0)
+    board_0.send_ifc()
+except Exception,e:
+    log("Failed to Clear Interface",e)
 
 class Magnet:
     def __init__(self, GPIB_No=27):
@@ -130,7 +135,6 @@ class Magnet:
                     "activity": self.activity, "local": self.local,\
                     "heater": self.heater_status}
                     
-        
     def ReadField(self):
         return self.actual_field       
 
@@ -207,7 +211,7 @@ class Magnet:
                 gpib_lock.acquire()
                 #self.magnet.clear()
                 self.actual_field = float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
-                #self.ReadStatus()
+                self.ReadStatus()
             except Exception,e:
                 self.actual_field=11
                 log("Magnet Thread Acquire Failed",e)
@@ -1354,7 +1358,7 @@ def magnet_starter():
             log("Found Magnet")
             found = True
         except Exception,e:
-            log("Couldn't Find Magnet",e)
+            #log("Couldn't Find Magnet",e)
             time.sleep(device_delay)
 
 def magnet_starter_2():
@@ -1366,7 +1370,7 @@ def magnet_starter_2():
             log("Found Magnet 2")
             found = True
         except Exception,e:
-            log("Couldn't Find Magnet",e)
+            #log("Couldn't Find Magnet",e)
             time.sleep(device_delay)
             
 def lakeshore_starter():
@@ -1445,7 +1449,7 @@ thread.start_new_thread(yoko_starter,())
 thread.start_new_thread(motor_starter,())
 thread.start_new_thread(lockin_starter,())
 thread.start_new_thread(magnet_starter,())
-#thread.start_new_thread(magnet_starter_2,())
+thread.start_new_thread(magnet_starter_2,())
 thread.start_new_thread(lakeshore_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())

@@ -204,13 +204,13 @@ def refresh_display():
             agilent_current_x = np.array(_self.data["agilent_current_timestamp"][y0:y1:step])-_self._start_time
             _self.data_curve1.set_data(agilent_voltage_x, np.array(_self.data["agilent_voltage_voltage"][x0:x1:step]))
             _self.data_curve2.set_data(agilent_current_x, np.array(_self.data["agilent_current_voltage"][y0:y1:step]))
-            if _self.form_data["checkAuto1a"]:
-                _self.ui.curvewidget.plot.set_scales(_self.ui.cw1.plot.Y_LEFT,"lin",True)
-            if _self.form_data["checkAuto1b"]:
-                _self.ui.curvewidget.plot.set_scales(_self.ui.cw1.plot.Y_RIGHT,"lin",True)
-            _self.ui.curvewidget.plot.set_scales(_self.ui.cw1.plot.X_BOTTOM,"lin",True)
-            _self.ui.curvewidget.plot.replot()
-            #_self.ui.cw1.plot.do_autoscale()
+            #if _self.form_data["checkAuto1a"]:
+            #    _self.ui.cw1.plot.setAxisAutoScale(_self.ui.cw1.plot.Y_LEFT)
+            #if _self.form_data["checkAuto1b"]:
+            #    _self.ui.cw1.plot.setAxisAutoScale(_self.ui.cw1.plot.Y_RIGHT)
+            #_self.ui.cw1.plot.setAxisAutoScale(_self.ui.cw1.plot.X_BOTTOM)
+            #_self.ui.cw1.plot.replot()
+            _self.ui.cw1.plot.do_autoscale()
         except Exception,e:
             log("Displaying Voltage/Current",e)
         

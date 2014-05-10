@@ -49,9 +49,11 @@ class main_program(QtGui.QMainWindow):
             npzfile = np.load("volume_data.npz")
             self.volume_list = list(npzfile["volume_list"])
             self.volume_time = list(npzfile["volume_time"])
+            self.level_list = list(npzfile["level_list"])
         except Exception,e:
             self.volume_time = []
             self.volume_list = []
+            self.level_list = []
             functions.log("Loading Volume failed",e)
         
         self.timer_update = 2
@@ -74,14 +76,32 @@ class main_program(QtGui.QMainWindow):
         self.timer_autosave.start(60*1000)
         
         self.arduino = ARDUINO()
+        self.levelmeter = TWICKENHAM()
+        
+    def level_to_liter(self, level=None):
+        """returns a linear interpolation of the level"""
+        if level == None:
+            level = self.level
+        return level/3.2+20
 
 
     def refresh_display(self):
-        self.volume += self.arduino.read_volume()
-        self.ui.labelVolume.setText("%i L"%(self.volume))
+        try:
+            self.volume += self.arduino.read_volume()
+            self.ui.labelVolume.setText("%i L"%(self.volume))
+        except Exception,e:
+            functions.log("Failed to update Volume",e)
+        
+        try:
+            self.level = self.levelmeter.read_volume()
+            self.ui.labelLevelMeter.setText("%i mm"%(self.level)) 
+            self.ui.labelLevelMeter_2.setText("%2.1f L"%(self.level_to_liter())) 
+        except Exception,e:
+            functions.log("Failed to update Level",e)
         
         self.volume_time.append(time.time())
         self.volume_list.append(self.volume)
+        self.level_list.append(self.level)
         
         try:
             min_items = int(self.flow_range / self.timer_update)
@@ -96,8 +116,9 @@ class main_program(QtGui.QMainWindow):
             flow_time = []
             while i > min_items+1:
                 p = np.polyfit(np.array(self.volume_time[i-min_items:i])-self.start_time, self.volume_list[i-min_items:i], 1)
-                flow.append(p[0]*3600.0/757.0)            
-                flow_time.append(self.volume_time[i-min_items/2])
+                if p[0] > 0:
+                    flow.append(p[0]*3600.0/757.0)            
+                    flow_time.append(self.volume_time[i-min_items/2])
                 
                 i -= min_items/2
             self.data_flow.set_data(np.array(flow_time)-self.start_time,flow)
@@ -107,6 +128,7 @@ class main_program(QtGui.QMainWindow):
         
         self.data_volume.set_data(np.array(self.volume_time)-self.start_time,self.volume_list)
         self.ui.curvewidget.plot.do_autoscale()
+        
         
         self.flow_range = int(self.ui.editRange.text())
         self.timer_update = float(self.ui.editRefresh.text())
@@ -139,9 +161,9 @@ class main_program(QtGui.QMainWindow):
             self.ui.editSetVolume.setText(str(self.volume))
             functions.write_config(self.ui)
             try:
-                np.savez("volume_data", volume_list=self.volume_list, volume_time=self.volume_time)
+                np.savez("volume_data", volume_list=self.volume_list, volume_time=self.volume_time, level_list=self.level_list)
             except Exception,e:
-                functions.log("Saving Volume failed",e)
+                functions.log("Saving Data failed",e)
             functions.log("Exiting")
         except Exception,e:
             print e
@@ -153,7 +175,7 @@ class main_program(QtGui.QMainWindow):
 class ARDUINO:
     def __init__(self):
         #self.motor=serial.Serial('COM1',115200,timeout=0) 
-        self.arduino=visa.SerialInstrument("ASRL5",delay=0.10,term_chars='\n',timeout=0.2,baud_rate=115200)
+        self.arduino=visa.SerialInstrument("ASRL5",delay=0.01,term_chars='\n',timeout=0.2,baud_rate=115200)
         self.arduino.clear()
 
     def initialize(self):
@@ -167,6 +189,25 @@ class ARDUINO:
         except Exception,e:
             answer = 0
             print ("Arduino Error while gathering Volume",e)
+        return answer
+
+class TWICKENHAM:
+    def __init__(self):
+        #self.motor=serial.Serial('COM1',115200,timeout=0) 
+        self.twickenham=visa.SerialInstrument("ASRL7",delay=0.01,term_chars='\r\n',timeout=0.2,baud_rate=9600)
+        self.twickenham.clear()
+
+    def initialize(self):
+        """init arduino"""
+        pass
+
+    def read_volume(self):
+        try:
+            answer = self.twickenham.ask("G")
+            answer = int(answer[3:6])
+        except Exception,e:
+            answer = 0
+            print ("Twickenham Error while gathering Volume",e)
         return answer
             
 myapp = None     

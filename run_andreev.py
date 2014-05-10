@@ -64,9 +64,12 @@ class main_program(QtGui.QMainWindow):
         self.timer_display.timeout.connect(refresh_display.refresh_display)
         self.timer_display.start(250)
         
-        self.form_data = {}
+        self.html_timer = QTimer()
+        self.html_timer.timeout.connect(self.call_html_export)
+        self.html_timer.start(30000)
         
-       
+        self.form_data = {}
+        #self.ui.cw1.plot.set_axis_scale
         #########################################################
         ############## MEASUREMENT PARAMETERS ###################
         #########################################################
@@ -82,7 +85,9 @@ class main_program(QtGui.QMainWindow):
         self.data_lock = thread.allocate_lock()
         thread.start_new_thread(self.measurement_thread,())    
 
-
+    def call_html_export(self):
+        export_html(self.ui)
+        
     # offset
     def offset_correct(self, delay=0.5):
         bias = DEV.yoko.get_voltage()
@@ -104,30 +109,7 @@ class main_program(QtGui.QMainWindow):
         #(a,b) = DEV.lockin.femto_get()
         
         # sets femto to 20dB
-        """DEV.lockin.femto_reset()
-        for amplification in range(1):
-            time.sleep(0.1)
-            
-            for i in range(10):
-                app.processEvents()
-                time.sleep(delay/10.0)
-            offset_timestamp = time.time()
-    
-            
-            offset_aux0 = np.average(lockin_data["0"]["auxin0"])
-            offset_aux1 = np.average(lockin_data["0"]["auxin1"])
 
-            if not self.f_config == None:
-                self.f_config.write("offset_aux0_%i\t%f\t%f\n"%(amplification,offset_timestamp,offset_aux0))
-                self.f_config.write("offset_aux1_%i\t%f\t%f\n"%(amplification,offset_timestamp,offset_aux1))
-            log("offset_aux0_%i\t%fV"%(amplification,offset_aux0))
-            log("offset_aux1_%i\t%fV"%(amplification,offset_aux1))
-            self.config_data["offset_aux0"][amplification] = offset_aux0
-            self.config_data["offset_aux1"][amplification] = offset_aux1
-            
-            DEV.lockin.femto_increase_amplification(channel=0)
-            DEV.lockin.femto_increase_amplification(channel=1)
-            time.sleep(delay/10.0)"""
         time.sleep(0.5)
         
         new_data = DEV.agilent_new.get_data_list()
@@ -278,12 +260,18 @@ class main_program(QtGui.QMainWindow):
                             if self.form_data["comboUltraAction"] == 0:
                                 # ivs
                                 log("Starting IVs")
-                                self.aquire_iv(_min=-0.01, _max=0.01, _time=30, _sample=True, _double=True)
-                                self.aquire_iv(_min=-0.1, _max=0.1, _time=200, _sample=True, _double=True)
+                                v_mar = float(self.form_data["editUltraIVMARV"])
+                                t_mar = float(self.form_data["editUltraIVMARt"])
+                                is_double = bool(self.form_data["checkUltraIVDouble"])
+                                is_sample = bool(self.form_data["checkUltraIVSample"])
+                                self.aquire_iv(_min=-v_mar, _max=v_mar, _time=t_mar, _sample=is_sample, _double=is_double)
+                                v_iets = float(self.form_data["ultraIVIETSV"])
+                                t_iets = float(self.form_data["editIVIETSt"])
+                                self.aquire_iv(_min=-v_iets, _max=v_iets, _time=t_iets, _sample=is_sample, _double=is_double)
                                 
                             if self.form_data["comboUltraAction"] == 1:
                                 # bsweep
-                                log("Starting IVs")
+                                log("Starting B Sweep")
                                 _max = float(self.form_data["editUltraBSweepMax"])
                                 _rate = float(self.form_data["editUltraBSweepRate"])
                                 _ips = int(self.form_data["comboUltraBSweepAxes"])
@@ -381,9 +369,9 @@ class main_program(QtGui.QMainWindow):
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
                 
         bias = DEV.yoko.get_voltage()
-        
         DEV.yoko.program_goto_ramp(_min, 1)
-        time.sleep(1)       
+        time.sleep(1.2)
+        time.sleep(5 * float(self.form_data["editLITC"]))       
         
         
         log("IV Loop %f"%_time) 
@@ -479,9 +467,9 @@ class main_program(QtGui.QMainWindow):
         if not self.f_config == None:
                 self.f_config.write("IV_STOP\t%15.15f\t\n"%(end_time))
 
-        time.sleep(0.25)        
-        DEV.yoko.set_voltage(bias)
-        time.sleep(0.25)
+        time.sleep(0.25)      
+        DEV.yoko.program_goto_ramp(bias, 1)
+        time.sleep(2)
         log("IV Sweep finished")
         self.iv_in_progress = False
         
@@ -714,6 +702,45 @@ class main_program(QtGui.QMainWindow):
         field_index = 0
         print fields
         
+        try:
+            # if automatic switch heater mode is checked
+            if self.form_data["checkBAutoSwitchHeater"]:
+                if _axes == 1:
+                    if not DEV.magnet == None:
+                        if DEV.magnet.heater == False:
+                            log("IPS1 Heater was OFF, Switching ON")
+                            DEV.magnet.set_switchheater("ON")
+                            for i in range(20):
+                                time.sleep(1)
+                                app.processEvents()
+                if _axes == 2:
+                    if not DEV.magnet_2 == None:
+                        if DEV.magnet_2.heater == False:
+                            log("IPS2 Heater was OFF, Switching ON")
+                            DEV.magnet_2.set_switchheater("ON")
+                            for i in range(20):
+                                time.sleep(1)
+                                app.processEvents()
+            
+            # if check for switch heater is checked
+            if self.form_data["checkBSwitchHeater"]:
+                if _axes == 1:
+                    if not DEV.magnet == None:
+                        if DEV.magnet.heater == False:
+                            log("IPS1 Heater is OFF. Exiting.")
+                            self.stop_measure = True
+                            return -1  
+                if _axes == 2:
+                    if not DEV.magnet_2 == None:
+                        if DEV.magnet_2.heater == False:
+                            log("IPS2 Heater is OFF. Exiting.")
+                            self.stop_measure = True
+                            return -1            
+        except Exception,e:
+            log("Auto Set Switchheater Failed. Exiting.",e)
+            self.stop_measure = True
+            return -1
+        
         self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "B (T)")
         self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "Resistance (Ohm)") 
         self.begin_time_b2 = time.time()
@@ -765,7 +792,23 @@ class main_program(QtGui.QMainWindow):
                 break
             time.sleep(0.5)
         end_time = time.time()    
-            
+        
+        if self.form_data["checkBSweepHeater"]:
+            try:
+                if DEV.magnet.field_reached():
+                    DEV.magnet.set_switchheater("zeroOFF")
+                else:
+                    log("Magnet Sweeping. Couldn't Turn off Heater!",e)
+            except Exception,e:
+                log("Failed Auto-Off Heater IPS1",e)
+            try:
+                if DEV.magnet_2.field_reached():
+                    DEV.magnet_2.set_switchheater("zeroOFF")
+                else:
+                    log("Magnet 2 Sweeping. Couldn't Turn off Heater!",e)
+            except Exception,e:
+                log("Failed Auto-Off Heater IPS2",e)
+                
         try:
             self.data_lock.acquire()
             

@@ -28,13 +28,25 @@ def interpolate(x=[],xp=[],fp=[],scale_y=1.0):
     
     interp_array = np.interp(x,xp[0:min_index],fp[0:min_index])
     return interp_array
-    
+
+
+def interp_breaking_trace(t_start=0,t_end=1,data={},steps=0.1):
+    """Sets diagram to a Opening/Closing Trace"""
+    return_dict = {}
+    try:
+        x_list = np.arange(t_start,t_end,steps)
+        for k,v in data.items():
+            temp_data = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+        voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+
+    except Exception,e:
+        log("Interpolating Failed",e)       
 
 
 def round_to_digits(x, digits=1):
     return round(x, -int(np.floor(np.log10(abs(x)))) + (digits - 1))
 
-def export_html(parent, path="C:\wamp\www\\"):
+def export_html(parent, path="C:\wamp\www\\", data_list=None):
     from PyQt4.QtCore import QPoint
     form_objects = inspect.getmembers(parent)
     
@@ -81,6 +93,33 @@ def export_html(parent, path="C:\wamp\www\\"):
         
     f.write("</form></body></html>")
     f.flush()
+    
+    try:
+        f = open(path+"messung.html","w")
+        f.write("<html><head><title>Andreev Measurement</title>")
+        f.write("<meta http-equiv=\"refresh\" content=\"15\" >\n")
+        f.write("\n")
+        f.write("</head><body>\n")
+        f.write("<img src=\"http://134.34.143.54/cw1.png\" />\n")
+        f.write("<img src=\"http://134.34.143.54/cw2.png\" />\n")
+        f.write("<img src=\"http://134.34.143.54/cw3.png\" />\n")
+        f.write("<img src=\"http://134.34.143.54/cw4.png\" />\n")
+        f.write("<img src=\"http://134.34.143.54/cw5.png\" />\n")
+        f.write("<img src=\"http://134.34.143.54/cw6.png\" />\n")
+        f.write("<img src=\"http://134.34.143.54/helium/curvewidget.png\" />\n")
+        f.write("\n")
+        if not data_list == None:
+            pass
+        f.write("\n")
+        f.write("</body></html>")
+        f.flush()
+        f.close()
+    except Exception,e:
+        log("Failed to write messung.html",e)
+    finally:
+        f.close()
+
+
 
 def voltage_ramp(_min=-1,_max=1,_step=0.1,_circular=True):
     """Returns a voltage ramp which has 0-max-0-min-0 shape.

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>715</width>
-    <height>284</height>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,21 +32,11 @@
       <property name="title">
        <string/>
       </property>
-      <widget class="QLineEdit" name="editSetVolume">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>120</y>
-         <width>81</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
       <widget class="QLabel" name="labelFlow">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>60</y>
+         <y>40</y>
          <width>191</width>
          <height>41</height>
         </rect>
@@ -63,24 +53,11 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QPushButton" name="btnSetVolume">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>120</y>
-         <width>81</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Set Volume</string>
-       </property>
-      </widget>
       <widget class="QLabel" name="labelVolume">
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>20</y>
+         <y>0</y>
          <width>181</width>
          <height>41</height>
         </rect>
@@ -97,88 +74,166 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QLineEdit" name="editRefresh">
+      <widget class="QLabel" name="labelLevelMeter">
        <property name="geometry">
         <rect>
-         <x>20</x>
-         <y>170</y>
-         <width>51</width>
-         <height>20</height>
+         <x>10</x>
+         <y>80</y>
+         <width>191</width>
+         <height>41</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
        <property name="text">
-        <string>2</string>
+        <string>100 mm</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QLineEdit" name="editRange">
+      <widget class="QGroupBox" name="groupBox_2">
        <property name="geometry">
         <rect>
-         <x>120</x>
-         <y>170</y>
-         <width>51</width>
-         <height>20</height>
+         <x>10</x>
+         <y>229</y>
+         <width>211</width>
+         <height>101</height>
         </rect>
        </property>
+       <property name="title">
+        <string>Settings</string>
+       </property>
+       <widget class="QLabel" name="label_3">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>50</y>
+          <width>46</width>
+          <height>13</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Refresh</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>70</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>s</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="editRefresh">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>70</y>
+          <width>51</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>2</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="editSetVolume">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>81</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_4">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>50</y>
+          <width>71</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Interpolate</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_2">
+        <property name="geometry">
+         <rect>
+          <x>180</x>
+          <y>70</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>s</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="editRange">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>70</y>
+          <width>51</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>20</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="btnSetVolume">
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>20</y>
+          <width>81</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Set Volume</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLabel" name="labelLevelMeter_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>120</y>
+         <width>191</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
        <property name="text">
-        <string>20</string>
+        <string>100 mm</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label">
-       <property name="geometry">
-        <rect>
-         <x>80</x>
-         <y>170</y>
-         <width>16</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>s</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_2">
-       <property name="geometry">
-        <rect>
-         <x>180</x>
-         <y>170</y>
-         <width>16</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>s</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_3">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>150</y>
-         <width>46</width>
-         <height>13</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Refresh</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_4">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>150</y>
-         <width>71</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Interpolate</string>
        </property>
       </widget>
      </widget>

@@ -214,10 +214,10 @@
         <widget class="QWidget" name="gridLayoutWidget_6">
          <property name="geometry">
           <rect>
-           <x>40</x>
-           <y>30</y>
+           <x>30</x>
+           <y>10</y>
            <width>191</width>
-           <height>216</height>
+           <height>151</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_6">
@@ -232,6 +232,9 @@
            <widget class="QLineEdit" name="editUltraMax">
             <property name="text">
              <string>15000</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -253,6 +256,9 @@
            <widget class="QLineEdit" name="editUltraColdTime">
             <property name="text">
              <string>10</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -282,15 +288,18 @@
             <property name="text">
              <string>6000</string>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
            </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="lineEdit_2"/>
           </item>
           <item row="3" column="1">
            <widget class="QLineEdit" name="editUltraStabilizeTime">
             <property name="text">
              <string>5</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -312,30 +321,6 @@
            <widget class="QLabel" name="label_98">
             <property name="text">
              <string>s</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_114">
-            <property name="text">
-             <string>Min V</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="label_113">
-            <property name="text">
-             <string>IETS</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QLineEdit" name="lineEdit_3"/>
-          </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_115">
-            <property name="text">
-             <string>TextLabel</string>
             </property>
            </widget>
           </item>
@@ -375,8 +360,8 @@
         <widget class="QPushButton" name="btnUltraStart">
          <property name="geometry">
           <rect>
-           <x>400</x>
-           <y>60</y>
+           <x>420</x>
+           <y>240</y>
            <width>91</width>
            <height>23</height>
           </rect>
@@ -388,18 +373,32 @@
         <widget class="QWidget" name="gridLayoutWidget_12">
          <property name="geometry">
           <rect>
-           <x>250</x>
-           <y>30</y>
-           <width>134</width>
+           <x>380</x>
+           <y>10</y>
+           <width>121</width>
            <height>101</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_12">
           <item row="2" column="1">
-           <widget class="QLineEdit" name="editUltraBSweepRate"/>
+           <widget class="QLineEdit" name="editUltraBSweepRate">
+            <property name="text">
+             <string>0.05</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="editUltraBSweepMax"/>
+           <widget class="QLineEdit" name="editUltraBSweepMax">
+            <property name="text">
+             <string>3</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
            <widget class="QComboBox" name="comboUltraBSweepAxes">
@@ -454,6 +453,135 @@
            <widget class="QLabel" name="label_132">
             <property name="text">
              <string>T</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="gridLayoutWidget_14">
+         <property name="geometry">
+          <rect>
+           <x>230</x>
+           <y>10</y>
+           <width>141</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_14">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_114">
+            <property name="text">
+             <string>MAR V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editUltraIVMARV">
+            <property name="text">
+             <string>0.004</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="editUltraIVMARt">
+            <property name="text">
+             <string>200</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_115">
+            <property name="text">
+             <string>MAR t</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_113">
+            <property name="text">
+             <string>s</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_133">
+            <property name="text">
+             <string>IETS V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_108">
+            <property name="text">
+             <string>Vsample</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_24">
+            <property name="text">
+             <string>IVs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_134">
+            <property name="text">
+             <string>IETS t</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="ultraIVIETSV">
+            <property name="text">
+             <string>0.2</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="editIVIETSt">
+            <property name="text">
+             <string>200</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_135">
+            <property name="text">
+             <string>Vsample</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_136">
+            <property name="text">
+             <string>s</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QCheckBox" name="checkUltraIVDouble">
+            <property name="text">
+             <string>Double</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QCheckBox" name="checkUltraIVSample">
+            <property name="text">
+             <string>Sample</string>
             </property>
            </widget>
           </item>
@@ -1742,6 +1870,32 @@
           <string>Goto Sweep 2</string>
          </property>
         </widget>
+        <widget class="QWidget" name="gridLayoutWidget_13">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>30</y>
+           <width>160</width>
+           <height>61</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="checkBSwitchHeater">
+            <property name="text">
+             <string>Check Switchheater</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="checkBAutoSwitchHeater">
+            <property name="text">
+             <string>Auto Switch On Heater</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
        <widget class="QWidget" name="tab_13">
         <attribute name="title">
@@ -1873,8 +2027,8 @@
           <rect>
            <x>30</x>
            <y>40</y>
-           <width>121</width>
-           <height>91</height>
+           <width>153</width>
+           <height>111</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_11">
@@ -1916,10 +2070,17 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="3" column="1">
            <widget class="QPushButton" name="btnBSweepStart">
             <property name="text">
              <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="checkBSweepHeater">
+            <property name="text">
+             <string>Switch Off Heater</string>
             </property>
            </widget>
           </item>
@@ -2471,32 +2632,6 @@
           </property>
           <property name="text">
            <string>3a</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_24">
-          <property name="geometry">
-           <rect>
-            <x>60</x>
-            <y>20</y>
-            <width>46</width>
-            <height>13</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>N/A</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_108">
-          <property name="geometry">
-           <rect>
-            <x>60</x>
-            <y>70</y>
-            <width>46</width>
-            <height>13</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>N/A</string>
           </property>
          </widget>
         </widget>
@@ -3434,8 +3569,6 @@
   <tabstop>editUltraMax</tabstop>
   <tabstop>editUltraStabilizeTime</tabstop>
   <tabstop>editUltraColdTime</tabstop>
-  <tabstop>lineEdit_2</tabstop>
-  <tabstop>lineEdit_3</tabstop>
   <tabstop>btnUltraStart</tabstop>
   <tabstop>editHistogramBias</tabstop>
   <tabstop>editHistogramUpper</tabstop>
