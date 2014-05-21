@@ -22,10 +22,12 @@ def init_files(_self):
     _self.f_ips_2 = None
     _self.f_femto = None
     _self.f_config = None
+    _self.hdf5_file = None
     
 def open_files():
     from functions import close_logfile,set_logfile
     import os
+    import hdf5_interface
 
     if not _self.f_li0 == None:
         _self.f_li0.close()
@@ -40,6 +42,7 @@ def open_files():
         _self.f_ips.close()
         _self.f_ips_2.close()
         _self.f_config.close()
+        _self.hdf5_file.close()
     close_logfile()
         
     d = str(_self.ui.editSetupDir.text())+str(_self.ui.editHeader.text())+"\\"    
@@ -58,6 +61,7 @@ def open_files():
     _self.f_ips = open(d+"ips.txt", 'a') 
     _self.f_ips_2 = open(d+"ips_2.txt", 'a') 
     _self.f_config = open(d+"config.txt", 'a')
+    _self.hdf5_file = hdf5_interface.hdf5_saving(d)
     set_logfile(d+"log.txt")      
     
 def close_files():
@@ -73,6 +77,7 @@ def close_files():
         _self.f_ips.close()
         _self.f_ips_2.close()
         _self.f_config.close()
+        _self.hdf5_file.close()
         _self.f_li0 = None
         _self.f_li1 = None
         _self.f_li3 = None
@@ -85,7 +90,17 @@ def close_files():
         _self.f_ips = None
         _self.f_ips_2 = None
         _self.f_config = None
+        _self.hdf5_file = None
     close_logfile()
+
+def write_config(text):
+    from functions import log
+    try:
+        if not _self.f_config == None:
+            _self.f_config.write(text)
+            _self.f_config.flush()
+    except Exception,e:
+        log("Failed to write config",e)
 
 def init_curvewidgets(_self):
     from guiqwt.builder import make

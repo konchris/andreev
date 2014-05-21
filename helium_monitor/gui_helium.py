@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui_helium.ui'
 #
-# Created: Fri May 09 13:43:24 2014
+# Created: Tue May 20 09:43:57 2014
 #      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(715, 401)
+        MainWindow.resize(626, 397)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.centralwidget)
@@ -88,14 +88,30 @@ class Ui_MainWindow(object):
         self.labelLevelMeter_2.setFont(font)
         self.labelLevelMeter_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.labelLevelMeter_2.setObjectName(_fromUtf8("labelLevelMeter_2"))
+        self.btnHe = QtGui.QToolButton(self.groupBox)
+        self.btnHe.setGeometry(QtCore.QRect(30, 200, 25, 19))
+        self.btnHe.setObjectName(_fromUtf8("btnHe"))
+        self.btnN2 = QtGui.QToolButton(self.groupBox)
+        self.btnN2.setGeometry(QtCore.QRect(60, 200, 25, 19))
+        self.btnN2.setObjectName(_fromUtf8("btnN2"))
+        self.btnZzz = QtGui.QToolButton(self.groupBox)
+        self.btnZzz.setGeometry(QtCore.QRect(90, 200, 25, 19))
+        self.btnZzz.setObjectName(_fromUtf8("btnZzz"))
         self.horizontalLayout.addWidget(self.groupBox)
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.curvewidget = CurveWidget(self.centralwidget)
         self.curvewidget.setOrientation(QtCore.Qt.Horizontal)
         self.curvewidget.setObjectName(_fromUtf8("curvewidget"))
-        self.horizontalLayout.addWidget(self.curvewidget)
+        self.verticalLayout.addWidget(self.curvewidget)
+        self.curvewidget_2 = CurveWidget(self.centralwidget)
+        self.curvewidget_2.setOrientation(QtCore.Qt.Horizontal)
+        self.curvewidget_2.setObjectName(_fromUtf8("curvewidget_2"))
+        self.verticalLayout.addWidget(self.curvewidget_2)
+        self.horizontalLayout.addLayout(self.verticalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 715, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 626, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -119,5 +135,8 @@ class Ui_MainWindow(object):
         self.editRange.setText(QtGui.QApplication.translate("MainWindow", "20", None, QtGui.QApplication.UnicodeUTF8))
         self.btnSetVolume.setText(QtGui.QApplication.translate("MainWindow", "Set Volume", None, QtGui.QApplication.UnicodeUTF8))
         self.labelLevelMeter_2.setText(QtGui.QApplication.translate("MainWindow", "100 mm", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnHe.setText(QtGui.QApplication.translate("MainWindow", "He", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnN2.setText(QtGui.QApplication.translate("MainWindow", "N2", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnZzz.setText(QtGui.QApplication.translate("MainWindow", "Zzz", None, QtGui.QApplication.UnicodeUTF8))
 
 from guiqwt.plot import CurveWidget

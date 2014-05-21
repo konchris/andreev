@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui_andreev.ui'
 #
-# Created: Sat May 10 13:32:46 2014
+# Created: Sat May 10 17:05:37 2014
 #      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -173,7 +173,7 @@ class Ui_MainWindow(object):
         self.btnUltraStart.setGeometry(QtCore.QRect(420, 240, 91, 23))
         self.btnUltraStart.setObjectName(_fromUtf8("btnUltraStart"))
         self.gridLayoutWidget_12 = QtGui.QWidget(self.tab_12)
-        self.gridLayoutWidget_12.setGeometry(QtCore.QRect(30, 170, 134, 101))
+        self.gridLayoutWidget_12.setGeometry(QtCore.QRect(380, 10, 121, 101))
         self.gridLayoutWidget_12.setObjectName(_fromUtf8("gridLayoutWidget_12"))
         self.gridLayout_12 = QtGui.QGridLayout(self.gridLayoutWidget_12)
         self.gridLayout_12.setMargin(0)
@@ -210,7 +210,7 @@ class Ui_MainWindow(object):
         self.label_132.setObjectName(_fromUtf8("label_132"))
         self.gridLayout_12.addWidget(self.label_132, 1, 2, 1, 1)
         self.gridLayoutWidget_14 = QtGui.QWidget(self.tab_12)
-        self.gridLayoutWidget_14.setGeometry(QtCore.QRect(230, 10, 141, 171))
+        self.gridLayoutWidget_14.setGeometry(QtCore.QRect(230, 10, 141, 188))
         self.gridLayoutWidget_14.setObjectName(_fromUtf8("gridLayoutWidget_14"))
         self.gridLayout_14 = QtGui.QGridLayout(self.gridLayoutWidget_14)
         self.gridLayout_14.setMargin(0)
@@ -260,10 +260,13 @@ class Ui_MainWindow(object):
         self.gridLayout_14.addWidget(self.label_136, 4, 2, 1, 1)
         self.checkUltraIVDouble = QtGui.QCheckBox(self.gridLayoutWidget_14)
         self.checkUltraIVDouble.setObjectName(_fromUtf8("checkUltraIVDouble"))
-        self.gridLayout_14.addWidget(self.checkUltraIVDouble, 5, 1, 1, 1)
+        self.gridLayout_14.addWidget(self.checkUltraIVDouble, 6, 1, 1, 1)
         self.checkUltraIVSample = QtGui.QCheckBox(self.gridLayoutWidget_14)
         self.checkUltraIVSample.setObjectName(_fromUtf8("checkUltraIVSample"))
-        self.gridLayout_14.addWidget(self.checkUltraIVSample, 6, 1, 1, 1)
+        self.gridLayout_14.addWidget(self.checkUltraIVSample, 7, 1, 1, 1)
+        self.checkUltraMAR = QtGui.QCheckBox(self.gridLayoutWidget_14)
+        self.checkUltraMAR.setObjectName(_fromUtf8("checkUltraMAR"))
+        self.gridLayout_14.addWidget(self.checkUltraMAR, 5, 1, 1, 1)
         self.tabWidget.addTab(self.tab_12, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
         self.tab_2.setObjectName(_fromUtf8("tab_2"))
@@ -1527,6 +1530,7 @@ class Ui_MainWindow(object):
         self.label_136.setText(QtGui.QApplication.translate("MainWindow", "s", None, QtGui.QApplication.UnicodeUTF8))
         self.checkUltraIVDouble.setText(QtGui.QApplication.translate("MainWindow", "Double", None, QtGui.QApplication.UnicodeUTF8))
         self.checkUltraIVSample.setText(QtGui.QApplication.translate("MainWindow", "Sample", None, QtGui.QApplication.UnicodeUTF8))
+        self.checkUltraMAR.setText(QtGui.QApplication.translate("MainWindow", "MAR", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_12), QtGui.QApplication.translate("MainWindow", "Ultra", None, QtGui.QApplication.UnicodeUTF8))
         self.checkHistogramEscape.setText(QtGui.QApplication.translate("MainWindow", "Stop if motor limit is hit", None, QtGui.QApplication.UnicodeUTF8))
         self.editHistogramUpper.setText(QtGui.QApplication.translate("MainWindow", "1000", None, QtGui.QApplication.UnicodeUTF8))

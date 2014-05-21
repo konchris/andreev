@@ -157,10 +157,10 @@ def lockin_set():
 def lockin_read_phase():
     import numpy as np
     try:
-        _self.config_data["lockin_phases"][0] = _self.config_data["lockin_phases"][0] + 180.0/3.141592*np.arctan(_self.data["li_0_y"][-1]/_self.data["li_0_x"][-1])    
-        _self.config_data["lockin_phases"][1] = _self.config_data["lockin_phases"][1] + 180.0/3.141592*np.arctan(_self.data["li_1_y"][-1]/_self.data["li_1_x"][-1])
-        _self.config_data["lockin_phases"][2] = _self.config_data["lockin_phases"][2] + 180.0/3.141592*np.arctan(_self.data["li_3_y"][-1]/_self.data["li_3_x"][-1])
-        _self.config_data["lockin_phases"][3] = _self.config_data["lockin_phases"][3] + 180.0/3.141592*np.arctan(_self.data["li_4_y"][-1]/_self.data["li_4_x"][-1])
+        _self.config_data["lockin_phases"][0] = _self.config_data["lockin_phases"][0] - 180.0/3.141592*np.arctan(_self.data["li_0_y"][-1]/_self.data["li_0_x"][-1])    
+        _self.config_data["lockin_phases"][1] = _self.config_data["lockin_phases"][1] - 180.0/3.141592*np.arctan(_self.data["li_1_y"][-1]/_self.data["li_1_x"][-1])
+        _self.config_data["lockin_phases"][2] = _self.config_data["lockin_phases"][2] - 180.0/3.141592*np.arctan(_self.data["li_3_y"][-1]/_self.data["li_3_x"][-1])
+        _self.config_data["lockin_phases"][3] = _self.config_data["lockin_phases"][3] - 180.0/3.141592*np.arctan(_self.data["li_4_y"][-1]/_self.data["li_4_x"][-1])
         _self.ui.editLIPhase0.setText(str(round(_self.config_data["lockin_phases"][0],2)))
         _self.ui.editLIPhase1.setText(str(round(_self.config_data["lockin_phases"][1],2)))
         _self.ui.editLIPhase3.setText(str(round(_self.config_data["lockin_phases"][2],2)))

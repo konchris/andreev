@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>715</width>
-    <height>401</height>
+    <width>626</width>
+    <height>397</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -236,14 +236,64 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
+      <widget class="QToolButton" name="btnHe">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>200</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>He</string>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="btnN2">
+       <property name="geometry">
+        <rect>
+         <x>60</x>
+         <y>200</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>N2</string>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="btnZzz">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>200</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Zzz</string>
+       </property>
+      </widget>
      </widget>
     </item>
     <item>
-     <widget class="CurveWidget" name="curvewidget">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="CurveWidget" name="curvewidget">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="CurveWidget" name="curvewidget_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -252,7 +302,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>715</width>
+     <width>626</width>
      <height>21</height>
     </rect>
    </property>

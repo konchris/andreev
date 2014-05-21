@@ -357,7 +357,7 @@ def refresh_display():
         _self.ui.tableWidget.setVerticalHeaderLabels(captions)
         i=0
         for item in data:
-            _self.ui.tableWidget.setItem(i,0,QtGui.QTableWidgetItem(str(round(item[1],5))))
+            _self.ui.tableWidget.setItem(i,0,QtGui.QTableWidgetItem(str(round_to_digits(item[1],4))))
             i = i + 1
         #_self.ui.tableWidget.column
     except Exception,e:

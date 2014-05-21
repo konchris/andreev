@@ -24,8 +24,9 @@ except AttributeError:
 
 from functions import *
 
-# exported functions
+# exported self written functions
 import initialize,refresh_display,gui_helper
+import hdf5_interface as hdf
 
 
 class main_program(QtGui.QMainWindow):
@@ -232,7 +233,7 @@ class main_program(QtGui.QMainWindow):
         log("Ultra Start")
         breaking = True         # sets direction of motor
         last_engage = 0
-        ultra_sleep = 0.05
+        ultra_sleep = 0.1
         
         self.begin_time_ultra = time.time()
         if not self.f_config == None:
@@ -255,16 +256,17 @@ class main_program(QtGui.QMainWindow):
                         time.sleep(self.editUltraStabilizeTime)
                         resistance_new = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
                         
-                        log("Resistance changed by %f"%(resistance_new*100/resistance))
+                        log("Resistance changed by %f"%(resistance_new*100/resistance-100))
                         if abs(resistance_new / resistance - 1) < 0.1:
                             if self.form_data["comboUltraAction"] == 0:
                                 # ivs
                                 log("Starting IVs")
-                                v_mar = float(self.form_data["editUltraIVMARV"])
-                                t_mar = float(self.form_data["editUltraIVMARt"])
                                 is_double = bool(self.form_data["checkUltraIVDouble"])
                                 is_sample = bool(self.form_data["checkUltraIVSample"])
-                                self.aquire_iv(_min=-v_mar, _max=v_mar, _time=t_mar, _sample=is_sample, _double=is_double)
+                                if self.form_data["checkUltraMAR"]: # mar sweep if checked
+                                    v_mar = float(self.form_data["editUltraIVMARV"])
+                                    t_mar = float(self.form_data["editUltraIVMARt"])
+                                    self.aquire_iv(_min=-v_mar, _max=v_mar, _time=t_mar, _sample=is_sample, _double=is_double)
                                 v_iets = float(self.form_data["ultraIVIETSV"])
                                 t_iets = float(self.form_data["editIVIETSt"])
                                 self.aquire_iv(_min=-v_iets, _max=v_iets, _time=t_iets, _sample=is_sample, _double=is_double)
@@ -364,17 +366,17 @@ class main_program(QtGui.QMainWindow):
             _max = _max / sample_factor
 
         # range maximum protection
-        _voltage_limits = 1.0
+        _voltage_limits = 2.0
         _min = max(-_voltage_limits, min(_min, _voltage_limits))
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
                 
         bias = DEV.yoko.get_voltage()
         DEV.yoko.program_goto_ramp(_min, 1)
-        time.sleep(1.2)
+        time.sleep(1)
         time.sleep(5 * float(self.form_data["editLITC"]))       
         
         
-        log("IV Loop %f"%_time) 
+        log("IV Loop %fV,%fV,%4.0fs"%(_min,_max,_time)) 
         # load counter
         loop_count = 2
         # last_time is used for display updating 
@@ -385,39 +387,36 @@ class main_program(QtGui.QMainWindow):
             if start_sweep_yoko:
                 # note down begin of sweep
                 self.begin_time_iv = time.time()
-                if not self.f_config == None:
-                    self.f_config.write("IV_START\t%15.15f\n"%(self.begin_time_iv))
+                               
+                initialize.write_config("IV_START\t%15.15f\t%s\n"%(self.begin_time_iv,params_str))
+
                 start_sweep_yoko = False
                 if loop_count % 2: # if not even = odd (2nd/4th run in double)
                     DEV.yoko.program_goto_ramp(_min, _time)
-                    print "IV goto Min"
+                    log("IV goto Min")
                 else: # if even run (first run)
                     DEV.yoko.program_goto_ramp(_max, _time) 
-                    print "IV goto Max"
+                    log("IV goto Max")
 
-            
             if time.time() - last_time > 1: # check if update needed
                 last_time = time.time()
 
                 try:
                     self.data_lock.acquire()
-                    
-                    x0 = find_min(self.data["agilent_voltage_timestamp"],self.begin_time_iv)
-                    x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
-            
-                    voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
-                    voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
+                    # TODO use editRate for lockin   
+                    x_list = np.arange(self.begin_time_iv,last_time,0.1)
                     
                     try:
-                        current_list = interpolate(voltage_timestamp, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-                        li_0_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-                        li_0_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                        li_1_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-                        li_1_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-                        li_3_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-                        li_3_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-                        li_4_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-                        li_4_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+                        voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                        current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                        li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+                        li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+                        li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+                        li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+                        li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+                        li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+                        li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+                        li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
                         
                         li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                         li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
@@ -426,8 +425,7 @@ class main_program(QtGui.QMainWindow):
                         
                         li_first = li_3_r/li_0_r*12900    # first
                         li_second = li_4_r/li_1_r*12900   # second
-                        
-                                                    
+                                            
                         self.plot_data["x3"] = voltage_list[:]
                         self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
                         
@@ -464,36 +462,30 @@ class main_program(QtGui.QMainWindow):
         log("IV Loop End") 
         # note down end of iv sweep
         end_time = time.time()
-        if not self.f_config == None:
-                self.f_config.write("IV_STOP\t%15.15f\t\n"%(end_time))
-
+        initialize.write_config("IV_STOP\t%15.15f\t\n"%(end_time))
+                
         time.sleep(0.25)      
         DEV.yoko.program_goto_ramp(bias, 1)
         time.sleep(2)
         log("IV Sweep finished")
         self.iv_in_progress = False
         
-        
-
         try:
             self.data_lock.acquire()
             
-            x0 = find_min(self.data["agilent_voltage_timestamp"],self.begin_time_iv)
-            x1 = find_min(self.data["agilent_voltage_timestamp"],last_time)
-            
-            voltage_timestamp = np.array(self.data["agilent_voltage_timestamp"][x0:x1])
-            voltage_list = np.array(self.data["agilent_voltage_voltage"][x0:x1])
+            x_list = np.arange(self.begin_time_iv,last_time,0.1)
  
             # lockin data refurbishment
-            current_list = interpolate(voltage_timestamp, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"], self.factor_voltage)
-            li_0_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-            li_0_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-            li_1_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-            li_1_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-            li_3_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-            li_3_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-            li_4_x_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-            li_4_y_interp = interpolate(voltage_timestamp, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+            li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+            li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+            li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+            li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+            li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+            li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+            li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+            li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
             
             li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
             li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
@@ -517,7 +509,7 @@ class main_program(QtGui.QMainWindow):
             self.plot_data["new"][3] = True
             
             try:        
-                saving_data = [voltage_timestamp, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
+                saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
                 d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
                 d_name = os.path.dirname(d)
                 if not os.path.exists(d_name):
@@ -525,15 +517,10 @@ class main_program(QtGui.QMainWindow):
                 time_string = str(int(round(time.time())))
                 file_string = "iv_%s.txt"%(time_string)
                 f_iv = open(d+file_string, 'a')
+
                 try:
-                    params = self.data.copy()
-                    params.update(DEV.lockin.get_param())
-                    for k,v in params.items():
-                        try:
-                            f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
-                        except Exception,e:
-                            pass
-                    f_iv.write("\n")
+                    param_string = self.return_param_string
+                    f_iv.write("%s\n"%(param_string))
                     f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
                 except Exception,e:
                     log("IV Parameter Save failed",e)
@@ -623,44 +610,44 @@ class main_program(QtGui.QMainWindow):
                     
                     x_list = np.arange(self.begin_time_b_circle,last_time,0.1)
  
-                    try:
-                        #voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
-                        #current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-                        li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-                        li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                        #li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-                        #li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-                        li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-                        li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-                        #li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-                        #li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
-                        b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
-                        b_2 = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
-                        
-                        li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-                        #li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
-                        li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-                        #li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-                        
-                        li_first = li_3_r/li_0_r*12900    # first
-                        #li_second = li_4_r/li_1_r*12900   # second
-                        
-                                                    
-                        self.plot_data["x3"] = np.arctan(b_1/b_2)
-                        self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
-                        
-                        #self.plot_data["x4"] = np.arctan(b_1/b_2)
-                        #self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
-                        
-                        self.plot_data["new"][2] = True
-                        #self.plot_data["new"][3] = True
-                    except Exception,e:
-                        log("IV interpolation failed",e)
+                    #voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                    #current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+                    #li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+                    #li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+                    #li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+                    #li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+                    b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+                    b_2 = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+                    
+                    li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                    #li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                    li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                    #li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                    
+                    li_first = li_3_r/li_0_r*12900    # first
+                    #li_second = li_4_r/li_1_r*12900   # second
+                    
+                    np.seterr(divide="print")
+                    
+                    self.plot_data["x3"] = np.rad2deg(np.arctan(b_1/b_2))
+                    self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                    
+                    #self.plot_data["x4"] = np.arctan(b_1/b_2)
+                    #self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                    
+                    self.plot_data["new"][2] = True
+                    #self.plot_data["new"][3] = True
+                    
             
                     self.plot_data["x1"] = b_1[:]
                     self.plot_data["y1"] = b_2[:]
                     self.plot_data["new"][0] = True 
-                    
+                except Exception,e:
+                        log("IV interpolation failed",e)
                 finally:
                     self.data_lock.release()
                     
@@ -681,7 +668,7 @@ class main_program(QtGui.QMainWindow):
                 
                 if self.stop_measure: # check for stop condition
                     break
-            time.sleep(0.01)
+            time.sleep(0.1)
         if not self.f_config == None:
             self.f_config.write("BCIRCLE_STOP\t%15.15f\n"%(time.time()))
         DEV.magnet.ZeroField(rate_1)
@@ -752,6 +739,7 @@ class main_program(QtGui.QMainWindow):
                         log("Fields done!")
                         self.stop_measure = True
                     else:
+                        time.sleep(5)
                         DEV.magnet.SetField(fields[field_index], _rate) 
                         print "IPS set to %f T"%(fields[field_index])
                         field_index += 1
@@ -761,8 +749,10 @@ class main_program(QtGui.QMainWindow):
                     if field_index >= len(fields):
                         log("Fields done!")
                         self.stop_measure = True
-                    else:                        
+                    else:    
+                        time.sleep(5)
                         DEV.magnet_2.SetField(fields[field_index], _rate) 
+                        print "IPS set to %f T"%(fields[field_index])
                         field_index += 1
                         
             if time.time() - last_time > 1: # check if update needed
@@ -833,14 +823,8 @@ class main_program(QtGui.QMainWindow):
             file_string = "bsweep_%s.txt"%(time_string)
             f_iv = open(d+file_string, 'a')
             try:
-                params = self.data.copy()
-                params.update(DEV.lockin.get_param())
-                for k,v in params.items():
-                    try:
-                        f_iv.write("%s:%s\t"%(str(k),str(v[-1])))
-                    except Exception,e:
-                        pass
-                f_iv.write("\n")
+                param_string = self.return_param_string
+                f_iv.write("%s\n"%(param_string))
                 f_iv.write("timestamp, voltage, current, b\n")
             except Exception,e:
                 log("B Sweep Parameter Save failed",e)
@@ -936,8 +920,18 @@ class main_program(QtGui.QMainWindow):
                         saving_data = [li_timestamp_4,li_4_x,li_4_y]
                         save_data(self.f_li4, saving_data)
                         
-                        saving_data = [femto_timestamp,femto_channela,femto_channelb]
-                        save_data(self.f_femto, saving_data)
+                        #saving_data = [femto_timestamp,femto_channela,femto_channelb]
+                        #save_data(self.f_femto, saving_data)
+                        #self.hdf5_file = hdf5_interface.hdf5_saving()
+                        if not self.hdf5_file == None:
+                            try:
+                                self.hdf5_file.save_lockin(0,li_timestamp_0,li_0_x,li_0_y)
+                                self.hdf5_file.save_lockin(1,li_timestamp_1,li_1_x,li_1_y)
+                                self.hdf5_file.save_lockin(3,li_timestamp_3,li_3_x,li_3_y)
+                                self.hdf5_file.save_lockin(4,li_timestamp_4,li_4_x,li_4_y)
+                            except Exception,e:
+                                log("Failed to Save LockIn HDF5",e)
+                        
                     except Exception,e:
                         log("LockIn failed DAQ",e)
                         
@@ -956,6 +950,12 @@ class main_program(QtGui.QMainWindow):
                         self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
                         saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
                         save_data(self.f_agilent_voltage, saving_data)   
+                        
+                        if not self.hdf5_file == None:
+                            try:
+                                self.hdf5_file.save_voltage(0,agilent_voltage_timestamp,agilent_voltage_voltage)
+                            except Exception,e:
+                                log("Failed to Save Voltage0 HDF5",e)
                     except Exception,e:
                         log("Agilent New failed DAQ",e)
 
@@ -972,7 +972,13 @@ class main_program(QtGui.QMainWindow):
                         self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
                         self.data["agilent_current_voltage"].extend(agilent_current_voltage)              
                         saving_data = [agilent_current_timestamp,agilent_current_voltage]
-                        save_data(self.f_agilent_current, saving_data)    
+                        save_data(self.f_agilent_current, saving_data)   
+                        
+                        if not self.hdf5_file == None:
+                            try:
+                                self.hdf5_file.save_voltage(1,agilent_current_timestamp,agilent_current_voltage)
+                            except Exception,e:
+                                log("Failed to Save Voltage1 HDF5",e)
                     except Exception,e:
                         log("Agilent old failed DAQ",e)
                     
@@ -996,6 +1002,12 @@ class main_program(QtGui.QMainWindow):
                     
                     saving_data = [motor_timestamp,motor_pos,motor_cur,motor_vel]
                     save_data(self.f_motor, saving_data)
+                    
+                    if not self.hdf5_file == None:
+                        try:
+                            self.hdf5_file.save_motor(motor_timestamp,motor_pos,motor_vel)
+                        except Exception,e:
+                            log("Failed to Save Motor HDF5",e)
                 except Exception,e:
                     log("Motor failed DAQ",e)
                     
@@ -1015,6 +1027,12 @@ class main_program(QtGui.QMainWindow):
                     
                     saving_data = [temp_timestamp,temp1,temp2]
                     save_data(self.f_temp, saving_data)
+                    
+                    if not self.hdf5_file == None:
+                        try:
+                            self.hdf5_file.save_temperature(temp_timestamp,temp1,temp2)
+                        except Exception,e:
+                            log("Failed to Save Temperatur HDF5",e)
                 except Exception,e:
                     log("Temperature failed DAQ",e)
                 
@@ -1031,7 +1049,12 @@ class main_program(QtGui.QMainWindow):
     
                     saving_data = [ips_timestamp,ips_mfield]
                     save_data(self.f_ips, saving_data)
-                
+                    
+                    if not self.hdf5_file == None:
+                        try:
+                            self.hdf5_file.save_magnet(0,ips_timestamp,ips_mfield)
+                        except Exception,e:
+                            log("Failed to Save IPS1 HDF5",e)
                 except Exception,e:
                     log("Magnet failed DAQ",e)
                 
@@ -1050,6 +1073,11 @@ class main_program(QtGui.QMainWindow):
                     saving_data = [ips_2_timestamp,ips_2_mfield]
                     save_data(self.f_ips_2, saving_data)
                 
+                    if not self.hdf5_file == None:
+                        try:
+                            self.hdf5_file.save_magnet(1,ips_2_timestamp,ips_2_mfield)
+                        except Exception,e:
+                            log("Failed to Save IPS2 HDF5",e)
                 except Exception,e:
                     log("Magnet 2 failed DAQ",e)
             
@@ -1094,7 +1122,20 @@ class main_program(QtGui.QMainWindow):
         # self, _max=None, _rate=None, _axes=None
         thread.start_new_thread(self.aquire_b_sweep,(_max,_rate,_axes))
             
-                    
+    def return_param_string(self):
+        params_str = ""
+        try:
+            params = self.data.copy()
+            params.update(DEV.lockin.get_param())
+            params_str = "PARAMS,%i:"%(len(params))
+            for k,v in params.items():
+                if len(v) > 0:
+                    params_str = params_str + ("%s:%s,"%(str(k),str(v[-1])))  
+        except Exception,e:
+            print k,v
+            log("IV Parameter Save failed",e)   
+        return params_str      
+        
     def execute(self):
         """Executes a command"""
         try:
@@ -1115,6 +1156,7 @@ class main_program(QtGui.QMainWindow):
                 self.shutdown = True # send terminate signal main app
                 self.temp_sweep_abort = True
                 time.sleep(2)   # wait all threads to terminate
+                initialize.close_files()
                 log("Exiting")
             except Exception,e:
                 print e

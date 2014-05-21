@@ -29,6 +29,9 @@ class main_program(QtGui.QMainWindow):
         
         
         QtCore.QObject.connect(self.ui.btnSetVolume, QtCore.SIGNAL("clicked()"), self.set_volume)
+        QtCore.QObject.connect(self.ui.btnHe, QtCore.SIGNAL("clicked()"), self.he_fast)
+        QtCore.QObject.connect(self.ui.btnN2, QtCore.SIGNAL("clicked()"), self.n2_fast)
+        QtCore.QObject.connect(self.ui.btnZzz, QtCore.SIGNAL("clicked()"), self.he_slow)
                
         #Read all the saved default values 
         try:
@@ -43,7 +46,6 @@ class main_program(QtGui.QMainWindow):
             self.volume = 0
         
         self.start_time = time.time()
-        
         
         try:
             npzfile = np.load("volume_data.npz")
@@ -62,11 +64,17 @@ class main_program(QtGui.QMainWindow):
         from guiqwt.builder import make
         self.data_volume = make.curve([],[])
         self.data_flow = make.curve([],[], yaxis="right", color="b")
+        self.data_level = make.curve([],[])
+        self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.X_BOTTOM, "Time (s)")
         self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.Y_LEFT, "Volume (LHeGas)")
         self.ui.curvewidget.plot.set_axis_title(self.ui.curvewidget.plot.Y_RIGHT, "Flow (LLHe/h)")
+        self.ui.curvewidget_2.plot.set_axis_title(self.ui.curvewidget.plot.X_BOTTOM, "Time (s)")
+        self.ui.curvewidget_2.plot.set_axis_title(self.ui.curvewidget.plot.Y_LEFT, "Level (mm)")
         self.ui.curvewidget.plot.add_item(self.data_volume)
         self.ui.curvewidget.plot.add_item(self.data_flow)
+        self.ui.curvewidget_2.plot.add_item(self.data_level)
         self.ui.curvewidget.plot.enable_used_axes()
+        self.ui.curvewidget_2.plot.enable_used_axes()
         
         self.timer_display = QTimer()
         self.timer_autosave = QTimer()
@@ -82,12 +90,23 @@ class main_program(QtGui.QMainWindow):
         """returns a linear interpolation of the level"""
         if level == None:
             level = self.level
-        return level/3.2+20
+        return level/3.44+20
+    
+    def he_fast(self):
+        self.levelmeter.set_probe(0)
+        self.levelmeter.set_speed(2)
+    def he_slow(self):
+        self.levelmeter.set_probe(0)
+        self.levelmeter.set_speed(1)
+    def n2_fast(self):
+        self.levelmeter.set_probe(1)
+        self.levelmeter.set_speed(2)
 
 
     def refresh_display(self):
         try:
-            self.volume += self.arduino.read_volume()
+            adding_volume = self.arduino.read_volume()
+            self.volume += adding_volume
             self.ui.labelVolume.setText("%i L"%(self.volume))
         except Exception,e:
             functions.log("Failed to update Volume",e)
@@ -99,9 +118,10 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             functions.log("Failed to update Level",e)
         
-        self.volume_time.append(time.time())
-        self.volume_list.append(self.volume)
-        self.level_list.append(self.level)
+        if adding_volume > 0.01: 
+            self.volume_time.append(time.time())
+            self.volume_list.append(self.volume)
+            self.level_list.append(self.level)
         
         try:
             min_items = int(self.flow_range / self.timer_update)
@@ -123,12 +143,12 @@ class main_program(QtGui.QMainWindow):
                 i -= min_items/2
             self.data_flow.set_data(np.array(flow_time)-self.start_time,flow)
         except Exception, e:
-            functions.log("Failed Calculating Flow",e)
-            
+            functions.log("Failed Calculating Flow",e)           
         
         self.data_volume.set_data(np.array(self.volume_time)-self.start_time,self.volume_list)
         self.ui.curvewidget.plot.do_autoscale()
-        
+        self.data_level.set_data(np.array(self.volume_time)-self.start_time,self.level_list)
+        self.ui.curvewidget_2.plot.do_autoscale()
         
         self.flow_range = int(self.ui.editRange.text())
         self.timer_update = float(self.ui.editRefresh.text())
@@ -200,6 +220,20 @@ class TWICKENHAM:
     def initialize(self):
         """init arduino"""
         pass
+
+    def set_probe(self, mode=0):
+        """Sets the reading mode 0=A, 1=B"""
+        try:
+            self.twickenham.ask("P%i"%mode)
+        except Exception,e:
+            print e
+            
+    def set_speed(self, mode=0):
+        """0=Standby,1=Slow,2=Fast,3=Continuous"""
+        try:
+            self.twickenham.ask("M%i"%mode)
+        except Exception,e:
+            print e
 
     def read_volume(self):
         try:

@@ -32,19 +32,22 @@ def interpolate(x=[],xp=[],fp=[],scale_y=1.0):
 
 def interp_breaking_trace(t_start=0,t_end=1,data={},steps=0.1):
     """Sets diagram to a Opening/Closing Trace"""
-    return_dict = {}
+    #return_dict = {}
     try:
-        x_list = np.arange(t_start,t_end,steps)
+        #x_list = np.arange(t_start,t_end,steps)
         for k,v in data.items():
-            temp_data = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
-        voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
-
+            #temp_data = interpolate(x_list, data["agilent_voltage_timestamp"], data["agilent_voltage_voltage"])
+            #voltage_list = interpolate(x_list, data["agilent_voltage_timestamp"], data["agilent_voltage_voltage"])
+            pass
     except Exception,e:
         log("Interpolating Failed",e)       
 
 
 def round_to_digits(x, digits=1):
-    return round(x, -int(np.floor(np.log10(abs(x)))) + (digits - 1))
+    if x > 1e-6:
+        return round(x, -int(np.floor(np.log10(abs(x)))) + (digits - 1))
+    else:
+        return round(x, digits)
 
 def export_html(parent, path="C:\wamp\www\\", data_list=None):
     from PyQt4.QtCore import QPoint
@@ -319,8 +322,6 @@ def find_min(L, value):
         else:
             index = center + 1
         iterations += 1
-    # not found
-    #log("not found!")
     return 0
   
     

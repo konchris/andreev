@@ -26,8 +26,13 @@ try:
     board_0 = visa.Gpib(0)
     board_0.send_ifc()
 except Exception,e:
-    log("Failed to Clear Interface",e)
-
+    log("Failed to Clear Interface 0",e)
+try:
+    board_0 = visa.Gpib(1)
+    board_0.send_ifc()
+except Exception,e:
+    log("Failed to Clear Interface 1",e)
+    
 class Magnet:
     def __init__(self, GPIB_No=27):
         self.magnet=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.0, term_chars='\r', timeout=0.2)#VI_EXCLUSIVE_LOCK
@@ -51,7 +56,7 @@ class Magnet:
         self.data_lock = thread.allocate_lock()
         self.data["timestamp"] = []
         self.data["field"] = []
-        thread.start_new_thread(self.magnet_thread,(0.1,))
+        thread.start_new_thread(self.magnet_thread,(0.2,))
 
     def initialize(self):
         try:
@@ -211,7 +216,7 @@ class Magnet:
                 gpib_lock.acquire()
                 #self.magnet.clear()
                 self.actual_field = float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
-                self.ReadStatus()
+                #self.ReadStatus()
             except Exception,e:
                 self.actual_field=11
                 log("Magnet Thread Acquire Failed",e)
@@ -234,7 +239,7 @@ class LAKESHORE:
         #self.initialize()
         
         self.data = {}
-        print "LAKESHORE INIT ---------------"
+        print "LAKESHORE INIT"
         self.data_lock = thread.allocate_lock()
         #self.data_lock.acquire()
         self.data["timestamp"] = []
@@ -267,18 +272,25 @@ class LAKESHORE:
     
     def get_setpoint(self):
         """Gets the setpoint"""
-        self.gpib_lock.acquire()
-        self.setpoint = self.lakeshore.ask('SETP? 1')
-        self.gpib_lock.release()
+        try:
+            gpib_lock.acquire()
+            self.setpoint = self.lakeshore.ask('SETP? 1')
+        except Exception,e:
+            log("Failed to acquire setpoint",e)
+        finally:
+            gpib_lock.release()
         return self.setpoint
     
     def set_setpoint(self, temperature=4):
         """Sets the new setpoint"""
         self.setpoint = temperature
-        #log('SETP 1,%f'%(temperature))
-        self.gpib_lock.acquire()
-        self.lakeshore.write('SETP 1,%f'%(temperature))
-        self.gpib_lock.release()
+        try:
+            gpib_lock.acquire()
+            self.lakeshore.write('SETP 1,%f'%(temperature))
+        except Exception,e:
+            log("Failed to set setpoint",e)
+        finally:
+            gpib_lock.release()
         
     def set_heater_range(self, range=0):
         """Set the heater range to specified value:
@@ -288,40 +300,61 @@ class LAKESHORE:
                 3 = high"""
         self.heater_range = range
         #log('RANGE 1,%i;'%(range))
-        self.gpib_lock.acquire()
-        self.lakeshore.write('RANGE 1,%i;'%(range))
-        self.gpib_lock.release()
+        try:
+            gpib_lock.acquire()
+            self.lakeshore.write('RANGE 1,%i;'%(range))
+        except Exception,e:
+            log("Failed to set heater range",e)
+        finally:
+            gpib_lock.release()
     
     def get_heater_range(self):
         """Get the heater range, look @ set"""
-        self.gpib_lock.acquire()
-        self.heater_range = self.lakeshore.ask("RANGE?")
-        self.gpib_lock.release()
+        try:
+            gpib_lock.acquire()
+            self.heater_range = self.lakeshore.ask("RANGE?")
+        except Exception,e:
+            log("Failed to set heater range",e)
+        finally:
+            gpib_lock.release()
+            
         return self.heater_range
     
     def set_pid(self,p=100,i=10,d=0):
         """sets pid parameter and switches to manual pid for loop 1"""
-        self.gpib_lock.acquire()       
-        self.lakeshore.write('CMODE 1,1')
-        #log('PID 1,%i,%i,%i'%(p,i,d))
-        self.lakeshore.write('PID 1,%i,%i,%i'%(p,i,d))
-        self.gpib_lock.release() 
+        try:
+            gpib_lock.acquire()       
+            self.lakeshore.write('CMODE 1,1')
+            #log('PID 1,%i,%i,%i'%(p,i,d))
+            self.lakeshore.write('PID 1,%i,%i,%i'%(p,i,d))
+        except Exception,e:
+            log("Failed to set pid",e)
+        finally:
+            gpib_lock.release() 
     
     def set_display(self,mode=0):
         """Display Setup Command"""        
         command = 'DISPLAY %i'%(mode)
-        #log(command)
-        self.gpib_lock.acquire()
-        self.lakeshore.write(command)
-        self.gpib_lock.release()
+        try:
+            gpib_lock.acquire()
+            self.lakeshore.write(command)
+        except Exception,e:
+            log("Failed to set display",e)
+        finally:
+            gpib_lock.release()
     
     def set_display_field(self,field=1,source=0,unit=0):
         """sets display field"""        
         command = 'DISPFLD %i,%i,%i'%(field,source,unit)
         #log(command)
-        self.gpib_lock.acquire()
-        self.lakeshore.write(command)
-        self.gpib_lock.release()
+        try:
+            gpib_lock.acquire()
+            self.lakeshore.write(command)
+        except Exception,e:
+            log("Failed to set display field",e)
+        finally:
+            gpib_lock.release()
+
     
     # data handling
     def get_data_list(self, erase=True):
@@ -813,8 +846,8 @@ class ZURICH:
                 [["/", self.device, "/dios/0/drive"],1]
                ]
         self.daq2.set(general_setting)
-        self.set_rate()
-        self.set_ac()
+        self.set_rate(14)
+        self.set_ac(False)
         self.set_amplitude(0.01)
         self.set_phases()
     
@@ -899,7 +932,7 @@ class ZURICH:
         
     
 
-    def lockin_thread(self):
+    def lockin_thread(self, delay=0.1):
         """ connects to the server and asks for data """
         log("LockIn Thread started!")        
         self.daq.flush()
@@ -943,6 +976,7 @@ class ZURICH:
                     self.data_lock.release()
                 except Exception,e:
                     log("Lockin Poll Failed",e)                
+                time.sleep(delay)
         except Exception,e:
             log("Lockin Communication Error in Thread",e)
         finally:
@@ -1089,7 +1123,7 @@ class MOTOR:
         self.data["position"] = []
         self.data["current"] = []
         self.data["velocity"] = []
-        thread.start_new_thread(self.motor_thread,(0.02,))
+        thread.start_new_thread(self.motor_thread,(0.05,))
 
     def initialize(self, max_rpm=8000):
         """activate motor control"""
@@ -1464,10 +1498,10 @@ if __name__ == "__main__":
     
     while False:
         try:
-            print agilent_new.get_data_list()
-            print agilent_old.get_data_list()
+            print len(agilent_new.get_data_list())
+            print len(agilent_old.get_data_list())
         except:
             pass
-        time.sleep(0.5)
+        time.sleep(1)
         pass
 
