@@ -16,11 +16,9 @@ import time
 
 rref = 104000.0
 filename = r"140514_21-I-04_Meas_didv_7"
-filename = r"140520_21-I-04_BxSweep_12"
+filename = r"140516_21-I-04_BzSweep_08"
 server = True
 
-femto_factor_u = 10.0
-femto_factor_i = 10.0
 
 max_cond = 0
 max_res = 0
@@ -32,7 +30,7 @@ stepsize = 0.1  # seconds between samples
 split_up_ivs = False
 plot_overview = True
 plot_ivs = False
-plot_hist=True
+plot_hist=False
 
 g0 = 2.0*e*e/h
 if server:
@@ -154,7 +152,7 @@ if plot_overview:
         print e
         
     
-    """try:
+    try:
         print "Lockin"
         start = time.time()
         li_0 = scipy.loadtxt(file_li_0,unpack=True)
@@ -198,8 +196,8 @@ if plot_overview:
         li_3_r = np.sqrt(np.square(li_3_x)+np.square(li_3_y))
         li_1_r = np.sqrt(np.square(li_1_x)+np.square(li_1_y))
         li_4_r = np.sqrt(np.square(li_4_x)+np.square(li_4_y))
-        di_dv = li_3_r/li_0_r/rref
-        d2i_dv2 = li_4_r/li_1_r/rref
+        di_dv = li_3_r/li_0_r/rref*12906.4
+        d2i_dv2 = li_4_r/li_1_r/rref*12906.4
         
         start4 = time.time()
         print "%f"%(start4-start3)
@@ -208,7 +206,7 @@ if plot_overview:
         ax_d2idv2.plot(timestamp-timestamp[0],d2i_dv2,'r-')
         
     except Exception,e:
-        print e"""
+        print e
     
     
     

@@ -101,20 +101,20 @@ class Magnet:
     def ReadStatus(self):
         """Saves the Status of the magnet to local variables."""        
         try:
-            #print "try ask x"
             answer = self.magnet.ask('X')
-            #print answer 
-            
-            self.status_a = int(answer[1])
-            self.status_b = int(answer[2])
-            self.activity = int(answer[4])
-            self.local = int(answer[6])
-            self.heater_status = int(answer[8])
-            
-            if self.heater_status==1:
-                self.heater = True
+            if answer[0] == "X":
+                self.status_a = int(answer[1])
+                self.status_b = int(answer[2])
+                self.activity = int(answer[4])
+                self.local = int(answer[6])
+                self.heater_status = int(answer[8])
+                
+                if self.heater_status==1:
+                    self.heater = True
+                else:
+                    self.heater = False
             else:
-                self.heater = False
+                raise ValueError("Not a valid Status Answer!")
         except Exception,e:
             print answer
             log("Magnet Status Error",e)
@@ -158,7 +158,6 @@ class Magnet:
             #sleep(0.2)
         except:
             print('ERROR: Set B field failed')
-            pass     
     
     def field_reached(self):
         """ returns True if the desired field is already reached
@@ -179,13 +178,13 @@ class Magnet:
             self.magnet.write('$H%s'%str(settings[value]))
             print '$H%s'%str(settings[value])
             if value in ['OFF', 'zeroOFF'] and self.heater==True:
-                log('wait for switch heater....cooldown')
+                log('Wait for switch heater....Cooldown',force=True)
                 for i in range (40):
                     time.sleep(0.5)
                     app.processEvents()
                 self.heater=False
             elif value in ['ON'] and self.heater==False:
-                log('wait for switch heater....warming')
+                log('Wait for switch heater....Warming',force=True)
                 for i in range (40):
                     time.sleep(0.5)
                     app.processEvents()
@@ -215,10 +214,16 @@ class Magnet:
             try:
                 gpib_lock.acquire()
                 #self.magnet.clear()
-                self.actual_field = float(self.magnet.ask('R7')[1:]) #R7=Demand field (output field)            
-                #self.ReadStatus()
+                try:
+                    answer = self.magnet.ask('R7')
+                    self.actual_field = float(answer[1:])
+                    self.ReadStatus()
+                except Exception,e:
+                    self.actual_field=11
+                    log("Field Aquire Failed",e)
+                    self.magnet.clear()
             except Exception,e:
-                self.actual_field=11
+                
                 log("Magnet Thread Acquire Failed",e)
             finally:
                 gpib_lock.release()
@@ -677,23 +682,14 @@ class Agilent34410A:
         #print "alias Agilent 34410A"FRESistance
     
     def initialize4WIREOHM(self, NPLC=1, DISPLAY ="ON"):
-        #self.Agilent.write('*RST')
-        #self.Agilent.write('*CLS')
-        #self.Agilent.write('CONF:VOLT:DC 10') # was 2
-        #self.Agilent.write('DISP '+DISPLAY)
-        #self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         self.Agilent.write('FUNC "FRES"')
         self.Agilent.write('FRES:RANG:AUTO ON') # manual range?
-        #inst=self.Agilent.ask('*IDN?')
-        #print('%s ... initialized'%str(inst))
-        #print "alias Agilent 34410A"FRESistance
         
     def get(self):
         return float(self.Agilent.ask("READ?"))
     
     def set_nplc(self, NPLC=1,):
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
-        
         
     def initializeVOLTDCarray(self, NPLC=0.2, DISPLAY ="OFF"):
         self.Agilent.write('*RST')
@@ -765,11 +761,8 @@ class ZURICH:
         # Detect device
         self.device = zhinst.utils.autoDetect(self.daq)
         
-        # calculate timeoffset for time calibration of lockin timebase
-        # internal time is time from powerup
-        sample_time = time.time()
-        sample = self.daq.getSample('/'+self.device+'/demods/0/sample')
-        self.time_offset = sample_time - sample["timestamp"][0]/210e6
+        self.time_offset = 0.0
+        self.resync()
         
         self.initialize()
         self.femto_reset()
@@ -805,6 +798,20 @@ class ZURICH:
         self.data["femto"]["channelb"] = []
         
         thread.start_new_thread(self.lockin_thread, ())
+    
+    def resync(self):
+        """calculate timeoffset for time calibration of lockin timebase
+        internal time is time from powerup"""
+        try:
+            sample_time = time.time()
+            sample = self.daq2.getSample('/'+self.device+'/demods/0/sample')
+            sample_time_2 = time.time()
+            backup_offset = self.time_offset
+            self.time_offset = (sample_time+sample_time_2)/2 - sample["timestamp"][0]/210e6
+            log("LockIn Resync: %f"%(backup_offset-self.time_offset))
+        except Exception,e:
+            log("Resync failed",e)
+            self.time_offset = 0.0
     
     def initialize(self, frequency=2222.222, ampl=0.01, order=4, tc=0.1, rate=14):
         general_setting = [
@@ -1317,30 +1324,7 @@ class MOTOR:
     
     
             
-class ILM210:
-    def __init__(self, port='ASRL4', address='6'):
-        #self.meter=serial.Serial('COM3',9600,timeout=0) 
-        self.meter=visa.SerialInstrument(port,delay=0,term_chars='\r\n')
-        self.address = address
-        #thread.start_new_thread(self.motor_thread,(0.1,))
-    
-    def read_level(self):
-        """stop motor and deactivate motor control"""
-        answer = self.meter.ask('@'+self.address+'R1')
-        # answer: R+00588
-        try:
-            return float(answer[2:])/10
-        except Exception,e:
-            print e
-            return 0
-            
-    def version(self):
-        """stop motor and deactivate motor control"""
-        answer = self.meter.ask('@'+self.address+'V')
-        return answer
-        
-    def close(self):
-        self.meter.close()
+
 
 
 
@@ -1496,10 +1480,10 @@ log("Device Threads Initalized")
 
 if __name__ == "__main__":
     
-    while False:
+    while True:
         try:
-            print len(agilent_new.get_data_list())
-            print len(agilent_old.get_data_list())
+            #print len(agilent_new.get_data_list())
+            print len(agilent_old.get_data_list()["timestamp"])
         except:
             pass
         time.sleep(1)

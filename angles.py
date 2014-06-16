@@ -5,6 +5,7 @@ Created on Wed May 21 15:23:32 2014
 @author: David Weber
 """
 import numpy as np
+
 _radius = 3
 for angle in [0,90,180,270,360,450,630]:
     b_1 = np.cos(np.deg2rad(angle))*_radius
@@ -20,3 +21,4 @@ angle: 360, z: 3.000000, x: -0.000000
 angle: 450, z: 0.000000, x: 3.000000
 angle: 630, z: -0.000000, x: -3.000000
 """
+

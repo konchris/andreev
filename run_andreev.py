@@ -66,7 +66,7 @@ class main_program(QtGui.QMainWindow):
         self.timer_display.start(250)
         
         self.html_timer = QTimer()
-        self.html_timer.timeout.connect(self.call_html_export)
+        self.html_timer.timeout.connect(self.slow_timer)
         self.html_timer.start(30000)
         
         self.form_data = {}
@@ -86,8 +86,11 @@ class main_program(QtGui.QMainWindow):
         self.data_lock = thread.allocate_lock()
         thread.start_new_thread(self.measurement_thread,())    
 
-    def call_html_export(self):
+    def slow_timer(self):
         export_html(self.ui)
+        
+        if not self.f_config == None:
+            self.f_config.flush()
         
     # offset
     def offset_correct(self, delay=0.5):
@@ -124,20 +127,10 @@ class main_program(QtGui.QMainWindow):
         log("offset agilent old\t%fV"%(offset_old))
         
         time.sleep(delay/10.0)
-        # restore recent values
-        #DEV.lockin.femto_set(a,b)            
-        
-        
+
         self.ui.editOffsetAux0_0.setText(str(round(self.config_data["offset_agilent_voltage"][0],6)))
-        #self.ui.editOffsetAux0_1.setText(str(round(self.config_data["offset_aux0"][1],6)))
-        #self.ui.editOffsetAux0_2.setText(str(round(self.config_data["offset_aux0"][2],6)))
-        #self.ui.editOffsetAux0_3.setText(str(round(self.config_data["offset_aux0"][3],6)))
         self.ui.editOffsetAux1_0.setText(str(round(self.config_data["offset_agilent_current"][0],6)))
-        #self.ui.editOffsetAux1_1.setText(str(round(self.config_data["offset_aux1"][1],6)))
-        #self.ui.editOffsetAux1_2.setText(str(round(self.config_data["offset_aux1"][2],6)))
-        #self.ui.editOffsetAux1_3.setText(str(round(self.config_data["offset_aux1"][3],6)))
-        
-        
+
         DEV.yoko.set_voltage(bias)
         time.sleep(0.2)
         # flush data to /dev/null
@@ -189,9 +182,9 @@ class main_program(QtGui.QMainWindow):
                         breaking = True
                     
                     if breaking:
-                        gui_helper.motor_break(self.editHistogramOpeningSpeed, quiet=True)
+                        gui_helper.motor_break(int(self.form_data["editHistogramOpeningSpeed"]), quiet=True)
                     else:
-                        gui_helper.motor_unbreak(self.editHistogramClosingSpeed, quiet=True)
+                        gui_helper.motor_unbreak(int(self.form_data["editHistogramClosingSpeed"]), quiet=True)
                         
                     # if escape on motor limit hit
                     if self.checkHistogramEscape:
@@ -388,7 +381,8 @@ class main_program(QtGui.QMainWindow):
                 # note down begin of sweep
                 self.begin_time_iv = time.time()
                                
-                initialize.write_config("IV_START\t%15.15f\t%s\n"%(self.begin_time_iv,params_str))
+                param_string = self.return_param_string()
+                initialize.write_config("IV_START\t%15.15f\t%s\n"%(self.begin_time_iv,param_string))
 
                 start_sweep_yoko = False
                 if loop_count % 2: # if not even = odd (2nd/4th run in double)
@@ -417,7 +411,9 @@ class main_program(QtGui.QMainWindow):
                         li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
                         li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
                         li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
-                        
+         
+                         #dG:np.sqrt(np.power([li_3_x],2)+np.power([li_3_y],2))/np.sqrt(np.power([li_0_x],2)+np.power([li_0_y],2))/104000.0*12900.0
+
                         li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                         li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
                         li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
@@ -519,7 +515,7 @@ class main_program(QtGui.QMainWindow):
                 f_iv = open(d+file_string, 'a')
 
                 try:
-                    param_string = self.return_param_string
+                    param_string = self.return_param_string()
                     f_iv.write("%s\n"%(param_string))
                     f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
                 except Exception,e:
@@ -592,6 +588,11 @@ class main_program(QtGui.QMainWindow):
         
         rate_1 = float(self.form_data["editBRate"])
         rate_2 = float(self.form_data["editBRate_2"])
+        
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "Bz (T)")
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "Bx (T)") 
+        self.ui.cw6.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "Angle (Deg))")
+        self.ui.cw6.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "G (Go)") 
 
         angles = np.arange(_start,_stop,_stepsize)
         angle_index = 0
@@ -608,48 +609,50 @@ class main_program(QtGui.QMainWindow):
                 try:
                     self.data_lock.acquire()
                     
-                    x_list = np.arange(self.begin_time_b_circle,last_time,0.1)
+                    x_list = np.arange(self.begin_time_b_circle,last_time,0.25)
  
-                    #voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
-                    #current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                    voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                    current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
                     li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
                     li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                    #li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-                    #li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
                     li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
                     li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-                    #li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-                    #li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
                     b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
                     b_2 = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
                     
                     li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-                    #li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
                     li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-                    #li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
                     
                     li_first = li_3_r/li_0_r*12900    # first
-                    #li_second = li_4_r/li_1_r*12900   # second
                     
-                    np.seterr(divide="print")
+                    np.seterr(divide="ignore")
                     
-                    self.plot_data["x3"] = np.rad2deg(np.arctan(b_1/b_2))
-                    self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                    # trying to get full circle
+                    try:
+                        self.plot_data["x1"] = b_1[:]
+                        self.plot_data["y1"] = b_2[:]
+                        
+                        self.plot_data["x3"] = np.rad2deg(np.arctan(b_1/b_2))
+                        self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                        self.plot_data["x4"] = np.arctan(b_1/b_2)
+                        self.plot_data["y4"] = current_list/voltage_list/self.rref
+                        for i in range(len(b_2)):
+                            if b_2[i] < 0:
+                                self.plot_data["x3"][i] += 180.0
+                                self.plot_data["x4"][i] += 180.0
+                        self.plot_data["new"][0] = True 
+                        self.plot_data["new"][2] = True
+                        self.plot_data["new"][3] = True
+                        
+                        DEV.yoko.display_set_text("%2.2fT %2.2fT %i"%(b_1[-1],b_2[-1],self.plot_data["x3"][-1]))
+                    except Exception,e:
+                        log("Angle Constructing Plot Failed",e)
                     
-                    #self.plot_data["x4"] = np.arctan(b_1/b_2)
-                    #self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
-                    
-                    self.plot_data["new"][2] = True
-                    #self.plot_data["new"][3] = True
-                    
-            
-                    self.plot_data["x1"] = b_1[:]
-                    self.plot_data["y1"] = b_2[:]
-                    self.plot_data["new"][0] = True 
                 except Exception,e:
                         log("IV interpolation failed",e)
                 finally:
                     self.data_lock.release()
+                    np.seterr(divide="print")
                     
             if DEV.magnet.field_reached() and DEV.magnet_2.field_reached():
                 # do whatever
@@ -671,8 +674,38 @@ class main_program(QtGui.QMainWindow):
             time.sleep(0.1)
         if not self.f_config == None:
             self.f_config.write("BCIRCLE_STOP\t%15.15f\n"%(time.time()))
+            
+        DEV.yoko.display_main_screen()
+        log("Waiting for Magnets set to Zero")
         DEV.magnet.ZeroField(rate_1)
         DEV.magnet_2.ZeroField(rate_2)
+
+        if self.form_data["checkBSweepHeater"]:
+            log("Requested to Switch of Heaters")
+            log("Waiting for Magnets to run down")
+            self.stop_measure = False
+            while not self.stop_measure:
+                if DEV.magnet.field_reached() and DEV.magnet_2.field_reached():
+                    self.stop_measure = True
+                time.sleep(0.25)
+            
+            log("Magnets at Zero Field")
+            try:
+                if DEV.magnet.field_reached():
+                    DEV.magnet.set_switchheater("zeroOFF")
+                    log("IPS1 Heater Off")
+                else:
+                    log("Magnet Sweeping. Couldn't Turn off Heater!",e)
+            except Exception,e:
+                log("Failed Auto-Off Heater IPS1",e)
+            try:
+                if DEV.magnet_2.field_reached():
+                    DEV.magnet_2.set_switchheater("zeroOFF")
+                    log("IPS2 Heater Off")
+                else:
+                    log("Magnet 2 Sweeping. Couldn't Turn off Heater!",e)
+            except Exception,e:
+                log("Failed Auto-Off Heater IPS2",e)
         
         
         
@@ -743,6 +776,13 @@ class main_program(QtGui.QMainWindow):
                         DEV.magnet.SetField(fields[field_index], _rate) 
                         print "IPS set to %f T"%(fields[field_index])
                         field_index += 1
+                try:
+                    DEV.yoko.display_set_text("%fV %2.1fT"
+                        %(round_to_digits(DEV.yoko.get_voltage,2),
+                          self.data["ips_mfield"][-1]))
+                    #DEV.yoko.display_set_text("%2.1fT %2.1fT %i"%(1.2,3.3,32))
+                except Exception,e:
+                    log("Failed to Update Yoko Display")
                 
             if _axes == 2:
                 if DEV.magnet_2.field_reached():
@@ -782,6 +822,7 @@ class main_program(QtGui.QMainWindow):
                 break
             time.sleep(0.5)
         end_time = time.time()    
+        
         
         if self.form_data["checkBSweepHeater"]:
             try:

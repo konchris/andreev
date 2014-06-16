@@ -2107,273 +2107,6 @@
          </property>
         </widget>
        </widget>
-       <widget class="QWidget" name="tab_5">
-        <attribute name="title">
-         <string>LI</string>
-        </attribute>
-        <widget class="QWidget" name="formLayoutWidget_3">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>20</y>
-           <width>147</width>
-           <height>245</height>
-          </rect>
-         </property>
-         <layout class="QFormLayout" name="formLayout_3">
-          <property name="fieldGrowthPolicy">
-           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-          </property>
-          <property name="margin">
-           <number>10</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_36">
-            <property name="text">
-             <string>Freq</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="editLIFreq">
-            <property name="text">
-             <string>1111.1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_37">
-            <property name="text">
-             <string>TC</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="editLITC">
-            <property name="text">
-             <string>0.1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_38">
-            <property name="text">
-             <string>Ampl</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="editLIAmpl">
-            <property name="text">
-             <string>0.1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_34">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Average</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="editAverage">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>100</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_59">
-            <property name="text">
-             <string>Rate</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="editRate">
-            <property name="text">
-             <string>14</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="aCLabel">
-            <property name="text">
-             <string>AC</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QCheckBox" name="checkLIAC"/>
-          </item>
-          <item row="7" column="1">
-           <widget class="QPushButton" name="btnLockinSet">
-            <property name="text">
-             <string>Set</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QComboBox" name="comboLIOrder">
-            <property name="currentIndex">
-             <number>3</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>1</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>2</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>3</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>4</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>5</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>6</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>7</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>8</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_101">
-            <property name="text">
-             <string>Order</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="gridLayoutWidget_5">
-         <property name="geometry">
-          <rect>
-           <x>200</x>
-           <y>20</y>
-           <width>160</width>
-           <height>181</height>
-          </rect>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_82">
-            <property name="text">
-             <string>Phase 4</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QLabel" name="label_86">
-            <property name="text">
-             <string>°</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_83">
-            <property name="text">
-             <string>°</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_79">
-            <property name="text">
-             <string>Phase 0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_85">
-            <property name="text">
-             <string>°</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_81">
-            <property name="text">
-             <string>Phase 3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="editLIPhase4"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="editLIPhase3"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="editLIPhase1"/>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="editLIPhase0"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_80">
-            <property name="text">
-             <string>Phase 1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_84">
-            <property name="text">
-             <string>°</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QPushButton" name="btnLIZeroPhase">
-            <property name="text">
-             <string>Zero Phase</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QPushButton" name="btnLIReadPhase">
-            <property name="text">
-             <string>Read</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </widget>
        <widget class="QWidget" name="tab_4">
         <attribute name="title">
          <string>View</string>
@@ -2704,48 +2437,332 @@
          </property>
         </widget>
        </widget>
-       <widget class="QWidget" name="tab_11">
+       <widget class="QWidget" name="tab_5">
         <attribute name="title">
-         <string>Offset</string>
+         <string>LI</string>
         </attribute>
-        <widget class="QWidget" name="formLayoutWidget_6">
+        <widget class="QWidget" name="formLayoutWidget_3">
          <property name="geometry">
           <rect>
-           <x>30</x>
-           <y>10</y>
-           <width>160</width>
-           <height>251</height>
+           <x>20</x>
+           <y>20</y>
+           <width>147</width>
+           <height>221</height>
           </rect>
          </property>
-         <layout class="QFormLayout" name="formLayout_6">
+         <layout class="QFormLayout" name="formLayout_3">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
           <property name="margin">
            <number>10</number>
           </property>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="editOffsetAux0_0">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_36">
             <property name="text">
-             <string>0</string>
+             <string>Freq</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_44">
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="editLIFreq">
             <property name="text">
-             <string>AUX0 20dB</string>
+             <string>1111.1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_37">
+            <property name="text">
+             <string>TC</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editLITC">
+            <property name="text">
+             <string>0.1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>Ampl</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="editLIAmpl">
+            <property name="text">
+             <string>0.1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_34">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Average</string>
             </property>
            </widget>
           </item>
           <item row="4" column="1">
+           <widget class="QLineEdit" name="editAverage">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>100</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_59">
+            <property name="text">
+             <string>Rate</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="editRate">
+            <property name="text">
+             <string>14</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="aCLabel">
+            <property name="text">
+             <string>AC</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QCheckBox" name="checkLIAC"/>
+          </item>
+          <item row="7" column="1">
+           <widget class="QPushButton" name="btnLockinSet">
+            <property name="text">
+             <string>Set</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="comboLIOrder">
+            <property name="currentIndex">
+             <number>3</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>7</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_101">
+            <property name="text">
+             <string>Order</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="gridLayoutWidget_5">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>20</y>
+           <width>160</width>
+           <height>181</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_82">
+            <property name="text">
+             <string>Phase 4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_86">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_83">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_79">
+            <property name="text">
+             <string>Phase 0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_85">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_81">
+            <property name="text">
+             <string>Phase 3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="editLIPhase4"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="editLIPhase3"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editLIPhase1"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="editLIPhase0"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_80">
+            <property name="text">
+             <string>Phase 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_84">
+            <property name="text">
+             <string>°</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QPushButton" name="btnLIZeroPhase">
+            <property name="text">
+             <string>Zero Phase</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QPushButton" name="btnLIReadPhase">
+            <property name="text">
+             <string>Read</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QPushButton" name="btnLIResync">
+         <property name="geometry">
+          <rect>
+           <x>250</x>
+           <y>210</y>
+           <width>101</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>ReSync</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_11">
+        <attribute name="title">
+         <string>Amps</string>
+        </attribute>
+        <widget class="QWidget" name="gridLayoutWidget_15">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>10</y>
+           <width>251</width>
+           <height>129</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_15">
+          <item row="0" column="3">
            <widget class="QLineEdit" name="editOffsetAux1_0">
             <property name="text">
              <string>0</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_55">
+            <property name="text">
+             <string>AUX1 60dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
            <widget class="QLabel" name="label_45">
             <property name="text">
              <string>AUX1 20dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>AUX1 40dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLineEdit" name="editOffsetAux1_2">
+            <property name="text">
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -2756,8 +2773,22 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="editOffsetAux0_1">
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="editOffsetAux0_0">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_56">
+            <property name="text">
+             <string>AUX1 80dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="editOffsetAux1_1">
             <property name="text">
              <string>0</string>
             </property>
@@ -2770,17 +2801,31 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="editOffsetAux0_3">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_52">
+            <property name="text">
+             <string>AUX0 60dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_44">
+            <property name="text">
+             <string>AUX0 20dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLineEdit" name="editOffsetAux1_3">
             <property name="text">
              <string>0</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_52">
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="editOffsetAux0_1">
             <property name="text">
-             <string>AUX0 60dB</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -2791,56 +2836,21 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="editOffsetAux1_1">
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="editOffsetAux0_3">
             <property name="text">
              <string>0</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
-           <widget class="QLineEdit" name="editOffsetAux1_2">
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_54">
-            <property name="text">
-             <string>AUX1 40dB</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_55">
-            <property name="text">
-             <string>AUX1 60dB</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_56">
-            <property name="text">
-             <string>AUX1 80dB</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="editOffsetAux1_3">
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
+          <item row="4" column="1">
            <widget class="QLabel" name="label_43">
             <property name="text">
              <string>Auto</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
+          <item row="4" column="2">
            <widget class="QPushButton" name="btnOffset">
             <property name="text">
              <string>Correct</string>
@@ -2849,16 +2859,11 @@
           </item>
          </layout>
         </widget>
-       </widget>
-       <widget class="QWidget" name="tab_3">
-        <attribute name="title">
-         <string>Setup</string>
-        </attribute>
         <widget class="QGroupBox" name="groupBox_8">
          <property name="geometry">
           <rect>
-           <x>20</x>
-           <y>20</y>
+           <x>300</x>
+           <y>10</y>
            <width>201</width>
            <height>231</height>
           </rect>
@@ -3037,10 +3042,15 @@
           </property>
          </widget>
         </widget>
+       </widget>
+       <widget class="QWidget" name="tab_3">
+        <attribute name="title">
+         <string>Setup</string>
+        </attribute>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="geometry">
           <rect>
-           <x>230</x>
+           <x>20</x>
            <y>20</y>
            <width>181</width>
            <height>201</height>
@@ -3183,8 +3193,8 @@
         <widget class="QLineEdit" name="editRRef">
          <property name="geometry">
           <rect>
-           <x>270</x>
-           <y>250</y>
+           <x>250</x>
+           <y>40</y>
            <width>113</width>
            <height>20</height>
           </rect>
@@ -3196,14 +3206,62 @@
         <widget class="QLabel" name="label_57">
          <property name="geometry">
           <rect>
-           <x>260</x>
-           <y>230</y>
+           <x>240</x>
+           <y>20</y>
            <width>46</width>
            <height>13</height>
           </rect>
          </property>
          <property name="text">
           <string>RRef</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="btnInitDevices">
+         <property name="geometry">
+          <rect>
+           <x>250</x>
+           <y>80</y>
+           <width>111</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Init Devices</string>
+         </property>
+        </widget>
+        <widget class="QTextEdit" name="textAddValues">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>140</y>
+           <width>291</width>
+           <height>111</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="html">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;R:[agilent_voltage_voltage]/[agilent_current_voltage]*104000.0;G:[agilent_current_voltage]/[agilent_voltage_voltage]/104000.0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_137">
+         <property name="geometry">
+          <rect>
+           <x>240</x>
+           <y>120</y>
+           <width>46</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Add Values</string>
          </property>
         </widget>
        </widget>
@@ -3389,7 +3447,7 @@
       <x>635</x>
       <y>10</y>
       <width>201</width>
-      <height>241</height>
+      <height>291</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3592,11 +3650,7 @@
   <tabstop>editIVMinEstimate</tabstop>
   <tabstop>editIVMaxEstimate</tabstop>
   <tabstop>checkIVSample</tabstop>
-  <tabstop>editOffsetAux0_2</tabstop>
   <tabstop>editIVGap</tabstop>
-  <tabstop>editOffsetAux1_1</tabstop>
-  <tabstop>editOffsetAux1_2</tabstop>
-  <tabstop>btnOffset</tabstop>
   <tabstop>checkIVGap</tabstop>
   <tabstop>editTempSetpoint</tabstop>
   <tabstop>editTempHeater</tabstop>
@@ -3667,8 +3721,6 @@
   <tabstop>checkAuto3b</tabstop>
   <tabstop>checkAuto4a</tabstop>
   <tabstop>checkAuto4b</tabstop>
-  <tabstop>editFactorVoltage</tabstop>
-  <tabstop>editFactorCurrent</tabstop>
   <tabstop>editUpperLimit</tabstop>
   <tabstop>editLowerLimit</tabstop>
   <tabstop>editMotorCurrent</tabstop>
@@ -3686,8 +3738,6 @@
   <tabstop>btnSaveStart</tabstop>
   <tabstop>btnSaveStop</tabstop>
   <tabstop>btnSaving</tabstop>
-  <tabstop>checkAutomaticGain</tabstop>
-  <tabstop>btnChBUp</tabstop>
   <tabstop>tableWidget</tabstop>
   <tabstop>btnStatusLockin</tabstop>
   <tabstop>btnStatusTemperatur</tabstop>
@@ -3696,15 +3746,7 @@
   <tabstop>btnStatusMotor</tabstop>
   <tabstop>btnStatusMagnet</tabstop>
   <tabstop>editLastIV</tabstop>
-  <tabstop>editOffsetAux1_0</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>editOffsetAux0_0</tabstop>
-  <tabstop>btnChAUp</tabstop>
-  <tabstop>btnChADown</tabstop>
-  <tabstop>btnChBDown</tabstop>
-  <tabstop>editOffsetAux0_3</tabstop>
-  <tabstop>editOffsetAux1_3</tabstop>
-  <tabstop>editOffsetAux0_1</tabstop>
  </tabstops>
  <resources/>
  <connections/>

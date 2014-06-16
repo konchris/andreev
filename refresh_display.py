@@ -6,10 +6,11 @@ All rights reserved by David Weber
 """
 import numpy as np
 import time
-from functions import log, find_min, round_to_digits
+from functions import log, find_min, round_to_digits, interpolate
 from PyQt4 import QtGui
 import devices_andreev as DEV
 import inspect
+import re
 
 _self = None
 
@@ -301,6 +302,25 @@ def refresh_display():
                     _self.ui.cw4.plot.do_autoscale()
                 except Exception,e:
                     log("Autoscale CW4 failed",e)
+            if True:
+                try:
+                    x_list = np.arange(begin,end,0.25)
+     
+                    voltage_list = interpolate(x_list, _self.data["agilent_voltage_timestamp"], _self.data["agilent_voltage_voltage"])
+                    li_0_x_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_x"], _self.factor_voltage)
+                    li_0_y_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_y"], _self.factor_voltage)
+                    li_3_x_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_x"], _self.factor_current)
+                    li_3_y_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_y"], _self.factor_current)
+
+                    li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                    li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                    
+                    li_first = li_3_r/li_0_r*12900
+                    
+                    _self.data_curve8b.set_data(voltage_list, li_first)
+                except Exception,e:
+                    log("Failed to Display LI Conductance",e)
+
             
         except Exception,e:
             log("Displaying Agilents Resistance",e)
@@ -346,6 +366,32 @@ def refresh_display():
                     item_count += 1
             except Exception,e:
                 log("Error displaying data: "+str(k),e)
+        
+        # this part adds on the fly calculated values used defined
+        try:
+            # additional calculated values
+            add_values = {}
+            diff_commands = str(_self.form_data["textAddValues"]).split(";")
+            for com in diff_commands:
+                splits = com.split(":")
+                add_values[splits[0]] = splits[1]
+                
+            for k,v in add_values.iteritems():
+                data_tokens = re.findall(r"\[(.*?)\]",v)
+
+                for data_k,data_v in _self.data.items():
+                    for token in data_tokens:
+                        if data_k == token:
+                            par_token = "["+token+"]"
+                            #print par_token
+                            v = v.replace(par_token, str(float(data_v[-1])))
+                eval_v = eval(v)
+                data.append([k,eval_v])
+                item_count += 1
+        except Exception,e:
+            log("Failed to add additional values",e)
+            
+                
         data = sorted(data, key=lambda v: v[0])
         
         _self.ui.tableWidget.setColumnCount(1)

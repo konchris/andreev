@@ -154,6 +154,9 @@ def lockin_set():
     DEV.lockin.set_frequency(freq,tc,order)
     DEV.lockin.set_ac(coupling)
 
+def lockin_resync():
+    DEV.lockin.resync()
+
 def lockin_read_phase():
     import numpy as np
     try:

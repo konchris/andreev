@@ -115,6 +115,7 @@ def init_curvewidgets(_self):
     _self.data_curve6b = make.curve([],[], yaxis="right", color="g")
     _self.data_curve7 = make.curve([],[])
     _self.data_curve8 = make.curve([1],[1], yaxis="right", color="b")
+    _self.data_curve8b = make.curve([1],[1], yaxis="right", color="g")
     _self.data_curve9 = make.curve([],[], linestyle="NoPen", marker="Rect",  markersize=3, markeredgecolor="k", markerfacecolor="b") # SolidLine NoPen
     #_self.data_curve10 = make.curve([],[],yaxis="right",color="b")
     _self.data_curve11 = make.curve([],[], linestyle="NoPen", marker="Rect" ,markersize=3, markeredgecolor="k", markerfacecolor="k") # SolidLine NoPen
@@ -151,6 +152,7 @@ def init_curvewidgets(_self):
     _self.ui.cw3.plot.add_item(_self.data_curve6b)
     _self.ui.cw4.plot.add_item(_self.data_curve7)
     _self.ui.cw4.plot.add_item(_self.data_curve8)
+    _self.ui.cw4.plot.add_item(_self.data_curve8b)
     _self.ui.cw5.plot.add_item(_self.data_curve9)
     #_self.ui.cw5.plot.add_item(_self.data_curve10)
     _self.ui.cw6.plot.add_item(_self.data_curve11)
@@ -328,6 +330,7 @@ def init_connections(_self):
     
     QtCore.QObject.connect(_self.ui.btnNature, QtCore.SIGNAL("clicked()"), gui_helper.send_to_nature)
     QtCore.QObject.connect(_self.ui.btnResetBeginTime, QtCore.SIGNAL("clicked()"), gui_helper.reset_begin_times)
+    QtCore.QObject.connect(_self.ui.btnInitDevices, QtCore.SIGNAL("clicked()"), gui_helper.init_device_parameters)
 
     QtCore.QObject.connect(_self.ui.btnBStart, QtCore.SIGNAL("clicked()"), gui_helper.magnet_goto)   
     QtCore.QObject.connect(_self.ui.btnBInitMagnet, QtCore.SIGNAL("clicked()"), gui_helper.magnet_init)    
@@ -364,6 +367,7 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnLockinSet, QtCore.SIGNAL("clicked()"), gui_helper.lockin_set)
     QtCore.QObject.connect(_self.ui.btnLIReadPhase, QtCore.SIGNAL("clicked()"), gui_helper.lockin_read_phase)
     QtCore.QObject.connect(_self.ui.btnLIZeroPhase, QtCore.SIGNAL("clicked()"), gui_helper.lockin_set_phase)
+    QtCore.QObject.connect(_self.ui.btnLIResync, QtCore.SIGNAL("clicked()"), gui_helper.lockin_resync)
     
     QtCore.QObject.connect(_self.ui.btnTempSet, QtCore.SIGNAL("clicked()"), gui_helper.set_temp_parameters)
     QtCore.QObject.connect(_self.ui.btnTempSweep, QtCore.SIGNAL("clicked()"), _self.temp_sweep)

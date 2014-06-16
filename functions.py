@@ -270,7 +270,7 @@ def save_data(filename, saving_data):
         
 
     
-def log(message, exception=None):
+def log(message, exception=None, force=False):
     # time to do not show same log again
     cold_time = 10
 
@@ -289,7 +289,8 @@ def log(message, exception=None):
     for msg in old_logs:
         if msg[0] == message:
             was_before = True       
-    
+    if force:
+        was_before = False
     # if not yet, show message, create new log entry    
     if not was_before:    
         if exception == None:

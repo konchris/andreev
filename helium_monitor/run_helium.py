@@ -16,10 +16,7 @@ import numpy as np
 import functions
 import visa
 
-
 from guidata.qt.QtCore import QTimer#,SIGNAL
-
-
 
 class main_program(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -46,8 +43,10 @@ class main_program(QtGui.QMainWindow):
             self.volume = 0
         
         self.start_time = time.time()
+        self.level = 0
         
         try:
+            
             npzfile = np.load("volume_data.npz")
             self.volume_list = list(npzfile["volume_list"])
             self.volume_time = list(npzfile["volume_time"])
@@ -57,6 +56,9 @@ class main_program(QtGui.QMainWindow):
             self.volume_list = []
             self.level_list = []
             functions.log("Loading Volume failed",e)
+        self.volume_time = []
+        self.volume_list = []
+        self.level_list = []
         
         self.timer_update = 2
         self.flow_range = 30
@@ -84,7 +86,18 @@ class main_program(QtGui.QMainWindow):
         self.timer_autosave.start(60*1000)
         
         self.arduino = ARDUINO()
-        self.levelmeter = TWICKENHAM()
+        try:
+            self.levelmeter = TWICKENHAM()
+        except Exception,e:
+            self.levelmeter = None
+            functions.log("TWICKENHAM",e)
+        if not self.levelmeter == None:
+            try:
+                self.levelmeter = ILM210()
+            except:
+                self.levelmeter = None
+                functions.log("ILM210",e)
+        
         
     def level_to_liter(self, level=None):
         """returns a linear interpolation of the level"""
@@ -111,12 +124,19 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             functions.log("Failed to update Volume",e)
         
-        try:
-            self.level = self.levelmeter.read_volume()
+        if not self.levelmeter == None:
+            try:
+                #self.level = self.levelmeter.read_volume()
+                print self.level
+                self.ui.labelLevelMeter.setText("%i mm"%(self.level)) 
+                self.ui.labelLevelMeter_2.setText("%2.1f L"%(self.level_to_liter())) 
+            except Exception,e:
+                functions.log("Failed to update Level",e)
+        else:
+            self.level = 0
             self.ui.labelLevelMeter.setText("%i mm"%(self.level)) 
             self.ui.labelLevelMeter_2.setText("%2.1f L"%(self.level_to_liter())) 
-        except Exception,e:
-            functions.log("Failed to update Level",e)
+            
         
         if adding_volume > 0.01: 
             self.volume_time.append(time.time())
@@ -243,6 +263,31 @@ class TWICKENHAM:
             answer = 0
             print ("Twickenham Error while gathering Volume",e)
         return answer
+
+class ILM210:
+    def __init__(self, port='ASRL7', address='6'):
+        #self.meter=serial.Serial('COM3',9600,timeout=0) 
+        self.meter=visa.SerialInstrument(port,delay=0,term_chars='\r\n')
+        self.address = address
+        #thread.start_new_thread(self.motor_thread,(0.1,))
+    
+    def read_volume(self):
+        """stop motor and deactivate motor control"""
+        answer = self.meter.ask('@'+self.address+'R1')
+        # answer: R+00588
+        try:
+            return float(answer[2:])/10
+        except Exception,e:
+            print e
+            return 0
+            
+    def version(self):
+        """stop motor and deactivate motor control"""
+        answer = self.meter.ask('@'+self.address+'V')
+        return answer
+        
+    def close(self):
+        self.meter.close()
             
 myapp = None     
 if __name__ == "__main__":
