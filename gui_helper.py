@@ -145,12 +145,13 @@ def switchheater_off_2():
 def lockin_set():
     rate = int(_self.ui.editRate.text())
     amplitude = float(_self.ui.editLIAmpl.text())
+    output_enabled = bool(_self.form_data["checkLIOutputEnabled"])
     tc = float(_self.ui.editLITC.text())
     freq = float(_self.ui.editLIFreq.text())
     order = _self.ui.comboLIOrder.currentIndex()+1
     coupling = _self.ui.checkLIAC.isChecked()
     DEV.lockin.set_rate(rate)
-    DEV.lockin.set_amplitude(amplitude)
+    DEV.lockin.set_amplitude(amplitude, output=output_enabled)
     DEV.lockin.set_frequency(freq,tc,order)
     DEV.lockin.set_ac(coupling)
 

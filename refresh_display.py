@@ -24,17 +24,15 @@ def refresh_display():
     global _self
     try:
         # filtering of values for plotting
-        begin = int(_self.ui.editViewBegin.text())
-        end = int(_self.ui.editViewEnd.text())
         _time = time.time()
-        begin = _time - begin
-        end = _time - end
+        begin = _time - int(_self.ui.editViewBegin.text())
+        end = _time - int(_self.ui.editViewEnd.text())
+
         step = int(_self.ui.editViewStep.text()) 
         interval = int(_self.ui.editTimerInterval.text())
         
         try: # updating ui data
-            _self.average_value = int(_self.ui.editAverage.text())
-            _self.automatic_gain = _self.ui.checkAutomaticGain.isChecked()
+            #_self.average_value = int(_self.ui.editAverage.text())
             _self.editHistogramLower = float(_self.ui.editHistogramLower.text())
             _self.editHistogramUpper = float(_self.ui.editHistogramUpper.text())
             _self.editHistogramBias = float(_self.ui.editHistogramBias.text())
@@ -46,14 +44,7 @@ def refresh_display():
             _self.editIVTime = float(_self.ui.editIVTime.text())
             _self.editIVMin = float(_self.ui.editIVMin.text())
             _self.editIVMax = float(_self.ui.editIVMax.text())
-            _self.checkIVSample = bool(_self.ui.checkIVSample.isChecked())
-            _self.checkIVDouble = bool(_self.ui.checkIVDouble.isChecked())
             
-            # ultra
-            _self.editUltraMin = float(_self.ui.editUltraMin.text())
-            _self.editUltraMax = float(_self.ui.editUltraMax.text())
-            _self.editUltraStabilizeTime = float(_self.ui.editUltraStabilizeTime.text())
-            _self.editUltraColdTime = float(_self.ui.editUltraColdTime.text())
             
             _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
             _self.factor_current = float(_self.ui.editFactorCurrent.text())
@@ -90,7 +81,7 @@ def refresh_display():
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
             sample_factor = _sample_res/(_sample_res+_self.rref)
             #_self.ui.editIVTimeEstimate.setText("%i s"%(round((_self.editIVDelay)*(abs(_self.editIVMax-_self.editIVMin)/_self.editIVSteps)))) 
-            if _self.checkIVSample:
+            if _self.form_data["checkIVSample"]:
                 _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(_self.editIVMin / sample_factor * 1e3,3)))
                 _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(_self.editIVMax / sample_factor * 1e3,3)))
                 #_self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(_self.editIVSteps / sample_factor * 1e6,3)))
@@ -189,10 +180,7 @@ def refresh_display():
         # limit range
         interval = max(100, min(interval, 10000))
         _self.timer_display.setInterval(interval)
-        
-        # amplifier progressbars
-        _self.ui.progA.setValue(_self.data["femto_channela"][-1]*20+20)
-        _self.ui.progB.setValue(_self.data["femto_channelb"][-1]*20+20)
+
         
         # 1 + 2
         try:
@@ -267,7 +255,7 @@ def refresh_display():
         
         # 7 + 8  
         try:
-            if len((_self.data["agilent_voltage_timestamp"])) > 2 and len((_self.data["agilent_current_timestamp"])) > 2 :
+            if len((_self.data["agilent_voltage_timestamp"])) > 5 and len((_self.data["agilent_current_timestamp"])) > 5 :
                 _self.rref = float(_self.ui.editRRef.text())
                 
                 x0 = find_min(_self.data["agilent_voltage_timestamp"],begin)
@@ -288,7 +276,7 @@ def refresh_display():
                     log("Lengths:diff x %i, x0 %i,x1 %i,voltage_timestamp %i, voltage %i, current %i, res %i"%(x1-x0,x0,x1,len(voltage_timestamp),len(voltage),len(current),len(resistance_x)))
                     log("Resistance Calculation failed",e)
                     
-                if _self.ui.checkViewConductance.isChecked():
+                if _self.form_data["checkViewConductance"]:
                     try:
                         g_y = 12900.0/r_y
                         _self.data_curve8.set_data(resistance_x, g_y)
@@ -297,31 +285,36 @@ def refresh_display():
                         _self.data_curve8.set_data([0,1,2],[1,5,2])
                 else:
                     _self.data_curve8.set_data([],[])
-                    
+
+            if _self.form_data["checkViewConductanceLI"]:
                 try:
-                    _self.ui.cw4.plot.do_autoscale()
-                except Exception,e:
-                    log("Autoscale CW4 failed",e)
-            if True:
-                try:
+                    # begin und end = jetzt - etwas kleines
                     x_list = np.arange(begin,end,0.25)
      
-                    voltage_list = interpolate(x_list, _self.data["agilent_voltage_timestamp"], _self.data["agilent_voltage_voltage"])
                     li_0_x_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_x"], _self.factor_voltage)
                     li_0_y_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_y"], _self.factor_voltage)
                     li_3_x_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_x"], _self.factor_current)
                     li_3_y_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_y"], _self.factor_current)
-
+    
                     li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                     li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
                     
-                    li_first = li_3_r/li_0_r*12900
+                    li_first = li_3_r/li_0_r*12900.0/_self.rref
                     
-                    _self.data_curve8b.set_data(voltage_list, li_first)
+                    _self.data_curve8b.set_data(x_list-_self._start_time, li_first)
                 except Exception,e:
                     log("Failed to Display LI Conductance",e)
-
-            
+                    _self.data_curve8b.set_data([],[])
+            else:
+                _self.data_curve8b.set_data([],[])
+                    
+                
+            #log("%i"%(len(_self.data["li_timestamp_0"])))
+            try:
+                _self.ui.cw4.plot.do_autoscale()
+            except Exception,e:
+                log("Autoscale CW4 failed",e)
+   
         except Exception,e:
             log("Displaying Agilents Resistance",e)
  

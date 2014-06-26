@@ -528,7 +528,7 @@ class LAKESHORE_USB:
 class GS200:
     def __init__(self, GPIB_No=14):
         #self.yoko=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.05, term_chars='\n')
-        self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n', timeout=5)
+        self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n', timeout=0.2)
         self.initialize()
    
     def initialize(self):
@@ -654,22 +654,22 @@ class GS200:
 
 
 class Agilent34410A:
-    def __init__(self, dlay=0, GPIB_No=22, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR"):
+    def __init__(self, dlay=0, GPIB_No=22, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR",timeout=0.2):
         """Agilent 34410A"""
         #self.Agilent=visa.instrument('GPIB0::%i'%GPIB_No, delay=dlay,term_chars='\n')
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
         #print "Agilent Created"        
-        self.initializeVOLTDC()
+        self.initializeVOLTDC(2)
         #self.initialize4WIREOHM()
         #print "Agilent VOLTDC initalized"
         self.data = {}
         self.data_lock = thread.allocate_lock()
         self.data["timestamp"] = []
         self.data["voltage"] = []
-        thread.start_new_thread(self.measurement_thread,(0.01,))
+        thread.start_new_thread(self.measurement_thread,(0.05,))
         
 
-    def initializeVOLTDC(self, NPLC=1, DISPLAY ="ON"):
+    def initializeVOLTDC(self, NPLC=2, DISPLAY ="ON"):
         #self.Agilent.write('*RST')
         #self.Agilent.write('*CLS')
         self.Agilent.write('CONF:VOLT:DC 10') # was 2
@@ -681,14 +681,14 @@ class Agilent34410A:
         #print('%s ... initialized'%str(inst))
         #print "alias Agilent 34410A"FRESistance
     
-    def initialize4WIREOHM(self, NPLC=1, DISPLAY ="ON"):
+    def initialize4WIREOHM(self, NPLC=2, DISPLAY ="ON"):
         self.Agilent.write('FUNC "FRES"')
         self.Agilent.write('FRES:RANG:AUTO ON') # manual range?
         
     def get(self):
         return float(self.Agilent.ask("READ?"))
     
-    def set_nplc(self, NPLC=1,):
+    def set_nplc(self, NPLC=10,):
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         
     def initializeVOLTDCarray(self, NPLC=0.2, DISPLAY ="OFF"):
@@ -813,7 +813,7 @@ class ZURICH:
             log("Resync failed",e)
             self.time_offset = 0.0
     
-    def initialize(self, frequency=2222.222, ampl=0.01, order=4, tc=0.1, rate=14):
+    def initialize(self, frequency=222.222, ampl=0.01, order=4, tc=0.1, rate=7):
         general_setting = [
                 [["/", self.device, "/sigins/0/diff"],0.0],
                 [["/", self.device, "/sigins/1/diff"],0.0],
@@ -830,7 +830,7 @@ class ZURICH:
                 [["/", self.device, "/demods/3/order"],order],
                 [["/", self.device, "/demods/4/order"],order],
 
-                [["/", self.device, "/sigouts/0/on"],1.0],  # off
+                [["/", self.device, "/sigouts/0/on"],1.0],  # offiv_1403001126_0_0
                 #[["/", self.device, "/sigouts/0/range"],0.1],
                 #[["/", self.device, "/sigouts/0/amplitudes/6"],ampl],
                 #[["/", self.device, "/oscs/0/freq"],frequency],
@@ -853,9 +853,9 @@ class ZURICH:
                 [["/", self.device, "/dios/0/drive"],1]
                ]
         self.daq2.set(general_setting)
-        self.set_rate(14)
+        self.set_rate(rate)
         self.set_ac(False)
-        self.set_amplitude(0.01)
+        self.set_amplitude(ampl)
         self.set_phases()
     
     def set_rate(self, rate=7):
@@ -870,7 +870,7 @@ class ZURICH:
         self.daq2.set(general_setting)
         log("LockIn Rate %i"%(rate))
     
-    def set_amplitude(self, amplitude=0.01):
+    def set_amplitude(self, amplitude=0.01, output=True):
         _range = 1
         if amplitude < 0.1:
             _range = 0.1
@@ -878,9 +878,14 @@ class ZURICH:
         if amplitude < 0.01:
             _range = 0.01
             amplitude = amplitude*10
+        if output:
+            output_enabled = 1
+        else:
+            output_enabled = 0
         general_setting = [
             [["/", self.device, "/sigouts/0/range"],_range],
-            [["/", self.device, "/sigouts/0/amplitudes/6"],amplitude]
+            [["/", self.device, "/sigouts/0/amplitudes/6"],amplitude],
+            [["/", self.device, "/sigouts/0/on"],output_enabled]
             ]
         self.daq2.set(general_setting)
         log("LockIn AC Range %fV, Part %f"%(_range,amplitude))
@@ -934,8 +939,9 @@ class ZURICH:
         sigin_0 =       self.daq2.getDouble('/'+self.device+'/sigins/0/range')
         sigin_1 =       self.daq2.getDouble('/'+self.device+'/sigins/1/range')
         sigout_on =     self.daq2.getDouble('/'+self.device+'/sigouts/0/on')
+        freq =          self.daq2.getDouble('/'+self.device+'/oscs/0/freq')
         ac = _range*_amplitude
-        return {"ac amplitude": [ac], "sigout on": [sigout_on],"input 0 range": [sigin_0],"input 1 range": [sigin_1]}
+        return {"ac amplitude": [ac], "sigout on": [sigout_on],"input 0 range": [sigin_0],"input 1 range": [sigin_1],"li freq": [freq]}
         
     
 
@@ -1119,7 +1125,7 @@ class ZURICH:
 class MOTOR:
     def __init__(self, reduction=3088, encoder=512):
         #self.motor=serial.Serial('COM1',115200,timeout=0) 
-        self.motor=visa.SerialInstrument("ASRL3",delay=0.00,term_chars='\r\n',timeout=1)
+        self.motor=visa.SerialInstrument("ASRL3",delay=0.00,term_chars='\r\n',timeout=0.2)
         self.motor.clear()
         self._gearfact=reduction*encoder*4
         self.initialize()
@@ -1322,11 +1328,6 @@ class MOTOR:
 
         
     
-    
-            
-
-
-
 
 
 device_delay = 10

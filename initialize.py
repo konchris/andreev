@@ -228,29 +228,23 @@ def init_variables(_self):
     
     # holds some config data like offset
     _self.config_data = {}
-    _self.config_data["offset_aux0"] = [0,0,0,0]
-    _self.config_data["offset_aux1"] = [0,0,0,0]
-    _self.config_data["offset_agilent_voltage"] = [0,0,0,0]
-    _self.config_data["offset_agilent_current"] = [0,0,0,0]
+
+    _self.config_data["offset_agilent_voltage"] = 0
+    _self.config_data["offset_agilent_current"] = 0
     _self.config_data["lockin_phases"] = [0,0,0,0]
+    _self.config_data["main_index"] = 0
+    _self.config_data["sub_index"] = 0
     
     # holds all the fields and boxes of the form with recent values
     _self.form_data = {}
     
-    _self.ui.editOffsetAux0_0.setText(str(0.0))
-    _self.ui.editOffsetAux0_1.setText(str(0.0))
-    _self.ui.editOffsetAux0_2.setText(str(0.0))
-    _self.ui.editOffsetAux0_3.setText(str(0.0))
-    _self.ui.editOffsetAux1_0.setText(str(0.0))
-    _self.ui.editOffsetAux1_1.setText(str(0.0))
-    _self.ui.editOffsetAux1_2.setText(str(0.0))
-    _self.ui.editOffsetAux1_3.setText(str(0.0))
+    _self.ui.editOffsetVoltage.setText(str(0.0))
+    _self.ui.editOffsetCurrent.setText(str(0.0))
     
     _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
     _self.factor_current = float(_self.ui.editFactorCurrent.text())
     
     _self.automatic_gain = False
-    _self.average_value = 100
     _self._excluded_splits = ["timestamp","li","femto"]
     
     _self.checkHistogramEscape = False
@@ -311,7 +305,6 @@ def init_validators(_self):
     _self.ui.editLIFreq.setValidator(doubleValidator)
     _self.ui.editLITC.setValidator(doubleValidator)
     _self.ui.editLIAmpl.setValidator(doubleValidator)
-    _self.ui.editAverage.setValidator(intValidator)
     _self.ui.editRate.setValidator(intValidator)
     # setup
     _self.ui.editFactorVoltage.setValidator(intValidator)
@@ -353,11 +346,6 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnMotorSetLimit, QtCore.SIGNAL("clicked()"), gui_helper.motor_set_limit) 
     
     QtCore.QObject.connect(_self.ui.btnSetBias, QtCore.SIGNAL("clicked()"), gui_helper.set_bias) 
-    
-    QtCore.QObject.connect(_self.ui.btnChAUp, QtCore.SIGNAL("clicked()"), gui_helper.ch_a_up) 
-    QtCore.QObject.connect(_self.ui.btnChADown, QtCore.SIGNAL("clicked()"), gui_helper.ch_a_down) 
-    QtCore.QObject.connect(_self.ui.btnChBUp, QtCore.SIGNAL("clicked()"), gui_helper.ch_b_up) 
-    QtCore.QObject.connect(_self.ui.btnChBDown, QtCore.SIGNAL("clicked()"), gui_helper.ch_b_down) 
     
     QtCore.QObject.connect(_self.ui.btnSaveStart, QtCore.SIGNAL("clicked()"), open_files)
     QtCore.QObject.connect(_self.ui.btnSaveStop, QtCore.SIGNAL("clicked()"), close_files)

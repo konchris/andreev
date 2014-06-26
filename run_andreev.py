@@ -54,8 +54,7 @@ class main_program(QtGui.QMainWindow):
         initialize.init_curvewidgets(self)
         initialize.init_files(self)
         initialize.init_shutdowns(self)
-        initialize.init_validators(self)
-        
+        initialize.init_validators(self)       
         
         #########################################################
         ##############    REFRESH DISPLAY     ###################
@@ -98,6 +97,8 @@ class main_program(QtGui.QMainWindow):
         self.offset_in_progress = True
         DEV.yoko.set_voltage(0)
         DEV.yoko.output(True)
+
+        DEV.lockin.set_amplitude(0.01, output=False)
         
         # time to settle 0 value
         for i in range(10):
@@ -105,7 +106,7 @@ class main_program(QtGui.QMainWindow):
                 time.sleep(0.1)
         
         # flush cache
-        DEV.lockin.get_data_list(averages=10)
+        DEV.lockin.get_data_list(averages=1)
         DEV.agilent_new.get_data_list()
         DEV.agilent_old.get_data_list()
         
@@ -121,18 +122,22 @@ class main_program(QtGui.QMainWindow):
         old_data = DEV.agilent_old.get_data_list()
         offset_old = np.average(old_data["voltage"])
         
-        self.config_data["offset_agilent_voltage"][0] = offset_new
-        self.config_data["offset_agilent_current"][0] = offset_old
-        log("offset agilent new\t%fV"%(offset_new))
-        log("offset agilent old\t%fV"%(offset_old))
+        self.config_data["offset_agilent_voltage"] = offset_new
+        self.config_data["offset_agilent_current"] = offset_old
+        log("Offset Agilent Voltage %fV"%(offset_new))
+        log("Offset Agilent Current %fV"%(offset_old))
         
         time.sleep(delay/10.0)
 
-        self.ui.editOffsetAux0_0.setText(str(round(self.config_data["offset_agilent_voltage"][0],6)))
-        self.ui.editOffsetAux1_0.setText(str(round(self.config_data["offset_agilent_current"][0],6)))
+        self.ui.editOffsetVoltage.setText(str(round(self.config_data["offset_agilent_voltage"]*1e3,6)))
+        self.ui.editOffsetCurrent.setText(str(round(self.config_data["offset_agilent_current"]*1e3,6)))
 
         DEV.yoko.set_voltage(bias)
-        time.sleep(0.2)
+        amplitude = float(self.form_data["editLIAmpl"])
+        output_enabled = bool(self.form_data["checkLIOutputEnabled"])
+
+        DEV.lockin.set_amplitude(amplitude, output=output_enabled)
+        time.sleep(0.5)
         # flush data to /dev/null
         DEV.lockin.get_data_list(averages=1)
         DEV.agilent_new.get_data_list()
@@ -160,8 +165,8 @@ class main_program(QtGui.QMainWindow):
                 try:
                     # update values
                     resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
-                    lower_res = self.editHistogramLower
-                    upper_res = self.editHistogramUpper
+                    lower_res = float(self.form_data["editHistogramLower"])
+                    upper_res = float(self.form_data["editHistogramUpper"])
                     bias = self.editHistogramBias
                     DEV.yoko.set_voltage(bias)
                     
@@ -225,8 +230,11 @@ class main_program(QtGui.QMainWindow):
     
         log("Ultra Start")
         breaking = True         # sets direction of motor
-        last_engage = 0
+        last_engage = 100
         ultra_sleep = 0.1
+
+        self.config_data["main_index"] = 0  
+        self.config_data["sub_index"] = 0
         
         self.begin_time_ultra = time.time()
         if not self.f_config == None:
@@ -235,33 +243,77 @@ class main_program(QtGui.QMainWindow):
             try:
                 # update values
                 resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
-                lower_res = self.editHistogramLower
-                upper_res = self.editHistogramUpper
+                try:
+                    _time = time.time()
+                    x_list = np.arange(_time-5,_time,0.25)
+                    current = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                    voltage = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                    r_array = voltage/current*self.rref
+                
+                    d_res = np.polyfit(x_list, r_array, 1)
+                    
+                    self.ui.label_138.setText("R_1(t)=%ft"%(d_res[0]))
+                except Exception,e:
+                    log("Failed to derivate Resistance",e)
+                    
+                lower_res = float(self.form_data["editHistogramLower"])
+                upper_res = float(self.form_data["editHistogramUpper"])
+                #print "upper_res"
 
-                if last_engage > self.editUltraColdTime:
-                    if resistance < self.editUltraMax and resistance > self.editUltraMin:
+                if last_engage > float(self.form_data["editUltraColdTime"]):
+                    if resistance < float(self.form_data["editUltraMax"]) and resistance > float(self.form_data["editUltraMin"]):
                         log("Found desired Resistance for Action")
                         log("Stopping Motor")
                         last_engage = 0
                         
                         # wait to stabilize
                         DEV.motor.stop()
-                        time.sleep(self.editUltraStabilizeTime)
+                        time.sleep(float(self.form_data["editUltraStabilizeTime"]))
                         resistance_new = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
                         
                         log("Resistance changed by %f"%(resistance_new*100/resistance-100))
+
                         if abs(resistance_new / resistance - 1) < 0.1:
-                            if self.form_data["comboUltraAction"] == 0:
+                            sample_factor = resistance_new/(resistance_new+self.rref)
+                            if int(self.form_data["comboUltraAction"]) == 0:
                                 # ivs
                                 log("Starting IVs")
                                 is_double = bool(self.form_data["checkUltraIVDouble"])
                                 is_sample = bool(self.form_data["checkUltraIVSample"])
-                                if self.form_data["checkUltraMAR"]: # mar sweep if checked
-                                    v_mar = float(self.form_data["editUltraIVMARV"])
-                                    t_mar = float(self.form_data["editUltraIVMARt"])
+                                is_mar = bool(self.form_data["checkUltraMAR"])
+                                v_mar = float(self.form_data["editUltraIVMARV"])/1000.0
+                                t_mar = float(self.form_data["editUltraIVMARt"])
+                                li_mar = abs(float(self.form_data["editUltraIVMARLI"]))/100.0
+                                v_iets = float(self.form_data["editUltraIVIETSV"])
+                                t_iets = float(self.form_data["editUltraIVIETSt"])
+                                li_iets = abs(float(self.form_data["editUltraIVIETSLI"]))/100.0
+                                
+                                if is_mar: # mar sweep if checked                                    
+                                    # set lockin (switch on/off)
+                                    output_enabled = True
+                                    if li_mar < 1e-5:
+                                        log("LI MAR disabled!")
+                                        output_enabled = False 
+                                    if is_sample:
+                                        li_mar = li_mar / sample_factor
+                                    if li_mar > 1:
+                                        log("LI MAR too high! Reduced!")
+                                        li_mar = 1
+                                    DEV.lockin.set_amplitude(li_mar, output=output_enabled)
                                     self.aquire_iv(_min=-v_mar, _max=v_mar, _time=t_mar, _sample=is_sample, _double=is_double)
-                                v_iets = float(self.form_data["ultraIVIETSV"])
-                                t_iets = float(self.form_data["editIVIETSt"])
+                                                                  
+                                # set lockin (switch on/off)
+                                output_enabled = True
+                                if li_iets < 1e-5:
+                                    log("LI IETS disabled!")
+                                    output_enabled = False
+                                
+                                if is_sample:
+                                    li_iets = li_iets / sample_factor
+                                if li_iets > 1:
+                                        log("LI IETS too high! Reduced!")
+                                        li_iets = 1
+                                DEV.lockin.set_amplitude(li_iets, output=output_enabled)
                                 self.aquire_iv(_min=-v_iets, _max=v_iets, _time=t_iets, _sample=is_sample, _double=is_double)
                                 
                             if self.form_data["comboUltraAction"] == 1:
@@ -285,12 +337,18 @@ class main_program(QtGui.QMainWindow):
                         
                             if self.stop_measure:
                                 break
+                            
+                            if breaking:
+                                self.config_data["sub_index"] += 1
+                            else:
+                                self.config_data["sub_index"] -= 1
                         else:
                             log("Resuming Ultra")
-                            
+                     
+                #print "wherever"
           
                 last_engage = last_engage + ultra_sleep # increase variable only when not in action
-                bias = self.editHistogramBias
+                bias = float(self.form_data["editHistogramBias"])
                 DEV.yoko.set_voltage(bias)
                 # if conductance hits upper limit, close again
                 if resistance > upper_res:            
@@ -298,23 +356,29 @@ class main_program(QtGui.QMainWindow):
                         self.begin_time_ultra = time.time()
                         if not self.f_config == None:
                             self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(self.begin_time_ultra))
+                        self.config_data["main_index"] += 1
+                        self.config_data["sub_index"] = 0
                     breaking = False
+                    
                     
                 # at lower limit, break again, in between: set speed
                 if resistance < lower_res:
                     if breaking == False: 
                         self.begin_time_ultra = time.time()
                         if not self.f_config == None:
-                            self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(self.begin_time_ultra))   
+                            self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(self.begin_time_ultra)) 
+                        self.config_data["main_index"] += 1
+                        self.config_data["sub_index"] = 0
                     breaking = True
+                    
 
                 if breaking:
-                    gui_helper.motor_break(self.editHistogramOpeningSpeed, quiet=True)
+                    gui_helper.motor_break(int(self.form_data["editHistogramOpeningSpeed"]), quiet=True)
                 else:
-                    gui_helper.motor_unbreak(self.editHistogramClosingSpeed, quiet=True)
+                    gui_helper.motor_unbreak(int(self.form_data["editHistogramClosingSpeed"]), quiet=True)
                     
                 # if escape on motor limit hit
-                if self.checkHistogramEscape:
+                if bool(self.form_data["checkHistogramEscape"]):
                     if DEV.motor.higher_bound or DEV.motor.lower_bound:
                         log("Motor reached its bounds, escaping histogram!")
                         break
@@ -329,7 +393,7 @@ class main_program(QtGui.QMainWindow):
                         breaking = False
                 time.sleep(ultra_sleep)
             except Exception,e:
-                log("Histogram inner failure",e)
+                log("Ultra Inner Failure",e)
                 DEV.motor.stop()
                 break
         DEV.motor.stop()
@@ -338,7 +402,7 @@ class main_program(QtGui.QMainWindow):
 
 
     
-    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None, _double=None):
+    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None, _double=None, _resync_lockin=True):
         """(self, _min=None, _max=None, _time=None, _sample=None, _double=None)"""
         log("IV Sweep Starting") 
         self.stop_measure = False
@@ -346,6 +410,9 @@ class main_program(QtGui.QMainWindow):
         
         self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "V (V)")
         self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)") 
+        
+        if _resync_lockin:
+            DEV.lockin.resync()
         
         try:
             sample_res = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
@@ -359,7 +426,7 @@ class main_program(QtGui.QMainWindow):
             _max = _max / sample_factor
 
         # range maximum protection
-        _voltage_limits = 2.0
+        _voltage_limits = 3.0
         _min = max(-_voltage_limits, min(_min, _voltage_limits))
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
                 
@@ -368,6 +435,7 @@ class main_program(QtGui.QMainWindow):
         time.sleep(1)
         time.sleep(5 * float(self.form_data["editLITC"]))       
         
+                
         
         log("IV Loop %fV,%fV,%4.0fs"%(_min,_max,_time)) 
         # load counter
@@ -397,7 +465,6 @@ class main_program(QtGui.QMainWindow):
 
                 try:
                     self.data_lock.acquire()
-                    # TODO use editRate for lockin   
                     x_list = np.arange(self.begin_time_iv,last_time,0.1)
                     
                     try:
@@ -454,86 +521,88 @@ class main_program(QtGui.QMainWindow):
                     loop_count -= 1
                 else: # if not double, sawtooth sweep
                     loop_count -= 2 
+                
+                # note down end of iv sweep
+                end_time = time.time()
+                initialize.write_config("IV_STOP\t%15.15f\t\n"%(end_time))
+                # save file
+                try:
+                    self.data_lock.acquire()
+                    
+                    x_list = np.arange(self.begin_time_iv,end_time,0.1)
+         
+                    # lockin data refurbishment
+                    voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                    current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
+                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
+                    li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
+                    li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
+                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
+                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+                    li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
+                    li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+                    
+                    li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                    li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                    li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                    li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                    li_first = li_3_r/li_0_r*12900    # first
+                    li_second = li_4_r/li_1_r*12900   # second
+                    
+                    self.plot_data["x1"] = voltage_list[:]
+                    self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
+                    
+                    self.plot_data["x3"] = voltage_list[:]
+                    self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                    
+                    self.plot_data["x4"] = voltage_list[:]
+                    self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                    
+                    # refresh plots and save them
+                    self.plot_data["new"][0] = True
+                    self.plot_data["new"][2] = True
+                    self.plot_data["new"][3] = True
+                    
+                    try:        
+                        saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
+                        d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
+                        d_name = os.path.dirname(d)
+                        if not os.path.exists(d_name):
+                            os.makedirs(d_name)
+                        time_string = str(int(round(time.time())))
+                        file_string = "iv_%s_%i_%i.txt"%(time_string,self.config_data["main_index"],self.config_data["sub_index"])
+                        f_iv = open(d+file_string, 'a')
+        
+                        try:
+                            param_string = self.return_param_string()
+                            f_iv.write("%s\n"%(param_string))
+                            f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
+                        except Exception,e:
+                            log("IV Parameter Save failed",e)
+                        save_data(f_iv, saving_data)
+                        f_iv.close()
+                        self.ui.editLastIV.setText(file_string)
+                        
+                        self.last_iv_name = time_string
+                    except Exception,e:
+                        log("Failed to Save IV",e)
+                    
+                    self.plot_data["save"] = True
+                except Exception,e:
+                    log("IV Calculation Failed",e)
+                finally:
+                    self.data_lock.release()
                     
         log("IV Loop End") 
-        # note down end of iv sweep
-        end_time = time.time()
-        initialize.write_config("IV_STOP\t%15.15f\t\n"%(end_time))
+        
+        
                 
         time.sleep(0.25)      
         DEV.yoko.program_goto_ramp(bias, 1)
         time.sleep(2)
         log("IV Sweep finished")
         self.iv_in_progress = False
-        
-        try:
-            self.data_lock.acquire()
-            
-            x_list = np.arange(self.begin_time_iv,last_time,0.1)
- 
-            # lockin data refurbishment
-            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
-            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-            li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-            li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-            li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-            li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-            li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-            li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-            li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-            li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
-            
-            li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
-            li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
-            li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
-            li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
-            li_first = li_3_r/li_0_r*12900    # first
-            li_second = li_4_r/li_1_r*12900   # second
-            
-            self.plot_data["x1"] = voltage_list[:]
-            self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
-            
-            self.plot_data["x3"] = voltage_list[:]
-            self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
-            
-            self.plot_data["x4"] = voltage_list[:]
-            self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
-            
-            # refresh plots and save them
-            self.plot_data["new"][0] = True
-            self.plot_data["new"][2] = True
-            self.plot_data["new"][3] = True
-            
-            try:        
-                saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
-                d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
-                d_name = os.path.dirname(d)
-                if not os.path.exists(d_name):
-                    os.makedirs(d_name)
-                time_string = str(int(round(time.time())))
-                file_string = "iv_%s.txt"%(time_string)
-                f_iv = open(d+file_string, 'a')
-
-                try:
-                    param_string = self.return_param_string()
-                    f_iv.write("%s\n"%(param_string))
-                    f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
-                except Exception,e:
-                    log("IV Parameter Save failed",e)
-                save_data(f_iv, saving_data)
-                f_iv.close()
-                self.ui.editLastIV.setText(file_string)
-                
-                self.last_iv_name = time_string
-            except Exception,e:
-                log("Failed to Save IV",e)
-            
-            self.plot_data["save"] = True
-        except Exception,e:
-            log("IV Calculation Failed",e)
-        finally:
-            self.data_lock.release()
-            
 
 
     
@@ -909,11 +978,11 @@ class main_program(QtGui.QMainWindow):
                     
                     try:
                         if DEV.lockin != None:
-                            lockin_data = DEV.lockin.get_data_list(averages=self.average_value)
+                            lockin_data = DEV.lockin.get_data_list(averages=1)
                             
                             li_timestamp_0 = lockin_data["0"]["timestamp"][:]
-                            li_aux0 =  [(x - self.config_data["offset_aux0"][0])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
-                            li_aux1 =  [(x - self.config_data["offset_aux1"][0])/self.factor_current for x in lockin_data["0"]["auxin1"]]
+                            li_aux0 =  [(x - self.config_data["offset_agilent_voltage"])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
+                            li_aux1 =  [(x - self.config_data["offset_agilent_current"])/self.factor_current for x in lockin_data["0"]["auxin1"]]
                             li_0_x =  [x / self.factor_voltage for x in lockin_data["0"]["x"]]
                             li_0_y =  [x / self.factor_voltage for x in lockin_data["0"]["y"]]
                             li_timestamp_1 = lockin_data["1"]["timestamp"][:]
@@ -985,7 +1054,7 @@ class main_program(QtGui.QMainWindow):
                         if DEV.agilent_new != None:
                             agilent_new_data = DEV.agilent_new.get_data_list()   
                             agilent_voltage_timestamp = agilent_new_data["timestamp"]
-                            agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"][0])/self.factor_voltage for x in agilent_new_data["voltage"]] 
+                            agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"])/self.factor_voltage for x in agilent_new_data["voltage"]] 
 
                         self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
                         self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
@@ -1007,7 +1076,7 @@ class main_program(QtGui.QMainWindow):
                         if DEV.agilent_old != None:
                             agilent_old_data = DEV.agilent_old.get_data_list()   
                             agilent_current_timestamp = agilent_old_data["timestamp"]
-                            agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"][0])/self.factor_current for x in agilent_old_data["voltage"]] 
+                            agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"])/self.factor_current for x in agilent_old_data["voltage"]] 
                     
                        
                         self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
@@ -1137,11 +1206,11 @@ class main_program(QtGui.QMainWindow):
     def measurement_btn_Acquire_Histogram(self):
         thread.start_new_thread(self.aquire_histogram,())
     def measurement_btn_Acquire_IV(self):
-        _min = self.editIVMin
-        _max = self.editIVMax
-        _time = self.editIVTime
-        _sample = self.checkIVSample
-        _double = self.checkIVDouble
+        _min = float(self.form_data["editIVMin"])
+        _max = float(self.form_data["editIVMax"])
+        _time = float(self.form_data["editIVTime"])
+        _sample = self.form_data["checkIVSample"]
+        _double = self.form_data["checkIVDouble"]
         #(self, _min=None, _max=None, _time=None, _sample=None, _double=None)
         thread.start_new_thread(self.aquire_iv,(_min,_max,_time,_sample,_double))
         
@@ -1171,7 +1240,10 @@ class main_program(QtGui.QMainWindow):
             params_str = "PARAMS,%i:"%(len(params))
             for k,v in params.items():
                 if len(v) > 0:
-                    params_str = params_str + ("%s:%s,"%(str(k),str(v[-1])))  
+                    params_str += ("%s:%s,"%(str(k),str(v[-1])))
+            for k,v in self.config_data.items():
+                if type(v).__name__ == "float" or type(v).__name__ == "int":
+                    params_str += ("%s:%s,"%(str(k),str(v)))
         except Exception,e:
             print k,v
             log("IV Parameter Save failed",e)   
