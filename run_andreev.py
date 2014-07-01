@@ -470,14 +470,14 @@ class main_program(QtGui.QMainWindow):
                     try:
                         voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
                         current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-                        li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-                        li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                        li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-                        li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-                        li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-                        li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-                        li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-                        li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+                        li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+                        li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+                        li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"])
+                        li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"])
+                        li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+                        li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])
+                        li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"])
+                        li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"])
          
                          #dG:np.sqrt(np.power([li_3_x],2)+np.power([li_3_y],2))/np.sqrt(np.power([li_0_x],2)+np.power([li_0_y],2))/104000.0*12900.0
 
@@ -534,14 +534,14 @@ class main_program(QtGui.QMainWindow):
                     # lockin data refurbishment
                     voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
                     current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                    li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"], self.factor_voltage)
-                    li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"], self.factor_voltage)
-                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
-                    li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"], self.factor_current)
-                    li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"], self.factor_current)
+                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+                    li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"])
+                    li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"])
+                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])
+                    li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"])
+                    li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"])
                     
                     li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                     li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
@@ -682,10 +682,10 @@ class main_program(QtGui.QMainWindow):
  
                     voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
                     current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
-                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"], self.factor_voltage)
-                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"], self.factor_voltage)
-                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"], self.factor_current)
-                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"], self.factor_current)
+                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])
                     b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
                     b_2 = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
                     
@@ -989,11 +989,11 @@ class main_program(QtGui.QMainWindow):
                             li_1_x =  [x / self.factor_voltage for x in lockin_data["1"]["x"]]
                             li_1_y =  [x / self.factor_voltage for x in lockin_data["1"]["y"]]
                             li_timestamp_3 = lockin_data["3"]["timestamp"][:]
-                            li_3_x =  [x / self.factor_voltage for x in lockin_data["3"]["x"]]
-                            li_3_y =  [x / self.factor_voltage for x in lockin_data["3"]["y"]]
+                            li_3_x =  [x / self.factor_current for x in lockin_data["3"]["x"]]
+                            li_3_y =  [x / self.factor_current for x in lockin_data["3"]["y"]]
                             li_timestamp_4 = lockin_data["4"]["timestamp"][:]
-                            li_4_x =  [x / self.factor_voltage for x in lockin_data["4"]["x"]]
-                            li_4_y =  [x / self.factor_voltage for x in lockin_data["4"]["y"]]
+                            li_4_x =  [x / self.factor_current for x in lockin_data["4"]["x"]]
+                            li_4_y =  [x / self.factor_current for x in lockin_data["4"]["y"]]
                             
                         femto_timestamp = lockin_data["femto"]["timestamp"]
                         femto_channela = lockin_data["femto"]["channela"]
