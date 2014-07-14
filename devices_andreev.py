@@ -56,7 +56,20 @@ class Magnet:
         self.data["timestamp"] = []
         self.data["field"] = []
         
-        #self.thread_id = thread.start_new_thread(self.magnet_thread,(0.2,))
+        self.thread_id = None
+        self.start_thread()
+
+    def start_thread(self, delay=0.2):
+        if self.thread_id != None:
+            self.stop = True                # send stop to thread
+            _timeout = time.time()+1        # timeout = 1s
+            # check if thread exited or timeout occured
+            while self.thread_id != None and time.time() < _timeout:
+                pass
+        self.stop = False                   # reset terminate signal
+        # create new thread and insert id
+        self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
+        log("Thread #%i started"%(self.thread_id))
 
     def initialize(self):
         try:
@@ -208,9 +221,9 @@ class Magnet:
         self.data_lock.release()
         return return_data
 
-    def magnet_thread(self, delay=0.1):
+    def measurement_thread(self, delay=0.1):
         log("Magnet Thread started!")
-        while not stop:
+        while not (self.stop or stop):
             try:
                 gpib_lock.acquire()
                 #self.magnet.clear()
@@ -235,25 +248,40 @@ class Magnet:
             self.data_lock.release()
             
             time.sleep(delay)
+        # indicate that thread terminated 
+        log("Thread #%i finished"%(self.thread_id))
+        self.thread_id = None
 
 
         
 class LAKESHORE:
-    def __init__(self,addr=12):
-        self.lakeshore=visa.instrument("GPIB0::%i"%(addr),timeout=0.1, term_chars="\r\n")
+    def __init__(self,addr=12, label="Lakeshore 336"):
+        self.lakeshore=visa.instrument("GPIB0::%i"%(addr), timeout=0.1, term_chars="\r\n")
         #self.initialize()
         
         self.data = {}
-        print "LAKESHORE INIT"
         self.data_lock = thread.allocate_lock()
-        #self.data_lock.acquire()
         self.data["timestamp"] = []
         self.data["temperature1"] = []
         self.data["temperature2"] = []
         self.data["sensor1"] = []
         self.data["sensor2"] = []
         
-        measurement_thread_list.append( (thread.start_new_thread(self.temperature_thread,(0.1,)), "Temperatur Thread") )
+        self.thread_id = None
+        self.start_thread()
+
+    def start_thread(self, delay=0.05):
+        if self.thread_id != None:
+            self.stop = True                # send stop to thread
+            _timeout = time.time()+1        # timeout = 1s
+            # check if thread exited or timeout occured
+            while self.thread_id != None and time.time() < _timeout:
+                pass
+        self.stop = False                   # reset terminate signal
+        # create new thread and insert id
+        self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
+        log("Thread #%i started"%(self.thread_id))
+        
 
     def initialize(self):
         """Initializes the device by reading all the values"""
@@ -381,9 +409,9 @@ class LAKESHORE:
         self.data_lock.release()
         return return_data    
     
-    def temperature_thread(self, delay=0.05):
+    def measurement_thread(self, delay=0.05):
         log("Temperature Thread started!")
-        while not stop:
+        while not self.stop or stop:
             try:
                 gpib_lock.acquire()
                 temperature1 = float(self.lakeshore.ask('KRDG? A'))            
@@ -410,116 +438,9 @@ class LAKESHORE:
             self.data_lock.release()
             
             time.sleep(delay)
-        
-    """calibration_ruo2 = np.array([[1280.23, 300.0], [1280.973, 280.0], [1281.822, 260.0], [1282.802, 240.0], [1283.947, 220.0], [1285.305, 200.0], [1286.083, 190.0], [1286.942, 180.0], [1287.894, 170.0], [1288.958, 160.0], [1290.152, 150.0], [1291.505, 140.0], [1293.052, 130.0], [1294.837, 120.0], [1296.923, 110.0], [1299.396, 100.0], [1300.814, 95.0], [1302.378, 90.0], [1304.113, 85.0], [1306.049, 80.0], [1308.225, 75.0], [1310.69, 70.0], [1313.506, 65.0], [1316.758, 60.0], [1320.558, 55.0], [1325.062, 50.0], [1330.493, 45.0], [1337.179, 40.0], [1345.632, 35.0], [1356.685, 30.0], [1362.129, 28.0], [1368.351, 26.0], [1375.535, 24.0], [1383.93, 22.0], [1393.881, 20.0], [1405.878, 18.0], [1420.651, 16.0], [1439.325, 14.0], [1463.742, 12.0], [1497.156, 10.0], [1519.009, 9.0], [1545.916, 8.0], [1579.928, 7.0], [1624.403, 6.0], [1652.253, 5.5], [1725.066, 4.5], [1753.167, 4.2], [1774.075, 4.0], [1803.124, 3.75], [1836.025, 3.5], [1873.622, 3.25], [1917.031, 3.0], [1956.936, 2.8], [2002.539, 2.6], [2055.19, 2.4], [2116.717, 2.2], [2189.645, 2.0], [2231.454, 1.9], [2277.578, 1.8], [2328.744, 1.7], [2385.85, 1.6], [2416.972, 1.55], [2522.709, 1.4], [2605.77, 1.3], [2701.67, 1.2], [2813.734, 1.1]])
-    calibration_probe2 = np.array([[104,300],[104.5,280],[105,260],[106,240],[107,220],[108,200],[108.5,190],[109,180],[110,170],[111,160],[112,150],[113,140],[114,130],[116,120],[118,110],[120,100],[121,95],[122,90],[124,85],[126,80],[128,75],[130,70],[132,65],[135,60],[139,55],[144,50],[149,45],[154,40],[162,35],[174,30],[179,28],[184,26],[194,24],[204,22],[214,20],[229,18],[245,16],[273,14],[304,12],[354,10],[394,9],[444,8],[524,7],[629,6],[704,5.5],[954,4.5],[1054,4.2],[1154,4],[1304,3.75],[1504,3.5],[1704,3.25],[2104,3],[2404,2.8],[2954,2.6],[3504,2.4],[4404,2.2],[5654,2],[6804,1.9],[8004,1.8],[10004,1.7],[12404,1.6],[14004,1.55],[20563.86,1.4],[28062.44,1.3],[40143.44,1.2],[60929.16,1.1]])
-    for i in range(len(calibration_ruo2)):
-        print str(i+1) + " " + str(np.log10(calibration_probe2[i][0])) + " " + str(calibration_probe2[i][1])    """    
-
-class LAKESHORE_USB:
-    def __init__(self,addr=6):
-        self.lakeshore=visa.SerialInstrument("ASRL6",delay=0.00,term_chars='\r\n',\
-            baud_rate=57600,data_bits=7,stop_bits=1)
-        self.lakeshore.clear()
-        
-        self.data = {}
-
-        self.data_lock = thread.allocate_lock()
-        #self.data_lock.acquire()
-        self.data["timestamp"] = []
-        self.data["temperature1"] = []
-        self.data["temperature2"] = []
-        thread.start_new_thread(self.temperature_thread,(0.1,))
-
-    def initialize(self):
-        """Initializes the device by reading all the values"""
-        self.reset()
-        self.get_temperature()
-        self.get_setpoint()
-        self.get_heater_range()
-        
-    
-    def reset(self):
-        """Sends Reset-Command"""
-        self.lakeshore.write('*RST')
-        log('RESET: '+self.lakeshore.ask("*IDN?"))
-    
-    def clear(self):
-        """Clears the interface"""
-        self.lakeshore.write('*CLS')
-    
-    def get_temperature(self, channel="A"):
-        """Asks for the temperature of sample of channel A oder B"""
-        return self.data["temperature1"][-1]
-    
-    def get_setpoint(self):
-        """Gets the setpoint"""
-        self.setpoint = self.lakeshore.ask('SETP? 1');
-        return self.setpoint;
-    
-    def set_setpoint(self, temperature=4):
-        """Sets the new setpoint"""
-        self.setpoint = self.lakeshore.write('SETP 1,%f'%(temperature))
-        
-    def set_heater_range(self, range=0):
-        """Set the heater range to specified value:
-                0 = off
-                1 = low
-                2 = med
-                3 = high"""
-        self.heater_range = range
-        self.lakeshore.write('RANGE 1,%i;'%(range))
-    
-    def get_heater_range(self):
-        """Get the heater range, look @ set"""
-        self.heater_range = self.lakeshore.ask("RANGE?")
-        print self.lakeshore.ask("RANGE? 1")
-        return self.heater_range
-    
-    def set_pid(self,p=100,i=10,d=0):
-        """sets pid parameter and switches to manual pid for loop 1"""
-        self.lakeshore.write('CMODE 1,1')
-        self.lakeshore.write('PID 1,%i,%i,%i'%(p,i,d))
-        
-    
-    # data handling
-    def get_data_list(self, erase=True):
-        """returns all the gathered data in one bunch
-        and erases the list """       
-        # get lock first
-        self.data_lock.acquire()
-        # copy data
-        return_data = self.data.copy()
-
-        if erase:    
-            self.data["timestamp"] = []
-            self.data["temperature1"] = []
-            self.data["temperature2"] = []
-        # release lock
-        self.data_lock.release()
-        return return_data    
-    
-    def temperature_thread(self, delay=0.05):
-        log("Temperature Thread started!")
-        while not stop:
-            try:
-                temperature1 = float(self.lakeshore.ask('KRDG? A'))            
-                temperature2 = float(self.lakeshore.ask('KRDG? B'))
-            except Exception,e:
-                print e
-                temperature1 = 0            
-                temperature2 = 0
-
-            # append gathered data to internal data dictionary
-            
-            self.data_lock.acquire()
-            
-            self.data["timestamp"].append(time.time())
-            self.data["temperature1"].append(temperature1)
-            self.data["temperature2"].append(temperature2)
-            self.data_lock.release()
-            
-            time.sleep(delay)
+        # indicate that thread terminated 
+        log("Thread #%i finished"%(self.thread_id))
+        self.thread_id = None
         
     """calibration_ruo2 = np.array([[1280.23, 300.0], [1280.973, 280.0], [1281.822, 260.0], [1282.802, 240.0], [1283.947, 220.0], [1285.305, 200.0], [1286.083, 190.0], [1286.942, 180.0], [1287.894, 170.0], [1288.958, 160.0], [1290.152, 150.0], [1291.505, 140.0], [1293.052, 130.0], [1294.837, 120.0], [1296.923, 110.0], [1299.396, 100.0], [1300.814, 95.0], [1302.378, 90.0], [1304.113, 85.0], [1306.049, 80.0], [1308.225, 75.0], [1310.69, 70.0], [1313.506, 65.0], [1316.758, 60.0], [1320.558, 55.0], [1325.062, 50.0], [1330.493, 45.0], [1337.179, 40.0], [1345.632, 35.0], [1356.685, 30.0], [1362.129, 28.0], [1368.351, 26.0], [1375.535, 24.0], [1383.93, 22.0], [1393.881, 20.0], [1405.878, 18.0], [1420.651, 16.0], [1439.325, 14.0], [1463.742, 12.0], [1497.156, 10.0], [1519.009, 9.0], [1545.916, 8.0], [1579.928, 7.0], [1624.403, 6.0], [1652.253, 5.5], [1725.066, 4.5], [1753.167, 4.2], [1774.075, 4.0], [1803.124, 3.75], [1836.025, 3.5], [1873.622, 3.25], [1917.031, 3.0], [1956.936, 2.8], [2002.539, 2.6], [2055.19, 2.4], [2116.717, 2.2], [2189.645, 2.0], [2231.454, 1.9], [2277.578, 1.8], [2328.744, 1.7], [2385.85, 1.6], [2416.972, 1.55], [2522.709, 1.4], [2605.77, 1.3], [2701.67, 1.2], [2813.734, 1.1]])
     calibration_probe2 = np.array([[104,300],[104.5,280],[105,260],[106,240],[107,220],[108,200],[108.5,190],[109,180],[110,170],[111,160],[112,150],[113,140],[114,130],[116,120],[118,110],[120,100],[121,95],[122,90],[124,85],[126,80],[128,75],[130,70],[132,65],[135,60],[139,55],[144,50],[149,45],[154,40],[162,35],[174,30],[179,28],[184,26],[194,24],[204,22],[214,20],[229,18],[245,16],[273,14],[304,12],[354,10],[394,9],[444,8],[524,7],[629,6],[704,5.5],[954,4.5],[1054,4.2],[1154,4],[1304,3.75],[1504,3.5],[1704,3.25],[2104,3],[2404,2.8],[2954,2.6],[3504,2.4],[4404,2.2],[5654,2],[6804,1.9],[8004,1.8],[10004,1.7],[12404,1.6],[14004,1.55],[20563.86,1.4],[28062.44,1.3],[40143.44,1.2],[60929.16,1.1]])
@@ -622,10 +543,6 @@ class GS200:
         # start sweep
         self.program_start() 
     
-    #:SOURce:RANGe <voltage>|MINimum|MAXimum|UP|DOWN
-    #:SOURce:LEVel[:FIX] <voltage>|MINimum|MAXimum
-    #:SOURce:LEVel:AUTO <voltage>|MINimum|MAXimum
-    # end program stuff
     
     def set_function(self,function="VOLT"):
         """sets the function of the device.
@@ -655,8 +572,9 @@ class GS200:
 
 
 class Agilent34410A:
-    def __init__(self, dlay=0, GPIB_No=22, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR",timeout=0.2):
+    def __init__(self, label="Agilent", dlay=0, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR",timeout=0.2): #GPIB_No=22, 
         """Agilent 34410A"""
+        self.label = label
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
         self.initializeVOLTDC(2)
         #self.initialize4WIREOHM()
@@ -668,14 +586,13 @@ class Agilent34410A:
         
         self.thread_id = None
         self.start_thread()
-        
 
     def start_thread(self, delay=0.05):
-        if not self.thread_id == None:
+        if self.thread_id != None:
             self.stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
             # check if thread exited or timeout occured
-            while self.thread_id == None and time.time() < _timeout:
+            while self.thread_id != None and time.time() < _timeout:
                 pass
         self.stop = False                   # reset terminate signal
         # create new thread and insert id
@@ -750,7 +667,7 @@ class Agilent34410A:
     # thread
     def measurement_thread(self, delay=0.05):
         log("Agilent Thread started!")
-        while not self.stop:
+        while not self.stop or stop:
             try:
                 voltage = self.get()
                 self.data_lock.acquire()
@@ -761,7 +678,8 @@ class Agilent34410A:
                 log("34410a Measurement Thread")
                     
             time.sleep(delay)
-        # indicate that thread terminated
+        # indicate that thread terminated 
+        log("Thread #%i finished"%(self.thread_id))
         self.thread_id = None
 
 
@@ -810,7 +728,20 @@ class ZURICH:
         self.data["femto"]["channela"] = []
         self.data["femto"]["channelb"] = []
         
-        thread.start_new_thread(self.lockin_thread, ())
+        self.thread_id = None
+        self.start_thread()
+
+    def start_thread(self, delay=0.1):
+        if self.thread_id != None:
+            self.stop = True                # send stop to thread
+            _timeout = time.time()+1        # timeout = 1s
+            # check if thread exited or timeout occured
+            while self.thread_id != None and time.time() < _timeout:
+                pass
+        self.stop = False                   # reset terminate signal
+        # create new thread and insert id
+        self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
+        log("Thread #%i started"%(self.thread_id))
     
     def resync(self):
         """calculate timeoffset for time calibration of lockin timebase
@@ -958,7 +889,7 @@ class ZURICH:
         
     
 
-    def lockin_thread(self, delay=0.1):
+    def measurement_thread(self, delay=0.1):
         """ connects to the server and asks for data """
         log("LockIn Thread started!")        
         self.daq.flush()
@@ -967,7 +898,7 @@ class ZURICH:
 
         try:
             self.daq.flush()
-            while not stop:
+            while not (self.stop or stop):
                 try:
                     dataDict = self.daq.poll(0.05,100,0,True)
                     # acquire lock
@@ -1007,6 +938,9 @@ class ZURICH:
             log("Lockin Communication Error in Thread",e)
         finally:
             self.daq.unsubscribe("*")
+        # indicate that thread terminated 
+        log("Thread #%i finished"%(self.thread_id))
+        self.thread_id = None
             
     def get_data_list(self, erase=True, averages=1):
         """returns all the gathered data in one bunch
@@ -1149,7 +1083,20 @@ class MOTOR:
         self.data["position"] = []
         self.data["current"] = []
         self.data["velocity"] = []
-        thread.start_new_thread(self.motor_thread,(0.05,))
+        self.thread_id = None
+        self.start_thread()
+
+    def start_thread(self, delay=0.1):
+        if self.thread_id != None:
+            self.stop = True                # send stop to thread
+            _timeout = time.time()+1        # timeout = 1s
+            # check if thread exited or timeout occured
+            while self.thread_id != None and time.time() < _timeout:
+                pass
+        self.stop = False                   # reset terminate signal
+        # create new thread and insert id
+        self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
+        log("Thread #%i started"%(self.thread_id))
 
     def initialize(self, max_rpm=8000):
         """activate motor control"""
@@ -1268,10 +1215,10 @@ class MOTOR:
         return return_data
 
 # thread
-    def motor_thread(self, delay=0.05):
+    def measurement_thread(self, delay=0.05):
         log("Motor Thread started!")
         speed_check_count = 0
-        while not stop:
+        while not (self.stop or stop):
             try:            
                 answer = self.motor.ask('GN')   # update speed            
                 self._v=float(answer.strip())
@@ -1337,10 +1284,11 @@ class MOTOR:
                     log("Motor speed check failed",e)
                     
             time.sleep(delay)
+        # indicate that thread terminated 
+        log("Thread #%i finished"%(self.thread_id))
+        self.thread_id = None
             
 
-        
-    
 
 
 device_delay = 10
