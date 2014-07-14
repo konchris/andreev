@@ -181,7 +181,7 @@ class hdf5_saving:
 
             
 if __name__ == "__main__":        
-    test = "C:\\Users\\David Weber\\Desktop\\andreev\\testhdf5\\"
+    test = r"C:\Users\David Weber\Desktop\andreev\testhdf5\\"
     db = hdf5_saving(test)
     
     """table = h5file.root.temperature.data

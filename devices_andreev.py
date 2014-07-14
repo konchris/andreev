@@ -32,6 +32,9 @@ try:
     board_0.send_ifc()
 except Exception,e:
     log("Failed to Clear Interface 1",e)
+
+measurement_thread_list = []
+
     
 class Magnet:
     def __init__(self, GPIB_No=27):
@@ -41,22 +44,19 @@ class Magnet:
         self.max_rate=2
         self.goto_field = 0
         self.actual_field = 0
-        #print "a"
+
         self.status_a = 0
         self.status_b = 0
         self.activity = 0
         self.local = 0
         self.heater = False
         
-        #print "b"
-        #self.ReadStatus()
-        #print "c"
-        
         self.data = {}
         self.data_lock = thread.allocate_lock()
         self.data["timestamp"] = []
         self.data["field"] = []
-        thread.start_new_thread(self.magnet_thread,(0.2,))
+        
+        #self.thread_id = thread.start_new_thread(self.magnet_thread,(0.2,))
 
     def initialize(self):
         try:
@@ -252,7 +252,8 @@ class LAKESHORE:
         self.data["temperature2"] = []
         self.data["sensor1"] = []
         self.data["sensor2"] = []
-        thread.start_new_thread(self.temperature_thread,(0.1,))
+        
+        measurement_thread_list.append( (thread.start_new_thread(self.temperature_thread,(0.1,)), "Temperatur Thread") )
 
     def initialize(self):
         """Initializes the device by reading all the values"""
@@ -656,22 +657,34 @@ class GS200:
 class Agilent34410A:
     def __init__(self, dlay=0, GPIB_No=22, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR",timeout=0.2):
         """Agilent 34410A"""
-        #self.Agilent=visa.instrument('GPIB0::%i'%GPIB_No, delay=dlay,term_chars='\n')
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
-        #print "Agilent Created"        
         self.initializeVOLTDC(2)
         #self.initialize4WIREOHM()
-        #print "Agilent VOLTDC initalized"
+        
         self.data = {}
         self.data_lock = thread.allocate_lock()
         self.data["timestamp"] = []
         self.data["voltage"] = []
-        thread.start_new_thread(self.measurement_thread,(0.05,))
         
+        self.thread_id = None
+        self.start_thread()
+        
+
+    def start_thread(self, delay=0.05):
+        if not self.thread_id == None:
+            self.stop = True                # send stop to thread
+            _timeout = time.time()+1        # timeout = 1s
+            # check if thread exited or timeout occured
+            while self.thread_id == None and time.time() < _timeout:
+                pass
+        self.stop = False                   # reset terminate signal
+        # create new thread and insert id
+        self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
+        log("Thread #%i started"%(self.thread_id))
 
     def initializeVOLTDC(self, NPLC=2, DISPLAY ="ON"):
         #self.Agilent.write('*RST')
-        #self.Agilent.write('*CLS')
+        self.Agilent.write('*CLS')
         self.Agilent.write('CONF:VOLT:DC 10') # was 2
         #self.Agilent.write('DISP '+DISPLAY)
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
@@ -734,13 +747,12 @@ class Agilent34410A:
         self.data_lock.release()
         return return_data
 
-# thread
+    # thread
     def measurement_thread(self, delay=0.05):
         log("Agilent Thread started!")
-        while not stop:
+        while not self.stop:
             try:
                 voltage = self.get()
-            
                 self.data_lock.acquire()
                 self.data["timestamp"].append(time.time())
                 self.data["voltage"].append(voltage)
@@ -749,7 +761,8 @@ class Agilent34410A:
                 log("34410a Measurement Thread")
                     
             time.sleep(delay)
-        self.Agilent.write("*RST")
+        # indicate that thread terminated
+        self.thread_id = None
 
 
 
