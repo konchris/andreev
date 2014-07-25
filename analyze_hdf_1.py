@@ -160,7 +160,7 @@ else:
     _time = time.time()
     
     ################################
-    # TEMPERATUR ###################
+    # TEMPERATURE ###################
     ################################
 
     temperature_t,raw_pot,raw_sample = zip(*tab_temperature[:])  
@@ -569,4 +569,3 @@ if split_up_ivs:
     #    current_t.append(tab_i[i]['timestamp'])
     #    current_v.append(tab_i[i]['voltage'])
 """
-
