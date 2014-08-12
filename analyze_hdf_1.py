@@ -13,88 +13,41 @@ import datetime
 import pylab as pl
 import scipy.constants as const
 
+from functions_evaluate import *
+
 g0 = const.elementary_charge**2*2.0/const.h
 r0 = 1/g0
-"""
-class li_measurement(tables.IsDescription):
-    timestamp   =   tables.Float64Col()
-    x           =   tables.Float32Col()
-    y           =   tables.Float32Col()
 
-class temperature(tables.IsDescription):
-    timestamp   =   tables.Float64Col()
-    pot         =   tables.Float32Col()
-    sample      =   tables.Float32Col()
-
-class magnet(tables.IsDescription):
-    timestamp   =   tables.Float64Col()
-    field       =   tables.Float32Col()
-
-class motor(tables.IsDescription):
-    timestamp   =   tables.Float64Col()
-    position    =   tables.Float32Col()
-    velocity    =   tables.Float32Col()
-
-class voltage(tables.IsDescription):
-    timestamp   =   tables.Float64Col()
-    voltage     =   tables.Float32Col()
-
-class parameter(tables.IsDescription):
-    timestamp   =   tables.Float64Col()
-    name        =   tables.StringCol(25)
-    value       =   tables.Float64Col()
-    """
     
-def movingaverage(values, window_size):
-    window = np.ones(int(window_size))/float(window_size)
-    return np.convolve(values, window, 'same')
-    
-def interpolate(x=[],data=[[],[]],scale_y=1.0):
-    """interpolates using np.interp() with some extras"""
-    xp = np.array(data[0])
-    fp = np.array(data[1])/scale_y
-    
-    min_index = min(len(xp),len(fp))-1
-    if len(xp) != len(fp):
-        print "Interp: Indices dont match %i,%i"%(len(xp),len(fp))
-    interp_array = np.interp(x,xp[0:min_index],fp[0:min_index])
-    return interp_array
 
-def ensure_dir(f):
-    d = os.path.dirname(f)
-    if not os.path.exists(d):
-        os.makedirs(d)     
-
-def find_min(L, value):
-    iterations = 0
-    maxindex = len(L) - 1
-    if len(L) == 0 or L[0] >= value:
-        return 0
-    if L[-1] <= value:
-        #log("Last value is larger than wanted value!")
-        return maxindex
-
-    index = 0
-    while index <= maxindex:
-        center = index + ((maxindex - index)/2)
-        if L[center] <= value and L[center+1] > value:
-            return center   
-        elif L[center] > value:
-            maxindex = center - 1
-        else:
-            index = center + 1
-        iterations += 1
-    return 0
-
+################################
+##### START ####################
+################################
 
 db = 0
+rref = 104000.0
 
-filename = r"140623_iets_mar_09_auto"
+filename = r"140809_Pb180_Histo_03"
+filename = r"140810_Pb180_Histo_04"
+filename = r"140812_Pb180_Histo_08"
 base_path = os.path.join("Z:\dweber\data_p5",filename)
 total_path = os.path.join(base_path,'db_%i.h5'%(db))
 config_path = os.path.join(base_path,'config.txt')
 
-close("all")
+"""
+filename = [r"140809_Pb180_Histo_03", r"140810_Pb180_Histo_04", r"140812_Pb180_Histo_08"]
+
+paths = []
+for f in filename:
+    paths.append(
+        [ os.path.join(r"Z:\dweber\data_p5",f),
+          os.path.join(r"Z:\dweber\data_p5",f,'db_%i.h5'%(db)),
+          os.path.join(r"Z:\dweber\data_p5",f,'config.txt')
+        ] )
+"""
+
+
+pl.close("all")
 
 skip_loading = False
 if 'old_filename' in locals():
@@ -139,6 +92,10 @@ else:
     print "Voltages after %is"%(time.time()-_time)
     _time = time.time()
     
+    x_list = np.arange(v_raw[0][0],v_raw[0][-1],0.1)
+    voltage = interpolate(x_list, v_raw)
+    current = interpolate(x_list, i_raw, rref)
+    
     
     ################################
     # LOCKIN #######################
@@ -148,6 +105,24 @@ else:
     raw_ch_1_t,raw_ch_1_x,raw_ch_1_y = zip(*tab_li_1[:])
     raw_ch_3_t,raw_ch_3_x,raw_ch_3_y = zip(*tab_li_3[:])
     raw_ch_4_t,raw_ch_4_x,raw_ch_4_y = zip(*tab_li_4[:])
+    
+    ch_0_x = interpolate(x_list, (raw_ch_0_t,raw_ch_0_x))
+    ch_0_y = interpolate(x_list, (raw_ch_0_t,raw_ch_0_y))
+    ch_1_x = interpolate(x_list, (raw_ch_1_t,raw_ch_1_x))
+    ch_1_y = interpolate(x_list, (raw_ch_1_t,raw_ch_1_y))
+    ch_3_x = interpolate(x_list, (raw_ch_3_t,raw_ch_3_x),rref)
+    ch_3_y = interpolate(x_list, (raw_ch_3_t,raw_ch_3_y),rref)
+    ch_4_x = interpolate(x_list, (raw_ch_4_t,raw_ch_4_x),rref)
+    ch_4_y = interpolate(x_list, (raw_ch_4_t,raw_ch_4_y),rref)
+    ch_0_r = np.sqrt(np.array(ch_0_x)**2 + np.array(ch_0_y)**2)
+    ch_1_r = np.sqrt(np.array(ch_1_x)**2 + np.array(ch_1_y)**2)
+    ch_3_r = np.sqrt(np.array(ch_3_x)**2 + np.array(ch_3_y)**2)
+    ch_4_r = np.sqrt(np.array(ch_4_x)**2 + np.array(ch_4_y)**2)
+    ch_0_theta = np.rad2deg(np.arctan(np.array(ch_0_x/ch_0_y)))
+    ch_1_theta = np.rad2deg(np.arctan(np.array(ch_1_x/ch_1_y)))
+    ch_3_theta = np.rad2deg(np.arctan(np.array(ch_3_x/ch_3_y)))
+    ch_4_theta = np.rad2deg(np.arctan(np.array(ch_4_x/ch_4_y)))    
+    
     print "Lockin after %is"%(time.time()-_time)
     _time = time.time()
     
@@ -155,7 +130,11 @@ else:
     # MOTOR ########################
     ################################
 
-    motor_t,raw_position,raw_velocity = zip(*tab_motor[:])  
+    raw_position,motor_t,raw_velocity = zip(*tab_motor[:])  
+    position = interpolate(x_list, [motor_t, raw_position])   
+    #print motor_t[0:100], raw_position[0:100], raw_velocity[0:100]
+    velocity = interpolate(x_list, [motor_t, raw_velocity])   
+    
     print "Motor after %is"%(time.time()-_time)
     _time = time.time()
     
@@ -186,32 +165,6 @@ else:
 
 
 
-rref = 104000.0
-
-
-
-x_list = np.arange(v_raw[0][0],v_raw[0][-1],0.1)
-
-ch_0_x = interpolate(x_list, (raw_ch_0_t,raw_ch_0_x))
-ch_0_y = interpolate(x_list, (raw_ch_0_t,raw_ch_0_y))
-ch_1_x = interpolate(x_list, (raw_ch_1_t,raw_ch_1_x))
-ch_1_y = interpolate(x_list, (raw_ch_1_t,raw_ch_1_y))
-ch_3_x = interpolate(x_list, (raw_ch_3_t,raw_ch_3_x),rref)
-ch_3_y = interpolate(x_list, (raw_ch_3_t,raw_ch_3_y),rref)
-ch_4_x = interpolate(x_list, (raw_ch_4_t,raw_ch_4_x),rref)
-ch_4_y = interpolate(x_list, (raw_ch_4_t,raw_ch_4_y),rref)
-ch_0_r = np.sqrt(np.array(ch_0_x)**2 + np.array(ch_0_y)**2)
-ch_1_r = np.sqrt(np.array(ch_1_x)**2 + np.array(ch_1_y)**2)
-ch_3_r = np.sqrt(np.array(ch_3_x)**2 + np.array(ch_3_y)**2)
-ch_4_r = np.sqrt(np.array(ch_4_x)**2 + np.array(ch_4_y)**2)
-ch_0_theta = np.rad2deg(np.arctan(np.array(ch_0_x/ch_0_y)))
-ch_1_theta = np.rad2deg(np.arctan(np.array(ch_1_x/ch_1_y)))
-ch_3_theta = np.rad2deg(np.arctan(np.array(ch_3_x/ch_3_y)))
-ch_4_theta = np.rad2deg(np.arctan(np.array(ch_4_x/ch_4_y)))
-
-voltage = interpolate(x_list, v_raw)
-current = interpolate(x_list, i_raw, rref)
-
 cond = abs(current/voltage*r0)
 di_dv = ch_3_r/ch_0_r*r0
 d2i_dv2 = ch_4_r/ch_1_r*r0
@@ -219,16 +172,16 @@ d2i_dv2 = ch_4_r/ch_1_r*r0
 print "Calc after %is"%(time.time()-_time)
 _time = time.time()
 
-pl.hold(True)
-fig_overview = pl.figure(figsize=(18,12), dpi=72)
+#pl.hold(True)
+#fig_overview = pl.figure(figsize=(18,12), dpi=72)
 #fig.subplots_adjust(hspace = 0.35, wspace = 0.6)
-pl_a = fig_overview.add_subplot(2,2,1)
-pl_b = fig_overview.add_subplot(2,2,2)
-pl_c = fig_overview.add_subplot(2,2,3)
-pl_d = fig_overview.add_subplot(2,2,4)
-pl_a.plot(v_raw[0][:],v_raw[1][:],'r')
-pl_a.plot(i_raw[0][:],i_raw[1][:],'k')
-pl_b.plot(x_list,cond,'k')
+#pl_a = fig_overview.add_subplot(2,2,1)
+#pl_b = fig_overview.add_subplot(2,2,2)
+#pl_c = fig_overview.add_subplot(2,2,3)
+#pl_d = fig_overview.add_subplot(2,2,4)
+#pl_a.plot(v_raw[0][:],v_raw[1][:],'r')
+#pl_a.plot(i_raw[0][:],i_raw[1][:],'k')
+#pl_b.plot(x_list,cond,'k')
 
 #pl.show()
 
@@ -410,9 +363,9 @@ if split_up_ivs:
         
         i += 1
     pl.close()
-    """
+    
     i = 1
-    for hist_times in histograms:#[0:20]:
+    for hist_times in histograms[0:1]:
         
         i_begin =   find_min(x_list, hist_times[0])
         i_end =     find_min(x_list, hist_times[1])
@@ -427,6 +380,7 @@ if split_up_ivs:
         cond_lower_end = 0.1
         cond_higher_end = 10.0
         ##############################
+        print len(position[i_begin:i_end]), position[i_begin], position[i_end]
         if cond[i_begin] > cond[i_end]: 
             # opening curve
             j = i_begin
@@ -439,7 +393,8 @@ if split_up_ivs:
                 if cond[k] < cond_lower_end:
                     break
                 k += 1
-            ax_cond.plot(position[j-5:k+5]*(-1.0),cond[j-5:k+5], 'k-')
+            #ax_cond.plot(position[j-5:k+5]*(-1.0),cond[j-5:k+5], 'k-')
+            ax_cond.plot(position[i_begin:i_end]*(-1.0),cond[i_begin:i_end], 'k-')
             ax_cond.set_title("Opening") 
         else:
             # closing curve
@@ -453,7 +408,9 @@ if split_up_ivs:
                 if cond[k] > cond_higher_end:
                     break
                 k += 1
-            ax_cond.plot(position[j-5:k+5],cond[j-5:k+5], 'k-')
+            #ax_cond.plot(position[j-5:k+5],cond[j-5:k+5], 'k-')
+            ax_cond.plot(position[i_begin:i_end],cond[i_begin:i_end], 'k-')
+            
             ax_cond.set_title("Closing") 
 
         #ax_didv.plot(position[i_begin:i_end],di_dv[i_begin:i_end], 'r-')
@@ -463,16 +420,16 @@ if split_up_ivs:
         ax_cond.set_ylabel("S ($G_0$)")
         ax_cond.grid()
 
-        ax_cond.set_ylim([0,10])
+        #ax_cond.set_ylim([0,10])
         
         fig.savefig(os.path.join(trace_dir,str(int(hist_times[1]))+".png"))
         pl.close()
-        trace_file = open(os.path.join(trace_dir,str(int(hist_times[1]))+".txt"),"w")
-        save_data(trace_file, [position[i_begin:i_end],cond[i_begin:i_end]])
+        #trace_file = open(os.path.join(trace_dir,str(int(hist_times[1]))+".txt"),"w")
+        #save_data(trace_file, [position[i_begin:i_end],cond[i_begin:i_end]])
         
         print "%i/%i %i"%(i,len(histograms),int(hist_times[1]))
         i += 1
-    
+    """
     i = 1
     for circle_times in bcircle:#[0:20]:
         
@@ -521,51 +478,21 @@ if split_up_ivs:
         i += 1
         """
 
+if True:
+    #fig_overview = pl.figure(figsize=(12,12), dpi=72)
+    #fig_overview.subplots_adjust(hspace = 0.35, wspace = 0.6)
+    #ov_histogram = fig.add_subplot(1,1,1) # fig.gca()
+    ov_plot = pl.figure()
+    ov_hist = ov_plot.add_subplot(1,1,1)
+    #ov_hist.hist(cond, bins=np.linspace(0, 5, 200))
+    ov_hist.hist(cond, log=False, bins=np.logspace(-4, 1, 150))
+    ov_hist.set_xscale("log")
+    #pl.hist(cond, bins=np.linspace(0, 5, 100))
+    #ov_histogram.hist(cond, bins=np.linspace(0, 5, 100))
+    #ov_histogram.grid()
+    #fig_overview.show()
+    
 
 """ old
-#ch_1_t = []
-    #ch_1_x = []
-    #ch_1_y = []
-    #for i in range(len(tab_li_1)):
-    #    ch_1_t.append(tab_li_1[i]['timestamp'])
-    #    ch_1_x.append(tab_li_1[i]['x'])
-    #    ch_1_y.append(tab_li_1[i]['y'])
-        #ch_3_t = []
-    #ch_3_x = []
-    #ch_3_y = []
-    #for i in range(len(tab_li_3)):
-    #    ch_3_t.append(tab_li_3[i]['timestamp'])
-    #    ch_3_x.append(tab_li_3[i]['x'])
-    #    ch_3_y.append(tab_li_3[i]['y'])
 
-    #ch_0_t = []
-    #ch_0_x = []
-    #ch_0_y = []
-    #for i in range(len(tab_li_0)):
-    #    ch_0_t.append(tab_li_0[i]['timestamp'])
-    #    ch_0_x.append(tab_li_0[i]['x'])
-    #    ch_0_y.append(tab_li_0[i]['y'])    
-    #ch_4_t = []
-    #ch_4_x = []
-    #ch_4_y = []
-    #for i in range(len(tab_li_4)):
-    #    ch_4_t.append(tab_li_4[i]['timestamp'])
-    #    ch_4_x.append(tab_li_4[i]['x'])
-    #    ch_4_y.append(tab_li_4[i]['y'])
-    #voltage_t = []
-    #voltage_v = []
-    #for i in _tab_v:
-    #    voltage_t.append(i["timestamp"])
-    #    voltage_v.append(i['voltage'])
-    #for i in range(len(tab_v)):
-    #    voltage_t.append(tab_v[i]['timestamp'])
-    #     voltage_v.append(tab_v[i]['voltage'])
-    #current_t = []
-    #current_v = []
-       #for i in _tab_i:
-    #    current_t.append(i["timestamp"])
-    #    current_v.append(i['voltage'])
-    #for i in range(len(tab_i)):
-    #    current_t.append(tab_i[i]['timestamp'])
-    #    current_v.append(tab_i[i]['voltage'])
 """
