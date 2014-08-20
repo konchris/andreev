@@ -291,10 +291,10 @@ def refresh_display():
                     # begin und end = jetzt - etwas kleines
                     x_list = np.arange(begin,end,0.25)
      
-                    li_0_x_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_x"], _self.factor_voltage)
-                    li_0_y_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_y"], _self.factor_voltage)
-                    li_3_x_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_x"], _self.factor_current)
-                    li_3_y_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_y"], _self.factor_current)
+                    li_0_x_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_x"])
+                    li_0_y_interp = interpolate(x_list, _self.data["li_timestamp_0"], _self.data["li_0_y"])
+                    li_3_x_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_x"])
+                    li_3_y_interp = interpolate(x_list, _self.data["li_timestamp_3"], _self.data["li_3_y"])
     
                     li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                     li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))

@@ -300,7 +300,6 @@ def init_validators(_self):
     # b-field
     _self.ui.editBMax.setValidator(doubleValidator)
     _self.ui.editBRate.setValidator(doubleValidator)
-    _self.ui.editBBias.setValidator(doubleValidator)  
     # lockin
     _self.ui.editLIFreq.setValidator(doubleValidator)
     _self.ui.editLITC.setValidator(doubleValidator)

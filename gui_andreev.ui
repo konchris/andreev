@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -216,7 +216,7 @@
           <rect>
            <x>10</x>
            <y>10</y>
-           <width>171</width>
+           <width>175</width>
            <height>151</height>
           </rect>
          </property>
@@ -694,8 +694,8 @@
           <rect>
            <x>40</x>
            <y>20</y>
-           <width>211</width>
-           <height>171</height>
+           <width>201</width>
+           <height>181</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout">
@@ -703,6 +703,9 @@
            <widget class="QLineEdit" name="editHistogramUpper">
             <property name="text">
              <string>1000</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -753,6 +756,9 @@
             <property name="text">
              <string>100000</string>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
            </widget>
           </item>
           <item row="0" column="1">
@@ -760,12 +766,18 @@
             <property name="text">
              <string>0.01</string>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
            </widget>
           </item>
           <item row="4" column="1">
            <widget class="QLineEdit" name="editHistogramClosingSpeed">
             <property name="text">
              <string>200</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -780,6 +792,9 @@
            <widget class="QLineEdit" name="editHistogramOpeningSpeed">
             <property name="text">
              <string>200</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -804,10 +819,34 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="QPushButton" name="btnHistogramStart">
             <property name="text">
              <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="editHistogramColdTime">
+            <property name="text">
+             <string>5</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_31">
+            <property name="text">
+             <string>Cold Time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLabel" name="label_107">
+            <property name="text">
+             <string>s</string>
             </property>
            </widget>
           </item>
@@ -1038,7 +1077,7 @@
           <rect>
            <x>10</x>
            <y>50</y>
-           <width>135</width>
+           <width>155</width>
            <height>191</height>
           </rect>
          </property>
@@ -1054,6 +1093,9 @@
            <widget class="QLineEdit" name="editTempI">
             <property name="text">
              <string>120</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -1071,7 +1113,7 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="2">
+          <item row="7" column="2">
            <widget class="QPushButton" name="btnTempSet">
             <property name="text">
              <string>Set</string>
@@ -1090,12 +1132,18 @@
             <property name="text">
              <string>0</string>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
            </widget>
           </item>
           <item row="3" column="2">
            <widget class="QLineEdit" name="editTempP">
             <property name="text">
              <string>150</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -1118,12 +1166,42 @@
             <property name="text">
              <string>20</string>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
            </widget>
           </item>
           <item row="1" column="2">
            <widget class="QLineEdit" name="editTempSetpoint">
             <property name="text">
              <string>5</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLineEdit" name="editTempRamp">
+            <property name="text">
+             <string>0.1</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_30">
+            <property name="text">
+             <string>Ramp</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QLabel" name="label_106">
+            <property name="text">
+             <string>K/min</string>
             </property>
            </widget>
           </item>
@@ -1132,7 +1210,7 @@
         <widget class="QWidget" name="gridLayoutWidget_4">
          <property name="geometry">
           <rect>
-           <x>150</x>
+           <x>170</x>
            <y>50</y>
            <width>122</width>
            <height>191</height>
@@ -1242,7 +1320,7 @@
         <widget class="QLabel" name="label_65">
          <property name="geometry">
           <rect>
-           <x>150</x>
+           <x>170</x>
            <y>20</y>
            <width>54</width>
            <height>21</height>
@@ -1268,7 +1346,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay1a">
          <property name="geometry">
           <rect>
-           <x>290</x>
+           <x>320</x>
            <y>50</y>
            <width>81</width>
            <height>22</height>
@@ -1313,7 +1391,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay1b">
          <property name="geometry">
           <rect>
-           <x>290</x>
+           <x>320</x>
            <y>70</y>
            <width>81</width>
            <height>22</height>
@@ -1353,7 +1431,7 @@
         <widget class="QLabel" name="label_76">
          <property name="geometry">
           <rect>
-           <x>290</x>
+           <x>320</x>
            <y>20</y>
            <width>54</width>
            <height>21</height>
@@ -1366,7 +1444,7 @@
         <widget class="QPushButton" name="btnTemperatureCustom">
          <property name="geometry">
           <rect>
-           <x>290</x>
+           <x>320</x>
            <y>160</y>
            <width>81</width>
            <height>23</height>
@@ -1379,7 +1457,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay2a">
          <property name="geometry">
           <rect>
-           <x>380</x>
+           <x>410</x>
            <y>50</y>
            <width>81</width>
            <height>22</height>
@@ -1424,7 +1502,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay3a">
          <property name="geometry">
           <rect>
-           <x>290</x>
+           <x>320</x>
            <y>100</y>
            <width>81</width>
            <height>22</height>
@@ -1469,7 +1547,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay4a">
          <property name="geometry">
           <rect>
-           <x>380</x>
+           <x>410</x>
            <y>100</y>
            <width>81</width>
            <height>22</height>
@@ -1514,7 +1592,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay2b">
          <property name="geometry">
           <rect>
-           <x>380</x>
+           <x>410</x>
            <y>70</y>
            <width>81</width>
            <height>22</height>
@@ -1554,7 +1632,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay3b">
          <property name="geometry">
           <rect>
-           <x>290</x>
+           <x>320</x>
            <y>120</y>
            <width>81</width>
            <height>22</height>
@@ -1594,7 +1672,7 @@
         <widget class="QComboBox" name="comboTemperatureDisplay4b">
          <property name="geometry">
           <rect>
-           <x>380</x>
+           <x>410</x>
            <y>120</y>
            <width>81</width>
            <height>22</height>
@@ -1768,7 +1846,7 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
+          <item row="3" column="1">
            <widget class="QPushButton" name="btnBZeroMagnet">
             <property name="text">
              <string>Zero Magnet</string>
@@ -1782,17 +1860,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="2" column="1">
            <widget class="QPushButton" name="btnBStart">
             <property name="text">
              <string>Goto Field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="editBBias">
-            <property name="text">
-             <string>0.01</string>
             </property>
            </widget>
           </item>
@@ -1803,21 +1874,7 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_31">
-            <property name="text">
-             <string>V</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_30">
-            <property name="text">
-             <string>Bias</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
+          <item row="4" column="1">
            <widget class="QPushButton" name="btnBInitMagnet">
             <property name="text">
              <string>Init Magnet</string>
@@ -1880,7 +1937,7 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
+          <item row="3" column="1">
            <widget class="QPushButton" name="btnBZeroMagnet_2">
             <property name="text">
              <string>Zero Magnet</string>
@@ -1894,17 +1951,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="2" column="1">
            <widget class="QPushButton" name="btnBStart_2">
             <property name="text">
              <string>Goto Field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="editBBias_2">
-            <property name="text">
-             <string>0.01</string>
             </property>
            </widget>
           </item>
@@ -1915,21 +1965,7 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_106">
-            <property name="text">
-             <string>V</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_107">
-            <property name="text">
-             <string>Bias</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
+          <item row="4" column="1">
            <widget class="QPushButton" name="btnBInitMagnet_2">
             <property name="text">
              <string>Init Magnet</string>
@@ -2191,7 +2227,7 @@
            <x>20</x>
            <y>10</y>
            <width>176</width>
-           <height>221</height>
+           <height>217</height>
           </rect>
          </property>
          <layout class="QFormLayout" name="formLayout_2">
@@ -2252,7 +2288,7 @@
           <item row="3" column="1">
            <widget class="QLineEdit" name="editViewStep">
             <property name="text">
-             <string>10</string>
+             <string>1</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2335,9 +2371,9 @@
         <widget class="QGroupBox" name="groupBox_3">
          <property name="geometry">
           <rect>
-           <x>250</x>
+           <x>220</x>
            <y>10</y>
-           <width>181</width>
+           <width>121</width>
            <height>151</height>
           </rect>
          </property>
@@ -2347,7 +2383,7 @@
          <widget class="QCheckBox" name="checkAuto2a">
           <property name="geometry">
            <rect>
-            <x>100</x>
+            <x>70</x>
             <y>30</y>
             <width>70</width>
             <height>17</height>
@@ -2373,7 +2409,7 @@
          <widget class="QCheckBox" name="checkAuto4b">
           <property name="geometry">
            <rect>
-            <x>100</x>
+            <x>70</x>
             <y>110</y>
             <width>70</width>
             <height>17</height>
@@ -2386,7 +2422,7 @@
          <widget class="QCheckBox" name="checkAuto2b">
           <property name="geometry">
            <rect>
-            <x>100</x>
+            <x>70</x>
             <y>50</y>
             <width>70</width>
             <height>17</height>
@@ -2399,7 +2435,7 @@
          <widget class="QCheckBox" name="checkAuto4a">
           <property name="geometry">
            <rect>
-            <x>100</x>
+            <x>70</x>
             <y>90</y>
             <width>70</width>
             <height>17</height>
@@ -2452,7 +2488,7 @@
         <widget class="QCheckBox" name="checkViewConductance">
          <property name="geometry">
           <rect>
-           <x>280</x>
+           <x>250</x>
            <y>170</y>
            <width>111</width>
            <height>17</height>
@@ -2468,7 +2504,7 @@
         <widget class="QCheckBox" name="checkViewT1">
          <property name="geometry">
           <rect>
-           <x>280</x>
+           <x>250</x>
            <y>210</y>
            <width>111</width>
            <height>17</height>
@@ -2484,7 +2520,7 @@
         <widget class="QCheckBox" name="checkViewT2">
          <property name="geometry">
           <rect>
-           <x>280</x>
+           <x>250</x>
            <y>230</y>
            <width>111</width>
            <height>17</height>
@@ -2500,7 +2536,7 @@
         <widget class="QPushButton" name="btnResetBeginTime">
          <property name="geometry">
           <rect>
-           <x>354</x>
+           <x>320</x>
            <y>220</y>
            <width>131</width>
            <height>23</height>
@@ -2513,7 +2549,7 @@
         <widget class="QCheckBox" name="checkViewConductanceLI">
          <property name="geometry">
           <rect>
-           <x>280</x>
+           <x>250</x>
            <y>190</y>
            <width>111</width>
            <height>17</height>
@@ -3519,7 +3555,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>btnTemperatureCustom</tabstop>
   <tabstop>editBMax</tabstop>
   <tabstop>editBRate</tabstop>
-  <tabstop>editBBias</tabstop>
   <tabstop>btnBStart</tabstop>
   <tabstop>btnBZeroMagnet</tabstop>
   <tabstop>btnBInitMagnet</tabstop>
@@ -3527,7 +3562,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>btnSwitchHeaterOff</tabstop>
   <tabstop>editBMax_2</tabstop>
   <tabstop>editBRate_2</tabstop>
-  <tabstop>editBBias_2</tabstop>
   <tabstop>btnBStart_2</tabstop>
   <tabstop>btnBZeroMagnet_2</tabstop>
   <tabstop>btnBInitMagnet_2</tabstop>

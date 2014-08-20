@@ -33,7 +33,10 @@ try:
 except Exception,e:
     log("Failed to Clear Interface 1",e)
 
-measurement_thread_list = []
+
+def collect_garbage():
+    import gc
+    gc.collect()
 
     
 class Magnet:
@@ -61,12 +64,12 @@ class Magnet:
 
     def start_thread(self, delay=0.2):
         if self.thread_id != None:
-            self.stop = True                # send stop to thread
+            self._stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
             # check if thread exited or timeout occured
             while self.thread_id != None and time.time() < _timeout:
                 pass
-        self.stop = False                   # reset terminate signal
+        self._stop = False                   # reset terminate signal
         # create new thread and insert id
         self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
         log("Thread #%i started"%(self.thread_id))
@@ -223,7 +226,7 @@ class Magnet:
 
     def measurement_thread(self, delay=0.1):
         log("Magnet Thread started!")
-        while not (self.stop or stop):
+        while not (self._stop or stop):
             try:
                 gpib_lock.acquire()
                 #self.magnet.clear()
@@ -272,12 +275,12 @@ class LAKESHORE:
 
     def start_thread(self, delay=0.05):
         if self.thread_id != None:
-            self.stop = True                # send stop to thread
+            self._stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
             # check if thread exited or timeout occured
             while self.thread_id != None and time.time() < _timeout:
                 pass
-        self.stop = False                   # reset terminate signal
+        self._stop = False                   # reset terminate signal
         # create new thread and insert id
         self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
         log("Thread #%i started"%(self.thread_id))
@@ -326,21 +329,40 @@ class LAKESHORE:
         finally:
             gpib_lock.release()
         
-    def set_heater_range(self, range=0):
+    def set_heater_range(self, _range=0):
         """Set the heater range to specified value:
                 0 = off
                 1 = low
                 2 = med
                 3 = high"""
-        self.heater_range = range
+        self.heater_range = _range
         #log('RANGE 1,%i;'%(range))
         try:
             gpib_lock.acquire()
-            self.lakeshore.write('RANGE 1,%i;'%(range))
+            self.lakeshore.write('RANGE 1,%i;'%(_range))
         except Exception,e:
             log("Failed to set heater range",e)
         finally:
             gpib_lock.release()
+    
+    def set_setpoint_ramp(self, ramp=True, output=1, rate=0.1):
+        """Sets the setpoint ramp feature. If turned on, a new setpoint
+           is reached by the given ramp rate
+           ramp = True or False
+           output = 1 or 2
+           rate = 0.1 to 100"""
+        if ramp:
+            ramp = 1 
+        else:
+            ramp = 0
+        try:
+            gpib_lock.acquire()
+            self.lakeshore.write('RAMP %i,%i,%f;'%(output,ramp,rate))
+        except Exception,e:
+            log("Failed to set ramp parameter",e)
+        finally:
+            gpib_lock.release()
+        
     
     def get_heater_range(self):
         """Get the heater range, look @ set"""
@@ -411,7 +433,7 @@ class LAKESHORE:
     
     def measurement_thread(self, delay=0.05):
         log("Temperature Thread started!")
-        while not self.stop or stop:
+        while not (self._stop or stop):
             try:
                 gpib_lock.acquire()
                 temperature1 = float(self.lakeshore.ask('KRDG? A'))            
@@ -589,12 +611,12 @@ class Agilent34410A:
 
     def start_thread(self, delay=0.05):
         if self.thread_id != None:
-            self.stop = True                # send stop to thread
+            self._stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
             # check if thread exited or timeout occured
             while self.thread_id != None and time.time() < _timeout:
                 pass
-        self.stop = False                   # reset terminate signal
+        self._stop = False                   # reset terminate signal
         # create new thread and insert id
         self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
         log("Thread #%i started"%(self.thread_id))
@@ -667,7 +689,7 @@ class Agilent34410A:
     # thread
     def measurement_thread(self, delay=0.05):
         log("Agilent Thread started!")
-        while not self.stop or stop:
+        while not (self._stop or stop):
             try:
                 voltage = self.get()
                 self.data_lock.acquire()
@@ -733,12 +755,12 @@ class ZURICH:
 
     def start_thread(self, delay=0.1):
         if self.thread_id != None:
-            self.stop = True                # send stop to thread
+            self._stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
             # check if thread exited or timeout occured
             while self.thread_id != None and time.time() < _timeout:
                 pass
-        self.stop = False                   # reset terminate signal
+        self._stop = False                   # reset terminate signal
         # create new thread and insert id
         self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
         log("Thread #%i started"%(self.thread_id))
@@ -898,7 +920,7 @@ class ZURICH:
 
         try:
             self.daq.flush()
-            while not (self.stop or stop):
+            while not (self._stop or stop):
                 try:
                     dataDict = self.daq.poll(0.05,100,0,True)
                     # acquire lock
@@ -1083,17 +1105,19 @@ class MOTOR:
         self.data["position"] = []
         self.data["current"] = []
         self.data["velocity"] = []
+        self.higher_bound = False
+        self.lower_bound = False
         self.thread_id = None
         self.start_thread()
 
     def start_thread(self, delay=0.1):
         if self.thread_id != None:
-            self.stop = True                # send stop to thread
+            self._stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
             # check if thread exited or timeout occured
             while self.thread_id != None and time.time() < _timeout:
                 pass
-        self.stop = False                   # reset terminate signal
+        self._stop = False                   # reset terminate signal
         # create new thread and insert id
         self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
         log("Thread #%i started"%(self.thread_id))
@@ -1126,12 +1150,13 @@ class MOTOR:
         self.motor.write('EN')
     
     def stop(self):
-        """stop the motor (5x)"""
-        for i in range(5):
+        """stop the motor (3x)"""
+        for i in range(3):
             self.set_velocity(0)
 
     def get_pos(self):
-        """return actual motor position of its encoder"""
+        """return actual motor position of its encoder
+            in encoder steps"""
         return self._mpos
 
     def get_real_pos(self, counts=None):
@@ -1218,7 +1243,7 @@ class MOTOR:
     def measurement_thread(self, delay=0.05):
         log("Motor Thread started!")
         speed_check_count = 0
-        while not (self.stop or stop):
+        while not (self._stop or stop):
             try:            
                 answer = self.motor.ask('GN')   # update speed            
                 self._v=float(answer.strip())
@@ -1435,8 +1460,6 @@ thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())
 #thread.start_new_thread(agilent_34401a_starter,())
 
-#a = time.time()
-#while (time.time() < a+10) and 
 log("Device Threads Initalized")
 
 

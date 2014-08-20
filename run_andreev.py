@@ -28,6 +28,9 @@ from functions import *
 import initialize,refresh_display,gui_helper
 import hdf5_interface as hdf
 
+def collect_garbage():
+    import gc
+    gc.collect()
 
 class main_program(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -156,6 +159,8 @@ class main_program(QtGui.QMainWindow):
     
         log("Histogram Start")
         breaking = True         # sets direction of motor
+        cold_timer = 0
+        histo_sleep = 0.1
         
         self.begin_time_histogram = time.time()
         if not self.f_config == None:
@@ -167,24 +172,36 @@ class main_program(QtGui.QMainWindow):
                     resistance = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
                     lower_res = float(self.form_data["editHistogramLower"])
                     upper_res = float(self.form_data["editHistogramUpper"])
+                    cold_time = float(self.form_data["editHistogramColdTime"])
                     bias = self.editHistogramBias
-                    DEV.yoko.set_voltage(bias)
+                    if not self.offset_in_progress:
+                        DEV.yoko.set_voltage(bias)
                     
-                    # if conductance hits upper limit, close again
-                    if resistance > upper_res:            
-                        if breaking == True: 
-                            self.begin_time_histogram = time.time()
-                            if not self.f_config == None:
-                                self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(self.begin_time_histogram))
-                        breaking = False
+                    # if sample broken
+                    if resistance > upper_res:  
+                        # check for cold_time timeout
+                        if cold_timer > 0:
+                            cold_timer -= histo_sleep
+                        else:   # if timeout expired
+                            if breaking == True: 
+                                self.begin_time_histogram = time.time()
+                                if not self.f_config == None:
+                                    self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(self.begin_time_histogram))
+                            breaking = False    # if resistance high -> CLOSE
                         
-                    # at lower limit, break again, in between: set speed
+                    # if sample closed
                     if resistance < lower_res:
-                        if breaking == False: 
-                            self.begin_time_histogram = time.time()
-                            if not self.f_config == None:
-                                self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(self.begin_time_histogram))   
-                        breaking = True
+                        if cold_timer > 0:
+                            cold_timer -= histo_sleep
+                        else:   # if timeout expired
+                            if breaking == False: 
+                                self.begin_time_histogram = time.time()
+                                if not self.f_config == None:
+                                    self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(self.begin_time_histogram))   
+                            breaking = True     # if resistance low -> BREAK
+                    
+                    if resistance < upper_res and resistance > lower_res:
+                        cold_timer = cold_time
                     
                     if breaking:
                         gui_helper.motor_break(int(self.form_data["editHistogramOpeningSpeed"]), quiet=True)
@@ -207,7 +224,7 @@ class main_program(QtGui.QMainWindow):
                             breaking = False
                 except Exception,e:
                     log("Histogram inner failure",e)
-                time.sleep(0.1) 
+                time.sleep(histo_sleep) 
         except Exception,e:
             log("Histogram outer failure",e)
         finally:
@@ -349,7 +366,8 @@ class main_program(QtGui.QMainWindow):
           
                 last_engage = last_engage + ultra_sleep # increase variable only when not in action
                 bias = float(self.form_data["editHistogramBias"])
-                DEV.yoko.set_voltage(bias)
+                if not self.offset_in_progress:
+                    DEV.yoko.set_voltage(bias)
                 # if conductance hits upper limit, close again
                 if resistance > upper_res:            
                     if breaking == True: 
@@ -426,7 +444,7 @@ class main_program(QtGui.QMainWindow):
             _max = _max / sample_factor
 
         # range maximum protection
-        _voltage_limits = 3.0
+        _voltage_limits = 5.0
         _min = max(-_voltage_limits, min(_min, _voltage_limits))
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
                 
@@ -846,12 +864,12 @@ class main_program(QtGui.QMainWindow):
                         print "IPS set to %f T"%(fields[field_index])
                         field_index += 1
                 try:
-                    DEV.yoko.display_set_text("%fV %2.1fT"
-                        %(round_to_digits(DEV.yoko.get_voltage,2),
-                          self.data["ips_mfield"][-1]))
-                    #DEV.yoko.display_set_text("%2.1fT %2.1fT %i"%(1.2,3.3,32))
+                    DEV.yoko.display_set_text("%f mV\n%2.1f mT"
+                        %(round(DEV.yoko.get_voltage()*1e3),
+                          round(self.data["ips_mfield"][-1]*1e3))
+                          )
                 except Exception,e:
-                    log("Failed to Update Yoko Display")
+                    log("Failed to Update Yoko Display",e)
                 
             if _axes == 2:
                 if DEV.magnet_2.field_reached():
@@ -1237,7 +1255,7 @@ class main_program(QtGui.QMainWindow):
         try:
             params = self.data.copy()
             params.update(DEV.lockin.get_param())
-            params_str = "PARAMS,%i:"%(len(params))
+            params_str = "PARAMS:%i,"%(len(params))
             for k,v in params.items():
                 if len(v) > 0:
                     params_str += ("%s:%s,"%(str(k),str(v[-1])))

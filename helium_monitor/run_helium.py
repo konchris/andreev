@@ -91,12 +91,13 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             self.levelmeter = None
             functions.log("TWICKENHAM",e)
-        if not self.levelmeter == None:
+            
+        """if not self.levelmeter == None:
             try:
                 self.levelmeter = ILM210()
             except:
                 self.levelmeter = None
-                functions.log("ILM210",e)
+                functions.log("ILM210",e)"""
         
         
     def level_to_liter(self, level=None):
@@ -120,16 +121,19 @@ class main_program(QtGui.QMainWindow):
         try:
             adding_volume = self.arduino.read_volume()
             self.volume += adding_volume
+            
             self.ui.labelVolume.setText("%i L"%(self.volume))
         except Exception,e:
             functions.log("Failed to update Volume",e)
         
-        if False:#not self.levelmeter == None:
+        if True:#not self.levelmeter == None:
             try:
-                #self.level = self.levelmeter.read_volume()
-                print self.level
+                self.level = self.levelmeter.read_volume()
+                #print self.level
+                rem_seconds = self.level_to_liter()/0.35*3600.0
+                str_warm = time.strftime("%a %Hh", time.localtime(time.time() + rem_seconds))
                 self.ui.labelLevelMeter.setText("%i mm"%(self.level)) 
-                self.ui.labelLevelMeter_2.setText("%2.1f L"%(self.level_to_liter())) 
+                self.ui.labelLevelMeter_2.setText("%2.1f L, %s"%(self.level_to_liter(),str_warm)) 
             except Exception,e:
                 functions.log("Failed to update Level",e)
         else:
@@ -258,7 +262,11 @@ class TWICKENHAM:
     def read_volume(self):
         try:
             answer = self.twickenham.ask("G")
-            answer = int(answer[3:6])
+            print answer
+            for i in range(len(answer)):
+                if answer[i] == "0":
+                    answer = int(answer[i:i+4])
+                    break
         except Exception,e:
             answer = 0
             print ("Twickenham Error while gathering Volume",e)

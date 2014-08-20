@@ -207,10 +207,18 @@ def set_temp_parameters():
         p = float(_self.ui.editTempP.text())
         i = float(_self.ui.editTempI.text())
         d = float(_self.ui.editTempD.text())
-        
+        ramp = abs(float(_self.form_data["editTempRamp"]))
+                
+        if ramp < 0.1:
+            DEV.lakeshore.set_setpoint_ramp(ramp=False, output=1)
+        else:
+            DEV.lakeshore.set_setpoint_ramp(ramp=True, output=1, rate=ramp)
+            
         DEV.lakeshore.set_setpoint(setpoint)
         DEV.lakeshore.set_heater_range(heater)
         DEV.lakeshore.set_pid(p,i,d)
+        
+        
     except Exception,e:
         log("New Temp was not accepted",e)
         
