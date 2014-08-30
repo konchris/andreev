@@ -229,8 +229,6 @@ def init_variables(_self):
     # holds some config data like offset
     _self.config_data = {}
 
-    _self.config_data["offset_agilent_voltage"] = 0
-    _self.config_data["offset_agilent_current"] = 0
     _self.config_data["lockin_phases"] = [0,0,0,0]
     _self.config_data["main_index"] = 0
     _self.config_data["sub_index"] = 0
@@ -238,8 +236,9 @@ def init_variables(_self):
     # holds all the fields and boxes of the form with recent values
     _self.form_data = {}
     
-    _self.ui.editOffsetVoltage.setText(str(0.0))
-    _self.ui.editOffsetCurrent.setText(str(0.0))
+    # amplifiers
+    _self.config_data["offset_agilent_voltage"] = float(_self.ui.editOffsetVoltage.text())
+    _self.config_data["offset_agilent_current"] = float(_self.ui.editOffsetCurrent.text())
     
     _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
     _self.factor_current = float(_self.ui.editFactorCurrent.text())

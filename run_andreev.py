@@ -49,6 +49,8 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             print e            
             log("Can't read config file")
+        
+        
             
                 
         # initialize.py - most of long initializations 
@@ -187,7 +189,11 @@ class main_program(QtGui.QMainWindow):
                                 self.begin_time_histogram = time.time()
                                 if not self.f_config == None:
                                     self.f_config.write("HISTOGRAM_CLOSE\t%15.15f\n"%(self.begin_time_histogram))
+                                self.config_data["main_index"] += 1
+                                log("Main Index %i"%(self.config_data["main_index"]))
+                                self.config_data["sub_index"] = 0
                             breaking = False    # if resistance high -> CLOSE
+                            
                         
                     # if sample closed
                     if resistance < lower_res:
@@ -198,6 +204,8 @@ class main_program(QtGui.QMainWindow):
                                 self.begin_time_histogram = time.time()
                                 if not self.f_config == None:
                                     self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(self.begin_time_histogram))   
+                                self.config_data["main_index"] += 1
+                                self.config_data["sub_index"] = 0
                             breaking = True     # if resistance low -> BREAK
                     
                     if resistance < upper_res and resistance > lower_res:
@@ -362,7 +370,6 @@ class main_program(QtGui.QMainWindow):
                         else:
                             log("Resuming Ultra")
                      
-                #print "wherever"
           
                 last_engage = last_engage + ultra_sleep # increase variable only when not in action
                 bias = float(self.form_data["editHistogramBias"])

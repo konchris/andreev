@@ -622,16 +622,12 @@ class Agilent34410A:
         log("Thread #%i started"%(self.thread_id))
 
     def initializeVOLTDC(self, NPLC=2, DISPLAY ="ON"):
-        #self.Agilent.write('*RST')
         self.Agilent.write('*CLS')
-        self.Agilent.write('CONF:VOLT:DC 10') # was 2
-        #self.Agilent.write('DISP '+DISPLAY)
+        self.Agilent.write('CONF:VOLT:DC 10')
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         self.Agilent.write('FUNC "VOLT:DC"')
-        self.Agilent.write('VOLT:DC:RANG:AUTO ON') # manual range?
-        #inst=self.Agilent.ask('*IDN?')
-        #print('%s ... initialized'%str(inst))
-        #print "alias Agilent 34410A"FRESistance
+        self.Agilent.write('VOLT:DC:RANG:AUTO ON')
+
     
     def initialize4WIREOHM(self, NPLC=2, DISPLAY ="ON"):
         self.Agilent.write('FUNC "FRES"')
@@ -643,23 +639,16 @@ class Agilent34410A:
     def set_nplc(self, NPLC=10,):
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         
-    def initializeVOLTDCarray(self, NPLC=0.2, DISPLAY ="OFF"):
-        self.Agilent.write('*RST')
+    def initializeVOLTDCarray(self, NPLC=0.2):
+        #self.Agilent.write('*RST')
         self.Agilent.write('*CLS')
-        #Agilent.write('*ESE 1')
-        #Agilent.write('*SRE 32')
-        #Agilent.write('*OPC?')
-        self.Agilent.write('CONF:VOLT:DC 2')
-        self.Agilent.write('DISP '+DISPLAY)
+        self.Agilent.write('CONF:VOLT:DC 10')
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         self.Agilent.write('FUNC "VOLT:DC"')
         self.Agilent.write('VOLT:DC:RANG:AUTO ON')
-        inst=self.Agilent.ask('*IDN?')
         self.Agilent.write('TRIG:SOUR IMM')        
         self.Agilent.write('TRIG:COUN 1')        
         self.Agilent.write('SAMP:COUN 1')
-        print('%s ... initialized'%str(inst))
-        print "alias Agilent 34410A"
 
     def initArray(self, value):
         self.Agilent.write('TRIG:SOUR IMM')        
@@ -667,9 +656,18 @@ class Agilent34410A:
         self.Agilent.write('SAMP:COUN ' + str(value))
         
     def get_array(self):
+        """Sets Agilent to wait for (auto) trigger and reads"""
         self.Agilent.write('INIT')
         return (self.Agilent.ask("FETC?"))
-        
+    
+    def stop_measurements(self):
+        """Stops measurements and goes to idle-state"""
+        self.Agilent.write('ABOR')
+    
+    def get_memory(self):
+        """Returns what is in the memory"""
+        answer = self.Agilent.ask("FETC?")
+        return answer
 
         # data handling
     def get_data_list(self, erase=True):

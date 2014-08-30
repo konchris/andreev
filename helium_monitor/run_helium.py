@@ -126,7 +126,7 @@ class main_program(QtGui.QMainWindow):
         except Exception,e:
             functions.log("Failed to update Volume",e)
         
-        if True:#not self.levelmeter == None:
+        if False:#not self.levelmeter == None:
             try:
                 self.level = self.levelmeter.read_volume()
                 #print self.level
