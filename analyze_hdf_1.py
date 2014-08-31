@@ -15,9 +15,6 @@ import scipy.constants as const
 
 from functions_evaluate import *
 
-g0 = const.elementary_charge**2*2.0/const.h
-r0 = 1/g0
-
     
 
 ################################
@@ -25,13 +22,14 @@ r0 = 1/g0
 ################################
 
 db = 0
-rref = 104000.0
 
-filename = r"140809_Pb180_Histo_03"
-filename = r"140810_Pb180_Histo_04"
-filename = r"140812_Pb180_Histo_08"
+#filename = r"140809_Pb180_Histo_03"
+#filename = r"140810_Pb180_Histo_04"
+#filename = r"140812_Pb180_Histo_08"
+filename = r"140826_Pb189_Histo_02"
+filename = r"140828_Pb189_Histo_03"
 base_path = os.path.join("Z:\dweber\data_p5",filename)
-total_path = os.path.join(base_path,'db_%i.h5'%(db))
+total_path = [os.path.join(base_path,'db_%i.h5'%(db))]
 config_path = os.path.join(base_path,'config.txt')
 
 """
@@ -45,7 +43,6 @@ for f in filename:
           os.path.join(r"Z:\dweber\data_p5",f,'config.txt')
         ] )
 """
-
 
 pl.close("all")
 
@@ -63,134 +60,19 @@ if skip_loading:
 else:
     last_loading_successfull = False
     print "Loading %s"%total_path
-    
-    
-    h5file = tables.openFile(total_path, mode = "r")
-    tab_v = h5file.root.voltages.ch_0
-    tab_i = h5file.root.voltages.ch_1
-    tab_li_0 = h5file.root.lockin.ch_0
-    tab_li_1 = h5file.root.lockin.ch_1
-    tab_li_3 = h5file.root.lockin.ch_3
-    tab_li_4 = h5file.root.lockin.ch_4
-    tab_motor = h5file.root.motor.data
-    tab_magnet_0 = h5file.root.magnet.ch_0
-    tab_magnet_1 = h5file.root.magnet.ch_1
-    tab_temperature = h5file.root.temperature.data
-    
-    ################################
-    # AGILENT ######################
-    ################################
-    
-    _tab_v = tab_v[:]
-    voltage_t,voltage_v = zip(*_tab_v)
-    
-    _tab_i = tab_i[:]
-    current_t,current_v = zip(*_tab_i)
- 
-    v_raw = [voltage_t, voltage_v]
-    i_raw = [current_t, current_v]
-    print "Voltages after %is"%(time.time()-_time)
-    _time = time.time()
-    
-    x_list = np.arange(v_raw[0][0],v_raw[0][-1],0.1)
-    voltage = interpolate(x_list, v_raw)
-    current = interpolate(x_list, i_raw, rref)
-    
-    
-    ################################
-    # LOCKIN #######################
-    ################################
-
-    raw_ch_0_t,raw_ch_0_x,raw_ch_0_y = zip(*tab_li_0[:])  
-    raw_ch_1_t,raw_ch_1_x,raw_ch_1_y = zip(*tab_li_1[:])
-    raw_ch_3_t,raw_ch_3_x,raw_ch_3_y = zip(*tab_li_3[:])
-    raw_ch_4_t,raw_ch_4_x,raw_ch_4_y = zip(*tab_li_4[:])
-    
-    ch_0_x = interpolate(x_list, (raw_ch_0_t,raw_ch_0_x))
-    ch_0_y = interpolate(x_list, (raw_ch_0_t,raw_ch_0_y))
-    ch_1_x = interpolate(x_list, (raw_ch_1_t,raw_ch_1_x))
-    ch_1_y = interpolate(x_list, (raw_ch_1_t,raw_ch_1_y))
-    ch_3_x = interpolate(x_list, (raw_ch_3_t,raw_ch_3_x),rref)
-    ch_3_y = interpolate(x_list, (raw_ch_3_t,raw_ch_3_y),rref)
-    ch_4_x = interpolate(x_list, (raw_ch_4_t,raw_ch_4_x),rref)
-    ch_4_y = interpolate(x_list, (raw_ch_4_t,raw_ch_4_y),rref)
-    ch_0_r = np.sqrt(np.array(ch_0_x)**2 + np.array(ch_0_y)**2)
-    ch_1_r = np.sqrt(np.array(ch_1_x)**2 + np.array(ch_1_y)**2)
-    ch_3_r = np.sqrt(np.array(ch_3_x)**2 + np.array(ch_3_y)**2)
-    ch_4_r = np.sqrt(np.array(ch_4_x)**2 + np.array(ch_4_y)**2)
-    ch_0_theta = np.rad2deg(np.arctan(np.array(ch_0_x/ch_0_y)))
-    ch_1_theta = np.rad2deg(np.arctan(np.array(ch_1_x/ch_1_y)))
-    ch_3_theta = np.rad2deg(np.arctan(np.array(ch_3_x/ch_3_y)))
-    ch_4_theta = np.rad2deg(np.arctan(np.array(ch_4_x/ch_4_y)))    
-    
-    print "Lockin after %is"%(time.time()-_time)
-    _time = time.time()
-    
-    ################################
-    # MOTOR ########################
-    ################################
-
-    raw_position,motor_t,raw_velocity = zip(*tab_motor[:])  
-    position = interpolate(x_list, [motor_t, raw_position])   
-    #print motor_t[0:100], raw_position[0:100], raw_velocity[0:100]
-    velocity = interpolate(x_list, [motor_t, raw_velocity])   
-    
-    print "Motor after %is"%(time.time()-_time)
-    _time = time.time()
-    
-    ################################
-    # TEMPERATURE ###################
-    ################################
-
-    temperature_t,raw_pot,raw_sample = zip(*tab_temperature[:])  
-    print "Temperature after %is"%(time.time()-_time)
-    _time = time.time()
-    
-    ################################
-    # MAGNET #######################
-    ################################
-
-    if len(tab_magnet_0) > 0:
-        magnet_0_t,raw_field_0 = zip(*tab_magnet_0[:])
-    #else:
-    #    magnet_0_t,raw_field_0 = [[],[]]
-    if len(tab_magnet_1) > 0:
-        magnet_1_t,raw_field_1 = zip(*tab_magnet_1[:])  
-    #else:
-    #    magnet_1_t,raw_field_1 = [[],[]]
-    print "Magnet after %is"%(time.time()-_time)
-    _time = time.time()
-    
-    last_loading_successfull = True
 
 
-
-cond = abs(current/voltage*r0)
-di_dv = ch_3_r/ch_0_r*r0
-d2i_dv2 = ch_4_r/ch_1_r*r0
-
-print "Calc after %is"%(time.time()-_time)
-_time = time.time()
-
-#pl.hold(True)
-#fig_overview = pl.figure(figsize=(18,12), dpi=72)
-#fig.subplots_adjust(hspace = 0.35, wspace = 0.6)
-#pl_a = fig_overview.add_subplot(2,2,1)
-#pl_b = fig_overview.add_subplot(2,2,2)
-#pl_c = fig_overview.add_subplot(2,2,3)
-#pl_d = fig_overview.add_subplot(2,2,4)
-#pl_a.plot(v_raw[0][:],v_raw[1][:],'r')
-#pl_a.plot(i_raw[0][:],i_raw[1][:],'k')
-#pl_b.plot(x_list,cond,'k')
-
-#pl.show()
-
-
+data_packages = []
+for file_total in total_path:
+    #print file_total
+    data_packages.append(HDF_DATA(file_total))
+    
+    
 
 ###########################################################################
 # SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP #
 ###########################################################################
-split_up_ivs = True
+split_up_ivs = False
 try:  
     # splitting up the config file for sweeps, histograms, etc.
     print "Loading %s"%config_path
@@ -479,18 +361,16 @@ if split_up_ivs:
         """
 
 if True:
-    #fig_overview = pl.figure(figsize=(12,12), dpi=72)
-    #fig_overview.subplots_adjust(hspace = 0.35, wspace = 0.6)
-    #ov_histogram = fig.add_subplot(1,1,1) # fig.gca()
     ov_plot = pl.figure()
     ov_hist = ov_plot.add_subplot(1,1,1)
-    #ov_hist.hist(cond, bins=np.linspace(0, 5, 200))
-    ov_hist.hist(cond, log=False, bins=np.logspace(-4, 1, 150))
-    ov_hist.set_xscale("log")
-    #pl.hist(cond, bins=np.linspace(0, 5, 100))
-    #ov_histogram.hist(cond, bins=np.linspace(0, 5, 100))
-    #ov_histogram.grid()
-    #fig_overview.show()
+    
+    if True:   # log
+        ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.logspace(-4,3, 100))  
+        ov_hist.set_xscale("log")
+    else:
+        ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.linspace(0.0,15, 45))
+        ov_hist.set_xscale("linear")
+
     
 
 """ old
