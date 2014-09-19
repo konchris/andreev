@@ -598,8 +598,10 @@ class Agilent34410A:
         """Agilent 34410A"""
         self.label = label
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
-        self.initializeVOLTDC(2)
+        
+        #self.initializeVOLTDC(2)
         #self.initialize4WIREOHM()
+        self.initializeVOLTDCarray(2)
         
         self.data = {}
         self.data_lock = thread.allocate_lock()
@@ -609,7 +611,7 @@ class Agilent34410A:
         self.thread_id = None
         self.start_thread()
 
-    def start_thread(self, delay=0.05):
+    def start_thread(self, delay=0.25):
         if self.thread_id != None:
             self._stop = True                # send stop to thread
             _timeout = time.time()+1        # timeout = 1s
@@ -636,11 +638,24 @@ class Agilent34410A:
     def get(self):
         return float(self.Agilent.ask("READ?"))
     
-    def set_nplc(self, NPLC=10,):
+    def get_errors(self):
+        i = 10
+        while i > 0:
+            try:
+                answer = self.yoko.ask(":SYST:ERR?")
+                print answer
+                if answer[0] == "0":
+                    i = 0
+            except Exception,e:
+                print "Yoko no Status Answer"
+                print e
+            finally:
+                i = i-1
+    
+    def set_nplc(self, NPLC=10):
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
         
-    def initializeVOLTDCarray(self, NPLC=0.2):
-        #self.Agilent.write('*RST')
+    def initializeVOLTDCarray(self, NPLC=2):
         self.Agilent.write('*CLS')
         self.Agilent.write('CONF:VOLT:DC 10')
         self.Agilent.write('VOLT:DC:NPLC '+str(NPLC))
@@ -648,25 +663,19 @@ class Agilent34410A:
         self.Agilent.write('VOLT:DC:RANG:AUTO ON')
         self.Agilent.write('TRIG:SOUR IMM')        
         self.Agilent.write('TRIG:COUN 1')        
-        self.Agilent.write('SAMP:COUN 1')
-
-    def initArray(self, value):
-        self.Agilent.write('TRIG:SOUR IMM')        
-        self.Agilent.write('TRIG:COUN 1')        
-        self.Agilent.write('SAMP:COUN ' + str(value))
+        self.Agilent.write('SAMP:COUN 20000')
         
-    def get_array(self):
-        """Sets Agilent to wait for (auto) trigger and reads"""
-        self.Agilent.write('INIT')
-        return (self.Agilent.ask("FETC?"))
+    def send_init(self):
+        """Sets Instrument to WAIT FOR TRIGGER"""
+        self.Agilent.write("INIT")
     
     def stop_measurements(self):
-        """Stops measurements and goes to idle-state"""
+        """Stops measurements and goes to IDLE-state"""
         self.Agilent.write('ABOR')
     
     def get_memory(self):
         """Returns what is in the memory"""
-        answer = self.Agilent.ask("FETC?")
+        answer = self.Agilent.ask("R?")
         return answer
 
         # data handling
@@ -687,17 +696,28 @@ class Agilent34410A:
     # thread
     def measurement_thread(self, delay=0.05):
         log("Agilent Thread started!")
+        last_time = time.time() # reset time variable
+        self.send_init()    # starts auto triggering
         while not (self._stop or stop):
-            try:
-                voltage = self.get()
+            try:               
+                voltage = self.get_memory()
+                                
+                voltages = [float(x) for x in voltage[2+int(voltage[1]):].split(",")]
+                times = np.linspace(last_time, time.time(), len(voltages), endpoint=False)
+                last_time = time.time()
+                
                 self.data_lock.acquire()
-                self.data["timestamp"].append(time.time())
-                self.data["voltage"].append(voltage)
+                self.data["timestamp"].extend(times)
+                self.data["voltage"].extend(voltages)
                 self.data_lock.release()
-            except:
-                log("34410a Measurement Thread")
+            except Exception,e:
+                self.send_init()
+                log("34410a Measurement Thread",e)
                     
             time.sleep(delay)
+        # send abort
+        self.stop_measurements()
+        
         # indicate that thread terminated 
         log("Thread #%i finished"%(self.thread_id))
         self.thread_id = None

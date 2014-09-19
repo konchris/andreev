@@ -202,6 +202,7 @@ def refresh_display():
             _self.ui.cw1.plot.do_autoscale()
         except Exception,e:
             log("Displaying Voltage/Current",e)
+            #print _self.data["agilent_voltage_voltage"]
         
         
         # 3 + 4

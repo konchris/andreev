@@ -73,6 +73,7 @@ class HDF_DATA:
         _time = time.time()
             
         self.h5file = tables.openFile(filename, mode="r")
+
         tab_v = self.h5file.root.voltages.ch_0
         tab_i = self.h5file.root.voltages.ch_1
         tab_li_0 = self.h5file.root.lockin.ch_0
@@ -89,6 +90,7 @@ class HDF_DATA:
         ################################
         
         _tab_v = tab_v[:]
+        
         voltage_t,voltage_v = zip(*_tab_v)
         
         _tab_i = tab_i[:]
@@ -152,7 +154,8 @@ class HDF_DATA:
         # TEMPERATURE ###################
         ################################
     
-        temperature_t,raw_pot,raw_sample = zip(*tab_temperature[:])  
+        #print zip(*tab_temperature[:]) 
+        raw_pot,raw_sample,temperature_t = zip(*tab_temperature[:])  
         self.t_sample = interpolate(self.x_list, [temperature_t, raw_sample])
         self.t_pot = interpolate(self.x_list, [temperature_t, raw_pot])
         

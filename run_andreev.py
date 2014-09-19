@@ -39,6 +39,7 @@ class main_program(QtGui.QMainWindow):
         self.ui.setupUi(self)
         DEV.app = app
         
+       
         initialize._self = self
         refresh_display._self = self
         gui_helper._self = self

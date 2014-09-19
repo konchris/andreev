@@ -26,9 +26,10 @@ db = 0
 #filename = r"140809_Pb180_Histo_03"
 #filename = r"140810_Pb180_Histo_04"
 #filename = r"140812_Pb180_Histo_08"
-filename = r"140826_Pb189_Histo_02"
-filename = r"140828_Pb189_Histo_03"
+#filename = r"140826_Pb189_Histo_02"
+filename = r"140911_Pb216_Tc"
 base_path = os.path.join("Z:\dweber\data_p5",filename)
+base_path = os.path.join("C:\data_p5",filename)
 total_path = [os.path.join(base_path,'db_%i.h5'%(db))]
 config_path = os.path.join(base_path,'config.txt')
 
@@ -360,7 +361,7 @@ if split_up_ivs:
         i += 1
         """
 
-if True:
+if False:
     ov_plot = pl.figure()
     ov_hist = ov_plot.add_subplot(1,1,1)
     
@@ -370,6 +371,17 @@ if True:
     else:
         ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.linspace(0.0,15, 45))
         ov_hist.set_xscale("linear")
+
+if True:
+    plot_t = pl.figure()
+    plot_t_1 = plot_t.add_subplot(2,1,1)
+    plot_t_2 = plot_t.add_subplot(2,1,2)
+    von = 3000
+    bis = 24000
+    plot_t_1.plot(data_packages[0].t_sample[von:bis], data_packages[0].cond[von:bis])
+    plot_t_2.plot(data_packages[0].cond)
+    plot_t_1.set_ylim([0,2000])
+    plot_t_2.set_ylim([0,2000])
 
     
 
