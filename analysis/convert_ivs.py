@@ -15,7 +15,7 @@ iv_path = r"C:\Users\David Weber\Desktop\Pb216"
 
 iv_files = os.listdir(iv_path)
 for iv_file in iv_files:
-    if iv_file.split(".")[-1] == "txt":
+    if iv_file.split(".")[-1] == "txt" and iv_file[0:3] != "out":
         print iv_file
         iv_filename = os.path.join(iv_path,iv_file)
         
@@ -26,4 +26,4 @@ for iv_file in iv_files:
         
         iv_output = os.path.join(iv_path,"out_"+iv_file)
         scipy.savetxt(iv_output, np.transpose([v,i]), fmt="%10.10f", delimiter="\t")
-        break
+        
