@@ -1,7 +1,6 @@
 ﻿import os
 import scipy
 import numpy as np
-#import glob
 
 
 class MAR:
@@ -79,9 +78,9 @@ class MAR:
             mar+=self.Ty[i]*p
         return mar
 
-    def fit(self, messung, iter=10, chanels=8, gap=180, punkte=400, Vmin=.15, Vmax=5.5 , ErrRef=1.0E-10, KickOff=0.0001, Strength=0.01, verbose=True, ReturnError=False):
+    def fit(self, messung, iter=10, channels=8, gap=180, punkte=400, Vmin=.15, Vmax=5.5 , ErrRef=1.0E-10, KickOff=0.0001, Strength=0.01, verbose=True, ReturnError=False):
         """messung: Messkurve vom Typ xy (nur monotone x-Werte)
-        chanels: Maximalzahl von Kanälen oder Anfangsverteilung als Liste
+        channels: Maximalzahl von Kanälen oder Anfangsverteilung als Liste
         gap: die zur Umrechnung verwendete Bandlücke in µeV
         punkte: Anzahl Punkte der Kurven (interpoliert)
         Vmin: untere Grenze fürs Fitten in Einheiten der Bandlücke
@@ -121,13 +120,13 @@ class MAR:
         #my = m[1]
 
         #Algorithmus nach AevCarlo
-        if type(chanels) is int:
-            TNew=rand(chanels)
+        if type(channels) is int:
+            TNew=rand(channels)
         else:
-            TNew=np.asarray(chanels,dtype='d')
-            chanels=len(chanels)
-        ch0=np.zeros(chanels,dtype='d')
-        ch1=np.ones(chanels,dtype='d')
+            TNew=np.asarray(channels,dtype='d')
+            channels=len(channels)
+        ch0=np.zeros(channels,dtype='d')
+        ch1=np.ones(channels,dtype='d')
         ErrNow=ErrBest=mean(square(kanal(TNew)-my))
         TBest=TNow=TNew
 
@@ -144,183 +143,17 @@ class MAR:
             # Check if new fit is the best one; if so, set best fit result
             if ErrNow<ErrBest: TBest,ErrBest=TNow,ErrNow 
             #Construct a new randomly changed temptative IV
-            TNew=TNow+Strength*uniform(-1,1,chanels)
+            TNew=TNow+Strength*uniform(-1,1,channels)
             TNew=maximum(TNew,ch0)
             TNew=minimum(TNew,ch1)
             #if n%50==0: fxy.append(n, xy.math.log(ErrNow,10))
             if verbose:
-                if n%10000==0: print str(n)+': Error=',ErrBest
+                if n%2500==0: print str(n)+': Error=',ErrBest
         TBest.sort()
         TBest=TBest[::-1]
         return (TBest, ErrBest) if ReturnError else TBest
 
 # initialize fitting by loading all theoretical ivs
 #mar=MAR('.\\t_4k_0_33\\')
-#mar=MAR('.\\t_0k\\')
-mar=MAR('.\\t_4k_0_25\\')
-# set the gap size
-_gap = 1370
-_punkte = 400
-_vmin = 0.1
-_vmax = 3.3
-_iterations = 5000
-_max_channels = 4
-additional_info = False
-show_plots = False
-
-iv_dir = r"C:\Users\David Weber\Desktop\Pb216\\"
-iv_files = []
-for _file in os.listdir(iv_dir):
-    if _file.endswith(".txt"):
-        if not _file.startswith("out"):
-            iv_files.append(_file)
-iv_files.sort()
-print "Found %i IV-Files."%(len(iv_files))
-#print iv_files
-
-for iv_file in iv_files[:]:
-
-    loaded_data = scipy.loadtxt(os.path.join(iv_dir,iv_file),unpack=True, skiprows=2)
-    
-    # aquire parameters from file
-    f = open(os.path.join(iv_dir,iv_file))
-    line = f.readline()
-    parameters =  [x.split(":") for x in line.split(",")]
-    params = {}
-    for x in parameters:
-        if len(x) == 2:
-            params[x[0]] = x[1]
-    #print params
-    
-    print "\nProcessing %s"%iv_file
-    u = loaded_data[1]
-    i = loaded_data[2]
-    u_min = np.argmin(abs(u))
-    
-    
-    import pylab
-    pylab.close("all")
-    pylab.plot(u,i)
-    ax = pylab.gca()
-    ax.set_xlim([-0.01,0.01])
-    ax.grid()
-    pylab.show()
-    
-    if u[0] < u[-1]:
-        u = u[u_min:]
-        i = i[u_min:]
-    else:
-        u = u[u_min:0:-1]
-        i = i[u_min:0:-1]
-    
-    print "Max: %5.2f Delta" %(u[-1]/_gap*1e6)
-    if u[-1]/_gap*1e6 < _vmax:
-        print "Voltage Span is not large enough %f < %f"%(u[-1]/_gap*1e6,_vmax)
-    
-    i = np.array(i)/104000.0
-    
-    outer_gap_index = next(x[0] for x in enumerate(u) if x[1] > 3*_gap/1e6)
-    #print outer_gap_index
-    p = np.polyfit(u[outer_gap_index:], i[outer_gap_index:], 1)
- 
-    i_linear = np.polyval(p,u[:])
-    
-    mar1 = np.array([u,i])
-    
-    c = mar.fit(messung=mar1, iter=_iterations, chanels=_max_channels, gap=_gap, punkte=_punkte, Vmin=_vmin, Vmax=_vmax, ErrRef=1E-10, KickOff=0.002, Strength=0.2); c #was gap=180 # kickoff 2e-4 # strength=0.1
-    fit = mar.kanalf(c, _gap, _punkte, 0, _vmax)
-    
-    import pylab
-    import brewer2mpl
-    from matplotlib.patches import Rectangle
-    
-    pylab.close("all")
-    
-    set2 = brewer2mpl.get_map('Paired', 'qualitative', 8).mpl_colors
-    extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)  #empty rectangle for legend
-    i_factor = 1e6
-    u_factor = 1e3/_gap*1e3 # _gap*1e3 for gap units
-    no_channel = 5e-2       # transmission indicating no real channel anymore
-    pos_x,pos_y = 0.5,1.0
-    
-    
-    pylab.axes()
-    ax1 = pylab.gca()
-    
-    #ax3 = ax1.twiny()
-    #ax3.set_xlabel("U ($\Delta$)")
-    
-    ax1.set_xlabel("U ($\Delta$)")
-    ax1.set_ylabel("I ($\mu$A)")
-    ax1.set_title("MAR")
-    ax1.hold("False")
-    pl_fit = ax1.plot(fit[0]*u_factor, fit[1]*i_factor, color = set2[1], linewidth=2,label="Fit %2.2f $G_0$"%(np.sum(c)))
-    ax1.hold("True")
-    pl_data = ax1.plot(mar1[0]*u_factor, mar1[1]*i_factor, color = set2[4], linewidth=2,label="Experimental Data")
-    
-    if additional_info:
-        pl_data = ax1.plot(u*u_factor, i_linear*i_factor, color = set2[2], linewidth=1,label="Excess Current %2.2f $G_0$"%(p[0]*12906))
-    
-    ax1.set_xlim(xmin=0)
-    ax1.set_ylim(ymin=0)
-    ax1.set_xticks([1,2,3,4])
-    #pylab.legend([pl_fit,pl_data,extra],("Fit","Data","Gap: %2.3fmeV"%(_gap/1000.0)),loc=2)
-    ax1.legend(loc=2)    
-    ax1.grid()
-    if additional_info:
-        ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.8, "Gap: %2.3fmeV"%(_gap/1000.0),ha="left")
-        ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.75, "T: %2.1fK"%(float(params["temp2"])),ha="left")
-    
-    """for i in range(len(c)):
-        if c[i] < no_channel:
-            rest = np.sum(c[i:])
-            pylab.text(pos_x,pos_y-i*0.05,"Dropped:\t%f $G_0$"%(rest))
-            break
-        pylab.text(pos_x,pos_y-i*0.05,"Channel %i:\t%f $G_0$"%(i+1,c[i]))"""
-    
-    ch = [x for x in c if x > no_channel]
-    ch_rest = [x for x in c if x < no_channel]
-    rest = np.sum(ch_rest)
-    
-    
-    # PLOTTING THE CHANNELS
-    pylab.axes([0.55, 0.15, 0.3, 0.3])
-    ax2 = pylab.gca()
-    pylab.bar(np.array(range(len(ch)))+1-0.4,ch, facecolor=set2[1], width=0.8)
-    
-    # CHANNEL TRANSMISSIONS
-    ch_height_par = 3
-    for i in range(len(ch)):
-        pylab.text(i+1, ch[i]+ch[0]/ch_height_par, "%0.2f"%(ch[i]), color="#333333", ha="left", rotation="vertical")
-    
-    pylab.text(len(ch)+1, 1, "Rest: %0.3f"%(rest), color="#AAAAAA", ha="right", rotation="horizontal")
-    pylab.ylabel("$T_i$")
-    pylab.title("Channels")
-    ax2.set_xticks(np.arange(1,len(ch)+0.5))
-    ax2.set_xlim(0.5,len(ch)+1)
-    ax2.set_yticks([0.25,0.5,0.75,1.0])
-    ax2.set_ylim([0,1.2])
-    
-    spines_to_remove = ['top', 'right']
-    for spine in spines_to_remove:
-        ax2.spines[spine].set_visible(False)
-    ax2.xaxis.set_ticks_position('none')
-    ax2.yaxis.set_ticks_position('none')
-    
-    savename = os.path.split(iv_file)[1]
-    pylab.savefig(os.path.join(iv_dir,savename)+".png")
-    #pylab.savefig(os.path.join(iv_dir,savename)+".pdf")
-    if show_plots:    
-        pylab.show()
-
-
-# statistics of fitting
-if not 'all_c' in locals():
-    all_c = []
-all_c.append(c)
-
-if False:
-    pylab.hold(True)
-    pylab.plot([x[0] for x in all_c])
-    pylab.plot([x[1] for x in all_c])
-    pylab.plot([x[2] for x in all_c])
+mar=MAR('.\\t_0k\\')
+#mar=MAR('.\\t_4k_0_25\\')

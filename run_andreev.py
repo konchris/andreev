@@ -889,7 +889,8 @@ class main_program(QtGui.QMainWindow):
                         DEV.magnet_2.SetField(fields[field_index], _rate) 
                         print "IPS set to %f T"%(fields[field_index])
                         field_index += 1
-                        
+                      
+            # replotting data if one second elapsed
             if time.time() - last_time > 1: # check if update needed
                     last_time = time.time()
     
