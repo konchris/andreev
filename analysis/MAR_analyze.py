@@ -3,7 +3,7 @@ import scipy
 import numpy as np
 import pylab
 
-from MARfit_David import mar    # data fitting
+#from MARfit_David import mar    # data fitting
 from MAR_functions import *
 
 # set the fit parameter
@@ -16,6 +16,11 @@ _max_channels = 4           # starting value of channels
 additional_info = True     # print additional information in plot
 show_plots = True          # show plots after fit (else direct save)
 
+
+# initialize fitting by loading all theoretical ivs
+#mar=MAR('.\\t_4k_0_33\\')
+mar=MAR('.\\t_0k\\')
+#mar=MAR('.\\t_4k_0_25\\')
 
 
 # load ivs
@@ -33,7 +38,7 @@ for iv_file in iv_files[:]:
     i_new = np.interp(u_new, u, i)
     
     u,i = u_new,i_new
-    du,di,shift,u,i = find_iv_offset_2([u,i], verbal=True)
+    du,di,shift,u,i = find_iv_offset([u,i], verbal=True)
     #u,i = u-du,i-di
     
     #u_min = np.argmin(abs(u))
@@ -87,8 +92,6 @@ for iv_file in iv_files[:]:
     pylab.axes()
     ax1 = pylab.gca()
     
-    #ax3 = ax1.twiny()
-    #ax3.set_xlabel("U ($\Delta$)")
     
     ax1.set_xlabel("U ($\Delta$)")
     ax1.set_ylabel("I ($\mu$A)")
@@ -154,13 +157,14 @@ for iv_file in iv_files[:]:
         pylab.show()
 
 
+"""
 # statistics of fitting
-#if not 'all_c' in locals():
-#    all_c = []
-#all_c.append(c)
+if not 'all_c' in locals():
+    all_c = []
+all_c.append(c)
 
 if False:
     pylab.hold(True)
     pylab.plot([x[0] for x in all_c])
     pylab.plot([x[1] for x in all_c])
-    pylab.plot([x[2] for x in all_c])
+    pylab.plot([x[2] for x in all_c])"""

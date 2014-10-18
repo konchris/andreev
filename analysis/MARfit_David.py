@@ -1,10 +1,11 @@
-﻿import os
-import scipy
-import numpy as np
+﻿
 
 
 class MAR:
     """Fitroutine für Multiple Andreev Refektionen"""
+    import os
+    import scipy
+    import numpy as np
     
     def __init__(self,filename='.\\'):
         """lädt die MAR-Theoriekurven in den Einheiten 2*e*Delta/h gegen
