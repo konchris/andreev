@@ -51,9 +51,7 @@ class main_program(QtGui.QMainWindow):
             print e            
             log("Can't read config file")
         
-        
-            
-                
+ 
         # initialize.py - most of long initializations 
         initialize.init_connections(self)            
         initialize.init_variables(self)
@@ -98,7 +96,7 @@ class main_program(QtGui.QMainWindow):
             self.f_config.flush()
         
     # offset
-    def offset_correct(self, delay=0.5):
+    def offset_correct(self, delay=1):
         bias = DEV.yoko.get_voltage()
         self.offset_in_progress = True
         DEV.yoko.set_voltage(0)
@@ -108,8 +106,8 @@ class main_program(QtGui.QMainWindow):
         
         # time to settle 0 value
         for i in range(10):
-                app.processEvents()
-                time.sleep(0.1)
+            app.processEvents()
+            time.sleep(delay/10.0)
         
         # flush cache
         DEV.lockin.get_data_list(averages=1)
@@ -117,33 +115,65 @@ class main_program(QtGui.QMainWindow):
         DEV.agilent_old.get_data_list()
         
         # backup recent values
-        #(a,b) = DEV.lockin.femto_get()
+        a,b = DEV.lockin.femto_get()
+        offset_a,offset_b = [0,0,0,0],[0,0,0,0]
+        self.config_data["offset_voltage"] = 0
+        self.config_data["offset_current"] = 0
+        self.config_data["offset_agilent_voltage"] = [0,0,0,0]
+        self.config_data["offset_agilent_current"] = [0,0,0,0]
         
-        # sets femto to 20dB
+        for i in range(4):
+            DEV.lockin.femto_set(i,i)
+    
+            # discard data
+            for j in range(10):
+                app.processEvents()
+                time.sleep(delay/10.0)
+            DEV.agilent_new.get_data_list()
+            DEV.agilent_old.get_data_list()
+            
+            # gather new data
+            for j in range(10):
+                app.processEvents()
+                time.sleep(delay/10.0)
+            
+            new_data = DEV.agilent_new.get_data_list()
+            offset_voltage = np.average(new_data["voltage"])
+            old_data = DEV.agilent_old.get_data_list()
+            offset_current = np.average(old_data["voltage"])
 
-        time.sleep(0.5)
+            offset_a[i] = offset_voltage
+            offset_b[i] = offset_current
+            log("Offset Agilent Voltage %fmV"%(offset_voltage*1e3))
+            log("Offset Agilent Current %fmV"%(offset_current*1e3))
+            
+            time.sleep(delay/10.0)
         
-        new_data = DEV.agilent_new.get_data_list()
-        offset_new = np.average(new_data["voltage"])
-        old_data = DEV.agilent_old.get_data_list()
-        offset_old = np.average(old_data["voltage"])
-        
-        self.config_data["offset_agilent_voltage"] = offset_new
-        self.config_data["offset_agilent_current"] = offset_old
-        log("Offset Agilent Voltage %fV"%(offset_new))
-        log("Offset Agilent Current %fV"%(offset_old))
-        
-        time.sleep(delay/10.0)
+        for i in range(4):
+            self.config_data["offset_agilent_voltage"][i] = offset_a[i]
+            self.config_data["offset_agilent_current"][i] = offset_b[i]
+            
+        self.ui.editOffsetVoltage.setText(str(round(self.config_data["offset_agilent_voltage"][0]*1e3,6)))
+        self.ui.editOffsetCurrent.setText(str(round(self.config_data["offset_agilent_current"][0]*1e3,6)))
+        self.ui.editOffsetVoltage_2.setText(str(round(self.config_data["offset_agilent_voltage"][1]*1e3,6)))
+        self.ui.editOffsetCurrent_2.setText(str(round(self.config_data["offset_agilent_current"][1]*1e3,6)))
+        self.ui.editOffsetVoltage_3.setText(str(round(self.config_data["offset_agilent_voltage"][2]*1e3,6)))
+        self.ui.editOffsetCurrent_3.setText(str(round(self.config_data["offset_agilent_current"][2]*1e3,6)))
+        self.ui.editOffsetVoltage_4.setText(str(round(self.config_data["offset_agilent_voltage"][3]*1e3,6)))
+        self.ui.editOffsetCurrent_4.setText(str(round(self.config_data["offset_agilent_current"][3]*1e3,6)))
 
-        self.ui.editOffsetVoltage.setText(str(round(self.config_data["offset_agilent_voltage"]*1e3,6)))
-        self.ui.editOffsetCurrent.setText(str(round(self.config_data["offset_agilent_current"]*1e3,6)))
-
+        gui_helper.femto_set(a,b) 
         DEV.yoko.set_voltage(bias)
         amplitude = float(self.form_data["editLIAmpl"])
         output_enabled = bool(self.form_data["checkLIOutputEnabled"])
 
         DEV.lockin.set_amplitude(amplitude, output=output_enabled)
-        time.sleep(0.5)
+               
+        
+        for i in range(10):
+            app.processEvents()
+            time.sleep(delay/10.0)
+
         # flush data to /dev/null
         DEV.lockin.get_data_list(averages=1)
         DEV.agilent_new.get_data_list()
@@ -154,8 +184,9 @@ class main_program(QtGui.QMainWindow):
     def aquire_histogram(self):
         self.stop_measure = False
         self.histogram_in_progress = True
+        
         # init bias        
-        bias = self.editHistogramBias
+        bias = float(self.form_data["editHistogramBias"])
 
         DEV.yoko.set_voltage(bias)
         DEV.yoko.output(True)
@@ -176,7 +207,7 @@ class main_program(QtGui.QMainWindow):
                     lower_res = float(self.form_data["editHistogramLower"])
                     upper_res = float(self.form_data["editHistogramUpper"])
                     cold_time = float(self.form_data["editHistogramColdTime"])
-                    bias = self.editHistogramBias
+                    bias = float(self.form_data["editHistogramBias"])
                     if not self.offset_in_progress:
                         DEV.yoko.set_voltage(bias)
                     
@@ -218,7 +249,7 @@ class main_program(QtGui.QMainWindow):
                         gui_helper.motor_unbreak(int(self.form_data["editHistogramClosingSpeed"]), quiet=True)
                         
                     # if escape on motor limit hit
-                    if self.checkHistogramEscape:
+                    if bool(self.form_data["checkHistogramEscape"]):
                         if DEV.motor.higher_bound or DEV.motor.lower_bound:
                             log("Motor reached its bounds, escaping histogram!")
                             break
@@ -249,7 +280,7 @@ class main_program(QtGui.QMainWindow):
         self.stop_measure = False
         self.histogram_in_progress = True
         # init bias        
-        bias = self.editHistogramBias
+        bias = float(self.form_data["editHistogramBias"])
 
         DEV.yoko.set_voltage(bias)
         DEV.yoko.output(True)
@@ -592,7 +623,7 @@ class main_program(QtGui.QMainWindow):
                     
                     try:        
                         saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
-                        d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
+                        d = str(self.form_data["editSetupDir"])+str(self.form_data["editHeader"])+"\\"    
                         d_name = os.path.dirname(d)
                         if not os.path.exists(d_name):
                             os.makedirs(d_name)
@@ -633,10 +664,10 @@ class main_program(QtGui.QMainWindow):
 
     
     def temp_sweep(self):       
-        start = float(self.ui.editTempSweepStart.text())
-        end = float(self.ui.editTempSweepStop.text())
-        steps = abs(float(self.ui.editTempSweepStep.text()))
-        delay = float(self.ui.editTempSweepDelay.text())
+        start = float(self.form_data["editTempSweepStart"])
+        end = float(self.form_data["editTempSweepStop"])
+        steps = abs(float(self.form_data["editTempSweepStep"]))
+        delay = float(self.form_data["editTempSweepDelay"])
         log("Temperature Sweep %f K to %f K, %f mK steps, %f s delay"%(start,end,steps*1000,delay))
         
         step_list = []
@@ -952,7 +983,7 @@ class main_program(QtGui.QMainWindow):
             self.plot_data["new"][0] = True
       
             saving_data = [x_list, voltage_list, current_list, b]
-            d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
+            d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"   
             d_name = os.path.dirname(d)
             if not os.path.exists(d_name):
                 os.makedirs(d_name)
@@ -1008,8 +1039,8 @@ class main_program(QtGui.QMainWindow):
                             lockin_data = DEV.lockin.get_data_list(averages=1)
                             
                             li_timestamp_0 = lockin_data["0"]["timestamp"][:]
-                            li_aux0 =  [(x - self.config_data["offset_agilent_voltage"])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
-                            li_aux1 =  [(x - self.config_data["offset_agilent_current"])/self.factor_current for x in lockin_data["0"]["auxin1"]]
+                            li_aux0 =  [(x - self.config_data["offset_voltage"])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
+                            li_aux1 =  [(x - self.config_data["offset_current"])/self.factor_current for x in lockin_data["0"]["auxin1"]]
                             li_0_x =  [x / self.factor_voltage for x in lockin_data["0"]["x"]]
                             li_0_y =  [x / self.factor_voltage for x in lockin_data["0"]["y"]]
                             li_timestamp_1 = lockin_data["1"]["timestamp"][:]
@@ -1080,8 +1111,8 @@ class main_program(QtGui.QMainWindow):
                     try:
                         if DEV.agilent_new != None:
                             agilent_new_data = DEV.agilent_new.get_data_list()   
-                            agilent_voltage_timestamp = agilent_new_data["timestamp"]
-                            agilent_voltage_voltage =  [(x - self.config_data["offset_agilent_voltage"])/self.factor_voltage for x in agilent_new_data["voltage"]] 
+                            agilent_voltage_timestamp = agilent_new_data["timestamp"]#_self.config_data["range_voltage"]
+                            agilent_voltage_voltage =  [(x - self.config_data["offset_voltage"])/(10**self.config_data["range_voltage"]) for x in agilent_new_data["voltage"]] 
 
                         self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
                         self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
@@ -1103,7 +1134,7 @@ class main_program(QtGui.QMainWindow):
                         if DEV.agilent_old != None:
                             agilent_old_data = DEV.agilent_old.get_data_list()   
                             agilent_current_timestamp = agilent_old_data["timestamp"]
-                            agilent_current_voltage =  [(x - self.config_data["offset_agilent_current"])/self.factor_current for x in agilent_old_data["voltage"]] 
+                            agilent_current_voltage =  [(x - self.config_data["offset_current"])/(10**self.config_data["range_current"]) for x in agilent_old_data["voltage"]] 
                     
                        
                         self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)

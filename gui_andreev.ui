@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>858</width>
-    <height>820</height>
+    <height>805</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -96,7 +96,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>9</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -851,6 +851,22 @@
            </widget>
           </item>
          </layout>
+        </widget>
+        <widget class="QCheckBox" name="checkHistogramOffset">
+         <property name="geometry">
+          <rect>
+           <x>310</x>
+           <y>50</y>
+           <width>131</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Auto Offset in Closed</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
         </widget>
        </widget>
        <widget class="QWidget" name="tab_6">
@@ -2844,7 +2860,7 @@
            <x>20</x>
            <y>20</y>
            <width>261</width>
-           <height>111</height>
+           <height>211</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_15">
@@ -2875,14 +2891,14 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="label_51">
             <property name="text">
-             <string>Offset</string>
+             <string>Offset 10</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="3" column="1">
            <widget class="QLineEdit" name="editOffsetVoltage">
             <property name="text">
              <string>0</string>
@@ -2892,7 +2908,7 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="3">
+          <item row="3" column="3">
            <widget class="QLineEdit" name="editOffsetCurrent">
             <property name="text">
              <string>0</string>
@@ -2909,7 +2925,7 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="7" column="0">
            <widget class="QPushButton" name="btnOffset">
             <property name="text">
              <string>Correct</string>
@@ -2923,17 +2939,161 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="4">
+          <item row="3" column="4">
            <widget class="QLabel" name="label_22">
             <property name="text">
              <string>mV</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="2">
+          <item row="3" column="2">
            <widget class="QLabel" name="label_52">
             <property name="text">
              <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="4">
+           <widget class="QLabel" name="label_140">
+            <property name="text">
+             <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="editOffsetVoltage_4">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="editOffsetVoltage_2">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLabel" name="label_144">
+            <property name="text">
+             <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3">
+           <widget class="QLineEdit" name="editOffsetCurrent_2">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="editOffsetVoltage_3">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="3">
+           <widget class="QLineEdit" name="editOffsetCurrent_3">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QLineEdit" name="editOffsetCurrent_4">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="4">
+           <widget class="QLabel" name="label_139">
+            <property name="text">
+             <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="4">
+           <widget class="QLabel" name="label_141">
+            <property name="text">
+             <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_142">
+            <property name="text">
+             <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLabel" name="label_143">
+            <property name="text">
+             <string>mV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_145">
+            <property name="text">
+             <string>x</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QLabel" name="label_146">
+            <property name="text">
+             <string>x</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_149">
+            <property name="text">
+             <string>Offset 10k</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_147">
+            <property name="text">
+             <string>Offset 100</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_148">
+            <property name="text">
+             <string>Offset 1k</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="btnFemtoSet">
+            <property name="text">
+             <string>Set</string>
             </property>
            </widget>
           </item>
@@ -3389,7 +3549,7 @@ p, li { white-space: pre-wrap; }
      <rect>
       <x>10</x>
       <y>760</y>
-      <width>482</width>
+      <width>411</width>
       <height>31</height>
      </rect>
     </property>
@@ -3478,6 +3638,38 @@ p, li { white-space: pre-wrap; }
       <height>20</height>
      </rect>
     </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>760</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="btnFemtoVoltage">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>V</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnFemtoCurrent">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>I</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <action name="action_Close">

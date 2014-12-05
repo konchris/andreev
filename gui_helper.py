@@ -30,6 +30,7 @@ def init_device_parameters():
     lockin_set()             # sets lockin parameters
     lockin_read_phase()  
     lockin_set_phase()       # set phase to zero
+    femto_set()
     set_bias()               # sets bias to last value
     _self.offset_correct()
 
@@ -73,6 +74,30 @@ def ch_b_up():
 def ch_b_down():
     DEV.femto.decrease_amplification(1)
     log("Femto increase b")
+def femto_set(a=0,b=0):
+    if int(_self.form_data["editFactorVoltage"]) == 10:
+        a = 0
+    if int(_self.form_data["editFactorVoltage"]) == 100:
+        a = 1
+    if int(_self.form_data["editFactorVoltage"]) == 1000:
+        a = 2
+    if int(_self.form_data["editFactorVoltage"]) == 10000:
+        a = 3
+    
+    if int(_self.form_data["editFactorCurrent"]) == 10:
+        b = 0
+    if int(_self.form_data["editFactorCurrent"]) == 100:
+        b = 1
+    if int(_self.form_data["editFactorCurrent"]) == 1000:
+        b = 2
+    if int(_self.form_data["editFactorCurrent"]) == 10000:
+        b = 3
+    
+    _self.config_data["offset_voltage"] = _self.config_data["offset_agilent_voltage"][a]
+    _self.config_data["offset_current"] = _self.config_data["offset_agilent_current"][b]
+    _self.config_data["range_voltage"] = a
+    _self.config_data["range_current"] = b
+    DEV.lockin.femto_set(a,b)
 
 def save_description():
     import os
@@ -240,5 +265,14 @@ def temp_custom():
         DEV.lakeshore.set_display_field(4,val_4a,val_4b)
     except Exception,e:
         log("New Display Setup not accepted",e)
+        
+
+
+def keyPressEvent_Bias(self, event):
+    
+    from PyQt4 import QtCore
+    key = event.key()
+    if key == QtCore.Qt.Key_Return: 
+        set_bias()
     
     

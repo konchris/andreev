@@ -237,16 +237,26 @@ def init_variables(_self):
     _self.form_data = {}
     
     # amplifiers
-    _self.config_data["offset_agilent_voltage"] = float(_self.ui.editOffsetVoltage.text())
-    _self.config_data["offset_agilent_current"] = float(_self.ui.editOffsetCurrent.text())
+    _self.config_data["offset_agilent_voltage"] = [0,0,0,0]
+    _self.config_data["offset_agilent_current"] = [0,0,0,0]
+    _self.config_data["offset_agilent_voltage"][0] = float(_self.ui.editOffsetVoltage.text())
+    _self.config_data["offset_agilent_current"][0] = float(_self.ui.editOffsetCurrent.text())
+    _self.config_data["offset_agilent_voltage"][1] = float(_self.ui.editOffsetVoltage_2.text())
+    _self.config_data["offset_agilent_current"][1] = float(_self.ui.editOffsetCurrent_2.text())
+    _self.config_data["offset_agilent_voltage"][2] = float(_self.ui.editOffsetVoltage_3.text())
+    _self.config_data["offset_agilent_current"][2] = float(_self.ui.editOffsetCurrent_3.text())
+    _self.config_data["offset_agilent_voltage"][3] = float(_self.ui.editOffsetVoltage_4.text())
+    _self.config_data["offset_agilent_current"][3] = float(_self.ui.editOffsetCurrent_4.text())
+    
+    _self.config_data["offset_voltage"] = 0
+    _self.config_data["offset_current"] = 0
+    _self.config_data["range_voltage"] = 0
+    _self.config_data["range_current"] = 0
     
     _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
     _self.factor_current = float(_self.ui.editFactorCurrent.text())
-    
-    _self.automatic_gain = False
+
     _self._excluded_splits = ["timestamp","li","femto"]
-    
-    _self.checkHistogramEscape = False
     
     _self.histogram_in_progress = False
     _self.iv_in_progress = False
@@ -361,3 +371,11 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnTemperatureCustom, QtCore.SIGNAL("clicked()"), gui_helper.temp_custom)
     
     QtCore.QObject.connect(_self.ui.btnExecute, QtCore.SIGNAL("clicked()"), _self.execute)
+    
+    QtCore.QObject.connect(_self.ui.btnFemtoSet, QtCore.SIGNAL("clicked()"), gui_helper.femto_set)
+    
+    
+    
+    #QtCore.QObject.connect(_self.ui.editBias, QtCore.SIGNAL("clicked()"), gui_helper.lockin_resync)
+    
+    

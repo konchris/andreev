@@ -967,9 +967,7 @@ class ZURICH:
                         self.data["4"]["y"].extend(dataDict["/"+self.device+"/demods/4/sample"]["y"])
                         self.data["4"]["timestamp"].extend(dataDict["/"+self.device+"/demods/4/sample"]["timestamp"]/210e6+self.time_offset)
 
-                    self.data["femto"]["timestamp"].append(time.time())
-                    self.data["femto"]["channela"].append(self.ampl_a)
-                    self.data["femto"]["channelb"].append(self.ampl_b)
+                    
                     self.data_lock.release()
                 except Exception,e:
                     log("Lockin Poll Failed",e)                
@@ -992,6 +990,10 @@ class ZURICH:
         return_data = self.data.copy()
 
         return_data = {}
+        
+        self.data["femto"]["timestamp"].append(time.time())
+        self.data["femto"]["channela"].append(self.ampl_a)
+        self.data["femto"]["channelb"].append(self.ampl_b)
      
         min_multiple = int(len(self.data["0"]["x"]) / averages) * averages   
         return_data["0"] = {}
@@ -1058,8 +1060,7 @@ class ZURICH:
     
     def get_dio(self):
         val = self.data["0"]["dio"][-1]
-        return val
-        
+        return val       
 
     def femto_reset(self):
         self.ampl_a = 0
@@ -1069,12 +1070,13 @@ class ZURICH:
     def femto_set(self, a=0, b=0):
         self.ampl_a = a
         self.ampl_b = b
+        self.femto_update()
     
     def femto_get(self):
         return (self.ampl_a, self.ampl_b)
     
     def femto_update(self):
-        value = self.ampl_a + (self.ampl_b << 4)
+        value = self.ampl_b + (self.ampl_a << 4)
         self.set_dio(value)
         
         
@@ -1471,8 +1473,8 @@ else:
 thread.start_new_thread(yoko_starter,())
 thread.start_new_thread(motor_starter,())
 thread.start_new_thread(lockin_starter,())
-thread.start_new_thread(magnet_starter,())
-thread.start_new_thread(magnet_starter_2,())
+#thread.start_new_thread(magnet_starter,())
+#thread.start_new_thread(magnet_starter_2,())
 thread.start_new_thread(lakeshore_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())

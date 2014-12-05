@@ -41,7 +41,6 @@ class hdf5_saving:
     def __init__(self, filename=None):
         """Initialises new File with HDF5
         Filename: Absolute Path to File"""
-        
         self.create_db(filename)
                
         

@@ -23,13 +23,10 @@ from functions_evaluate import *
 
 db = 0
 
-#filename = r"140809_Pb180_Histo_03"
-#filename = r"140810_Pb180_Histo_04"
-#filename = r"140812_Pb180_Histo_08"
-#filename = r"140826_Pb189_Histo_02"
-filename = r"140811_Pb180_Histo_07"
+filename = r"141124_Pb260_Cooldown"
+filename = r"141204_Pb244_Cooldown"
 base_path = os.path.join("Z:\dweber\data_p5",filename)
-#base_path = os.path.join("C:\data_p5",filename)
+base_path = os.path.join("C:\data_p5",filename)
 total_path = [os.path.join(base_path,'db_%i.h5'%(db))]
 config_path = os.path.join(base_path,'config.txt')
 
@@ -57,23 +54,23 @@ old_filename = filename
 _time = time.time()
 
 if skip_loading:
+    print "Skipping Loading"
     last_loading_successfull = True
 else:
     last_loading_successfull = False
     print "Loading %s"%total_path
 
-
-data_packages = []
-for file_total in total_path:
-    #print file_total
-    data_packages.append(HDF_DATA(file_total))
-    
+if not last_loading_successfull:
+    data_packages = []
+    for file_total in total_path:
+        data_packages.append(HDF_DATA(file_total))
+    last_loading_successfull = True
     
 
 ###########################################################################
 # SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP SPLIT UP #
 ###########################################################################
-split_up_ivs = False
+split_up_ivs = True
 try:  
     # splitting up the config file for sweeps, histograms, etc.
     print "Loading %s"%config_path
@@ -128,12 +125,13 @@ except Exception,e:
 if split_up_ivs:
     iv_dir = os.path.join(base_path,"ivs")
     trace_dir = os.path.join(base_path,"traces")
-    
+    bsweep_dir = os.path.join(base_path,"bsweep")
     ensure_dir(iv_dir+"\\")
     ensure_dir(trace_dir+"\\")
+    ensure_dir(bsweep_dir+"\\")
     print "IV-DIR: %s"%(iv_dir)
     print "TRACE-DIR: %s"%(trace_dir)
-    
+    print "BSWEEP-DIR: %s"%(bsweep_dir)
     
     seperate_windows = True
     if not seperate_windows:
@@ -144,8 +142,7 @@ if split_up_ivs:
         ax_sub_b = ax_didv.twinx()  
         ax_sub_c = fig.add_subplot(2,2,3)
         ax_sub_d = fig.add_subplot(2,2,4)
-    
-    
+      
     i = 1
     for iv_times in ivs:#[0:10]:
         if not seperate_windows:
@@ -154,8 +151,8 @@ if split_up_ivs:
             ax_sub_b.cla()
             ax_sub_c.cla()
             ax_sub_d.cla()
-        i_begin =   find_min(x_list, iv_times[0])
-        i_end =     find_min(x_list, iv_times[1])
+        i_begin = find_min(x_list, iv_times[0])
+        i_end = find_min(x_list, iv_times[1])
 
         ax_x_factor = 1e3
         ax_y_factor = 1e6
@@ -165,7 +162,7 @@ if split_up_ivs:
         abs_current = abs(slice_current)
         current_center_index = np.argmin(abs_current)
         
-        if max(abs(x_voltage)) < 10.0:
+        if max(abs(x_voltage)) < 10.0:  # 
             i += 1
             continue
         else:
@@ -250,49 +247,53 @@ if split_up_ivs:
     i = 1
     for hist_times in histograms[0:1]:
         
-        i_begin =   find_min(x_list, hist_times[0])
-        i_end =     find_min(x_list, hist_times[1])
+        i_begin =   find_min(data_packages[0].x_list, hist_times[0])
+        i_end =     find_min(data_packages[0].x_list, hist_times[1])
 
         fig = pl.figure(figsize=(12,12), dpi=72)
         fig.subplots_adjust(hspace = 0.35, wspace = 0.6)
-        ax_cond = fig.add_subplot(1,1,1) # fig.gca()
+        ax_cond = fig.add_subplot(1,1,1) 
+        #fig.gca()
         #ax_didv = fig.add_subplot(2,1,2)
         #ax_sub_b = ax_didv.twinx()
         
+        opening_data = []
+        closing_data = []
+        
         ##############################
-        cond_lower_end = 0.1
-        cond_higher_end = 10.0
+        cond_lower_end = 1e-4
+        cond_higher_end = 1e1
         ##############################
-        print len(position[i_begin:i_end]), position[i_begin], position[i_end]
-        if cond[i_begin] > cond[i_end]: 
+        #print len(data_packages[0].position[i_begin:i_end]), data_packages[0].position[i_begin], data_packages[0].position[i_end]
+        if data_packages[0].cond[i_begin] > data_packages[0].cond[i_end]: 
             # opening curve
+            opening_data.extend(data_packages[0].cond[i_begin:i_end])
             j = i_begin
             while j < i_end:
-                if cond[j] < cond_higher_end:
+                if data_packages[0].cond[j] < cond_higher_end:
                     break
                 j += 1
             k = j
             while k < i_end:
-                if cond[k] < cond_lower_end:
+                if data_packages[0].cond[k] < cond_lower_end:
                     break
                 k += 1
-            #ax_cond.plot(position[j-5:k+5]*(-1.0),cond[j-5:k+5], 'k-')
-            ax_cond.plot(position[i_begin:i_end]*(-1.0),cond[i_begin:i_end], 'k-')
+            ax_cond.plot(data_packages[0].position[i_begin:i_end]*(-1.0),data_packages[0].cond[i_begin:i_end], 'k-')
             ax_cond.set_title("Opening") 
         else:
             # closing curve
+            opening_data.extend(data_packages[0].cond[i_begin:i_end])
             j = i_begin
             while j < i_end:
-                if cond[j] > cond_lower_end:
+                if data_packages[0].cond[j] > cond_lower_end:
                     break
                 j += 1
             k = j
             while k < i_end:
-                if cond[k] > cond_higher_end:
+                if data_packages[0].cond[k] > cond_higher_end:
                     break
                 k += 1
-            #ax_cond.plot(position[j-5:k+5],cond[j-5:k+5], 'k-')
-            ax_cond.plot(position[i_begin:i_end],cond[i_begin:i_end], 'k-')
+            ax_cond.plot(data_packages[0].position[i_begin:i_end],data_packages[0].cond[i_begin:i_end], 'k-')
             
             ax_cond.set_title("Closing") 
 
@@ -301,9 +302,8 @@ if split_up_ivs:
         
         ax_cond.set_xlabel("Pos (Turns)")
         ax_cond.set_ylabel("S ($G_0$)")
+        ax_cond.set_yscale("log")
         ax_cond.grid()
-
-        #ax_cond.set_ylim([0,10])
         
         fig.savefig(os.path.join(trace_dir,str(int(hist_times[1]))+".png"))
         pl.close()
@@ -312,9 +312,9 @@ if split_up_ivs:
         
         print "%i/%i %i"%(i,len(histograms),int(hist_times[1]))
         i += 1
-    """
+    
     i = 1
-    for circle_times in bcircle:#[0:20]:
+    for circle_times in bcircle[0:]:
         
         i_begin =   find_min(x_list, circle_times[0])
         i_end =     find_min(x_list, circle_times[1])
@@ -359,32 +359,49 @@ if split_up_ivs:
         
         print "%i/%i %i"%(i,len(bcircle),int(circle_times[1]))
         i += 1
-        """
+        
 
 if True:
     ov_plot = pl.figure()
     ov_hist = ov_plot.add_subplot(1,1,1)
     
     if True:   # log
-        ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.logspace(-4,3, 100))  
+        ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.logspace(-4,3, 250))  
         ov_hist.set_xscale("log")
     else:
         ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.linspace(0.0,15, 45))
         ov_hist.set_xscale("linear")
+    ov_hist.set_xlabel("G (G/$G_0$)")
+    ov_hist.set_ylabel("Counts")
+    ov_hist.set_title("Histogram (%i open+close)"%(len(histograms)))
+    ov_plot.savefig(os.path.join(base_path,"histogramm.png"))
+    
+    #import numpy as np
+    #from scipy.optimize import curve_fit
+    
+    #def gauss(x, a, b, c):
+    #    return a * np.exp(-b * x**2) + c
+    """
+    y = func(xdata, 2.5, 1.3, 0.5)
+    ydata = y + 0.2 * np.random.normal(size=len(xdata))
+    
+    popt, pcov = curve_fit(func, xdata, ydata)"""
 
-if False:
+if True:
     plot_t = pl.figure()
     plot_t_1 = plot_t.add_subplot(2,1,1)
     plot_t_2 = plot_t.add_subplot(2,1,2)
-    von = 3000
-    bis = 24000
+    von = 0
+    bis = -1
     plot_t_1.plot(data_packages[0].t_sample[von:bis], data_packages[0].cond[von:bis])
+    plot_t_1.set_ylabel("G (G/$G_0$)")
+    plot_t_1.set_xlabel("T (K)")
     plot_t_2.plot(data_packages[0].cond)
-    plot_t_1.set_ylim([0,2000])
-    plot_t_2.set_ylim([0,2000])
+    plot_t_2.set_ylabel("G (G/$G_0$)")
+    plot_t_2.set_xlabel("t (s)")
+    #plot_t_1.set_ylim([0,2000])
+    #plot_t_2.set_ylim([0,2000])
+    plot_t.savefig(os.path.join(base_path,"temperature.png"))
 
     
 
-""" old
-
-"""

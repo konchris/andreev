@@ -17,38 +17,12 @@ _self = None
 
 def refresh_display():
     """This function is called every second for misc functions""" 
-    #try:
-    #    export_html(_self.ui, "C:\wamp\www\\")
-    #except Exception,e:
-    #    log("HTML export failed",e)                               
+                           
     global _self
     try:
-        # filtering of values for plotting
-        _time = time.time()
-        begin = _time - int(_self.ui.editViewBegin.text())
-        end = _time - int(_self.ui.editViewEnd.text())
-
-        step = int(_self.ui.editViewStep.text()) 
-        interval = int(_self.ui.editTimerInterval.text())
         
         try: # updating ui data
-            #_self.average_value = int(_self.ui.editAverage.text())
-            _self.editHistogramLower = float(_self.ui.editHistogramLower.text())
-            _self.editHistogramUpper = float(_self.ui.editHistogramUpper.text())
-            _self.editHistogramBias = float(_self.ui.editHistogramBias.text())
-            _self.checkHistogramEscape = _self.ui.checkHistogramEscape.isChecked()
-            _self.editHistogramOpeningSpeed = float(_self.ui.editHistogramOpeningSpeed.text())
-            _self.editHistogramClosingSpeed = float(_self.ui.editHistogramClosingSpeed.text())
-            
-            # iv
-            _self.editIVTime = float(_self.ui.editIVTime.text())
-            _self.editIVMin = float(_self.ui.editIVMin.text())
-            _self.editIVMax = float(_self.ui.editIVMax.text())
-            
-            
-            _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
-            _self.factor_current = float(_self.ui.editFactorCurrent.text())
-            
+
             form_objects = inspect.getmembers(_self.ui)
             for element in form_objects:
                 try:
@@ -70,6 +44,15 @@ def refresh_display():
                     log("Failed to automatically read out the form parameters %s"%(str(element[1].objectName())),e)
         except Exception,e:
             log("Failed updating form parameters",e)
+            
+            
+        # filtering of values for plotting
+        _time = time.time()
+        begin = _time - int(_self.form_data["editViewBegin"])
+        end = _time - int(_self.form_data["editViewEnd"])
+
+        step = int(_self.form_data["editViewStep"])
+        interval = int(_self.form_data["editTimerInterval"])
         
         max_datalength = int(_self.ui.editMaximumValues.text())
         for k,v in _self.data.items():
@@ -81,53 +64,46 @@ def refresh_display():
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
             sample_factor = _sample_res/(_sample_res+_self.rref)
             #_self.ui.editIVTimeEstimate.setText("%i s"%(round((_self.editIVDelay)*(abs(_self.editIVMax-_self.editIVMin)/_self.editIVSteps)))) 
+            edit_min = float(_self.form_data["editIVMin"])
+            edit_max = float(_self.form_data["editIVMax"])
             if _self.form_data["checkIVSample"]:
-                _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(_self.editIVMin / sample_factor * 1e3,3)))
-                _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(_self.editIVMax / sample_factor * 1e3,3)))
+                _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(edit_min / sample_factor * 1e3,3)))
+                _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(edit_max / sample_factor * 1e3,3)))
                 #_self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(_self.editIVSteps / sample_factor * 1e6,3)))
             else:
-                _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(sample_factor * _self.editIVMin * 1e3,3)))
-                _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(sample_factor * _self.editIVMax * 1e3,3)))
+                _self.ui.editIVMinEstimate.setText("%g mV"%(round_to_digits(sample_factor * edit_min * 1e3,3)))
+                _self.ui.editIVMaxEstimate.setText("%g mV"%(round_to_digits(sample_factor * edit_max * 1e3,3)))
                 #_self.ui.editIVStepsEstimate.setText("%g uV"%(round_to_digits(sample_factor * _self.editIVSteps * 1e6,3)))
         except Exception,e:
             log("Refresh Estimate Failed",e)#$(time::%d.%m.%y)
             
         try:
             # saving button
-            saving = True
-            saves = ""
-            if not _self.f_config:
-                saving = False
-            else:
-                saves = saves + "c"
-            if not (_self.f_agilent_voltage and _self.f_agilent_current):
-                saving = False
-            else:
-                saves = saves + "a"
-            if not _self.f_ips:
-                saving = False
-            else:
-                saves = saves + "i"
-            if not (_self.f_li0 and _self.f_li1 and _self.f_li3 and _self.f_li4 and _self.f_femto):
-                saving = False
-            else:
-                saves = saves + "l"
-            if not _self.f_motor:
-                saving = False
-            else:
-                saves = saves + "m"
-            if not _self.f_temp:
-                saving = False
-            else:
-                saves = saves + "t"
-            if saving:
-                _self.ui.btnSaving.setText("saving: "+saves)
+            if not _self.hdf5_file == None:
+                _self.ui.btnSaving.setText("saving")
                 _self.ui.btnSaving.setStyleSheet('QPushButton {color: green}')
             else:
-                _self.ui.btnSaving.setText("idle: "+saves)
+                _self.ui.btnSaving.setText("idle")
                 _self.ui.btnSaving.setStyleSheet('QPushButton {color: grey}')
         except Exception,e:
             log("Problem setting saving button color",e)
+            
+            
+        try:
+            voltage = _self.data["agilent_voltage_voltage"][-1] * (10**_self.config_data["range_voltage"]) + _self.config_data["offset_voltage"]
+            current = _self.data["agilent_current_voltage"][-1] * (10**_self.config_data["range_current"]) + _self.config_data["offset_current"]
+            _self.ui.btnFemtoVoltage.setText("%.3f"%(voltage))
+            _self.ui.btnFemtoCurrent.setText("%.3f"%(current))
+            if abs(voltage) > 11.5:
+                _self.ui.btnFemtoVoltage.setStyleSheet('QPushButton {color: red}')
+            else:
+                _self.ui.btnFemtoVoltage.setStyleSheet('QPushButton {color: green}')
+            if abs(current) > 11.5:
+                _self.ui.btnFemtoCurrent.setStyleSheet('QPushButton {color: red}')
+            else:
+                _self.ui.btnFemtoCurrent.setStyleSheet('QPushButton {color: green}')
+        except Exception,e:
+            log("Button Femto update failed",e)        
         try:
             if DEV.lockin == None:
                 _self.ui.btnStatusLockin.setStyleSheet('QPushButton {color: grey}')

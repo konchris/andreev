@@ -113,10 +113,17 @@ class HDF_DATA:
         # LOCKIN #######################
         ################################
     
-        raw_ch_0_t,raw_ch_0_x,raw_ch_0_y = zip(*tab_li_0[:])  
-        raw_ch_1_t,raw_ch_1_x,raw_ch_1_y = zip(*tab_li_1[:])
-        raw_ch_3_t,raw_ch_3_x,raw_ch_3_y = zip(*tab_li_3[:])
-        raw_ch_4_t,raw_ch_4_x,raw_ch_4_y = zip(*tab_li_4[:])
+        try:
+            raw_ch_0_t,raw_ch_0_x,raw_ch_0_y = zip(*tab_li_0[:])  
+            raw_ch_1_t,raw_ch_1_x,raw_ch_1_y = zip(*tab_li_1[:])
+            raw_ch_3_t,raw_ch_3_x,raw_ch_3_y = zip(*tab_li_3[:])
+            raw_ch_4_t,raw_ch_4_x,raw_ch_4_y = zip(*tab_li_4[:])
+        except Exception,e:
+            print "No Lockin Data Found!",e
+            raw_ch_0_t,raw_ch_0_x,raw_ch_0_y = [0,1],[0,1],[0,1]
+            raw_ch_1_t,raw_ch_1_x,raw_ch_1_y = [0,1],[0,1],[0,1]
+            raw_ch_3_t,raw_ch_3_x,raw_ch_3_y = [0,1],[0,1],[0,1]
+            raw_ch_4_t,raw_ch_4_x,raw_ch_4_y = [0,1],[0,1],[0,1]
         
         self.ch_0_x = interpolate(self.x_list, (raw_ch_0_t,raw_ch_0_x))
         self.ch_0_y = interpolate(self.x_list, (raw_ch_0_t,raw_ch_0_y))
