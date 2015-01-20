@@ -23,8 +23,16 @@ from functions_evaluate import *
 
 db = 0
 
+<<<<<<< .mine
+#filename = r"140809_Pb180_Histo_03"
+#filename = r"140810_Pb180_Histo_04"
+#filename = r"140812_Pb180_Histo_08"
+#filename = r"140826_Pb189_Histo_02"
+filename = r"141216_Pb266_Tc"
+=======
 filename = r"141124_Pb260_Cooldown"
 filename = r"141204_Pb244_Cooldown"
+>>>>>>> .r42
 base_path = os.path.join("Z:\dweber\data_p5",filename)
 base_path = os.path.join("C:\data_p5",filename)
 total_path = [os.path.join(base_path,'db_%i.h5'%(db))]
@@ -362,7 +370,7 @@ if split_up_ivs:
         
 
 if True:
-    ov_plot = pl.figure()
+    ov_plot = pl.figure(figsize=(8,6),dpi=120)
     ov_hist = ov_plot.add_subplot(1,1,1)
     
     if True:   # log
@@ -397,11 +405,13 @@ if True:
     plot_t_1.set_ylabel("G (G/$G_0$)")
     plot_t_1.set_xlabel("T (K)")
     plot_t_2.plot(data_packages[0].cond)
+
     plot_t_2.set_ylabel("G (G/$G_0$)")
     plot_t_2.set_xlabel("t (s)")
     #plot_t_1.set_ylim([0,2000])
     #plot_t_2.set_ylim([0,2000])
     plot_t.savefig(os.path.join(base_path,"temperature.png"))
+
 
     
 
