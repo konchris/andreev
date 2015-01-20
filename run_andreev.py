@@ -466,7 +466,7 @@ class main_program(QtGui.QMainWindow):
         self.iv_in_progress = True
         
         self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "V (V)")
-        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)") 
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)")         
         
         if _resync_lockin:
             DEV.lockin.resync()
@@ -1080,18 +1080,16 @@ class main_program(QtGui.QMainWindow):
                         self.data["femto_channela"].extend(femto_channela)
                         self.data["femto_channelb"].extend(femto_channelb)
                         
-                        saving_data = [li_timestamp_0,li_aux0,li_aux1,li_0_x,li_0_y]
-                        save_data(self.f_li0, saving_data)
-                        saving_data = [li_timestamp_1,li_1_x,li_1_y]
-                        save_data(self.f_li1, saving_data)
-                        saving_data = [li_timestamp_3,li_3_x,li_3_y]
-                        save_data(self.f_li3, saving_data)
-                        saving_data = [li_timestamp_4,li_4_x,li_4_y]
-                        save_data(self.f_li4, saving_data)
+                        if self.save_good_old_txt:
+                            saving_data = [li_timestamp_0,li_aux0,li_aux1,li_0_x,li_0_y]
+                            save_data(self.f_li0, saving_data)
+                            saving_data = [li_timestamp_1,li_1_x,li_1_y]
+                            save_data(self.f_li1, saving_data)
+                            saving_data = [li_timestamp_3,li_3_x,li_3_y]
+                            save_data(self.f_li3, saving_data)
+                            saving_data = [li_timestamp_4,li_4_x,li_4_y]
+                            save_data(self.f_li4, saving_data)
                         
-                        #saving_data = [femto_timestamp,femto_channela,femto_channelb]
-                        #save_data(self.f_femto, saving_data)
-                        #self.hdf5_file = hdf5_interface.hdf5_saving()
                         if not self.hdf5_file == None:
                             try:
                                 self.hdf5_file.save_lockin(0,li_timestamp_0,li_0_x,li_0_y)
@@ -1116,9 +1114,10 @@ class main_program(QtGui.QMainWindow):
                             agilent_voltage_voltage =  [(x - self.config_data["offset_voltage"])/(10**self.config_data["range_voltage"]) for x in agilent_new_data["voltage"]] 
 
                         self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
-                        self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)              
-                        saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
-                        save_data(self.f_agilent_voltage, saving_data)   
+                        self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)
+                        if self.save_good_old_txt:
+                            saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
+                            save_data(self.f_agilent_voltage, saving_data)   
                         
                         if not self.hdf5_file == None:
                             try:
@@ -1139,9 +1138,11 @@ class main_program(QtGui.QMainWindow):
                     
                        
                         self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
-                        self.data["agilent_current_voltage"].extend(agilent_current_voltage)              
-                        saving_data = [agilent_current_timestamp,agilent_current_voltage]
-                        save_data(self.f_agilent_current, saving_data)   
+                        self.data["agilent_current_voltage"].extend(agilent_current_voltage) 
+                        
+                        if self.save_good_old_txt:
+                            saving_data = [agilent_current_timestamp,agilent_current_voltage]
+                            save_data(self.f_agilent_current, saving_data)   
                         
                         if not self.hdf5_file == None:
                             try:
@@ -1169,8 +1170,9 @@ class main_program(QtGui.QMainWindow):
                     self.data["motor_cur"].extend(motor_cur)
                     self.data["motor_vel"].extend(motor_vel)                
                     
-                    saving_data = [motor_timestamp,motor_pos,motor_cur,motor_vel]
-                    save_data(self.f_motor, saving_data)
+                    if self.save_good_old_txt:
+                        saving_data = [motor_timestamp,motor_pos,motor_cur,motor_vel]
+                        save_data(self.f_motor, saving_data)
                     
                     if not self.hdf5_file == None:
                         try:
@@ -1194,8 +1196,9 @@ class main_program(QtGui.QMainWindow):
                     self.data["temp1"].extend(temp1)
                     self.data["temp2"].extend(temp2)
                     
-                    saving_data = [temp_timestamp,temp1,temp2]
-                    save_data(self.f_temp, saving_data)
+                    if self.save_good_old_txt:
+                        saving_data = [temp_timestamp,temp1,temp2]
+                        save_data(self.f_temp, saving_data)
                     
                     if not self.hdf5_file == None:
                         try:
@@ -1215,9 +1218,10 @@ class main_program(QtGui.QMainWindow):
                 
                     self.data["ips_timestamp"].extend(ips_timestamp)
                     self.data["ips_mfield"].extend(ips_mfield)
-    
-                    saving_data = [ips_timestamp,ips_mfield]
-                    save_data(self.f_ips, saving_data)
+                    
+                    if self.save_good_old_txt:    
+                        saving_data = [ips_timestamp,ips_mfield]
+                        save_data(self.f_ips, saving_data)
                     
                     if not self.hdf5_file == None:
                         try:
@@ -1239,8 +1243,9 @@ class main_program(QtGui.QMainWindow):
                     self.data["ips_2_timestamp"].extend(ips_2_timestamp)
                     self.data["ips_2_mfield"].extend(ips_2_mfield)
     
-                    saving_data = [ips_2_timestamp,ips_2_mfield]
-                    save_data(self.f_ips_2, saving_data)
+                    if self.save_good_old_txt:
+                        saving_data = [ips_2_timestamp,ips_2_mfield]
+                        save_data(self.f_ips_2, saving_data)
                 
                     if not self.hdf5_file == None:
                         try:

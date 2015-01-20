@@ -49,35 +49,39 @@ def open_files():
     d_name = os.path.dirname(d)
     if not os.path.exists(d_name):
         os.makedirs(d_name)
-    _self.f_li0 = open(d+"li0.txt", 'a')    # TODO os.path.join()
-    _self.f_li1 = open(d+"li1.txt", 'a')
-    _self.f_li3 = open(d+"li3.txt", 'a')
-    _self.f_li4 = open(d+"li4.txt", 'a')
-    _self.f_agilent_voltage = open(d+"agilent_new.txt", 'a')
-    _self.f_agilent_current = open(d+"agilent_old.txt", 'a')
-    _self.f_femto = open(d+"femto.txt", 'a')
-    _self.f_motor = open(d+"motor.txt", 'a')
-    _self.f_temp = open(d+"temp.txt", 'a')
-    _self.f_ips = open(d+"ips.txt", 'a') 
-    _self.f_ips_2 = open(d+"ips_2.txt", 'a') 
-    _self.f_config = open(d+"config.txt", 'a')
+    if _self.save_good_old_txt:
+        _self.f_li0 = open(d+"li0.txt", 'a')    # TODO os.path.join()
+        _self.f_li1 = open(d+"li1.txt", 'a')
+        _self.f_li3 = open(d+"li3.txt", 'a')
+        _self.f_li4 = open(d+"li4.txt", 'a')
+        _self.f_agilent_voltage = open(d+"agilent_new.txt", 'a')
+        _self.f_agilent_current = open(d+"agilent_old.txt", 'a')
+        _self.f_femto = open(d+"femto.txt", 'a')
+        _self.f_motor = open(d+"motor.txt", 'a')
+        _self.f_temp = open(d+"temp.txt", 'a')
+        _self.f_ips = open(d+"ips.txt", 'a') 
+        _self.f_ips_2 = open(d+"ips_2.txt", 'a') 
+        _self.f_config = open(d+"config.txt", 'a')
     _self.hdf5_file = hdf5_interface.hdf5_saving(d)
     set_logfile(d+"log.txt")      
     
 def close_files():
-    from functions import close_logfile
+    from functions import close_logfile,log
     if not _self.f_li0 == None:
-        _self.f_li0.close()
-        _self.f_li1.close()
-        _self.f_li3.close()
-        _self.f_li4.close()
-        _self.f_femto.close()
-        _self.f_motor.close()
-        _self.f_temp.close()
-        _self.f_ips.close()
-        _self.f_ips_2.close()
-        _self.f_config.close()
-        _self.hdf5_file.close()
+        try:
+            _self.f_li0.close()
+            _self.f_li1.close()
+            _self.f_li3.close()
+            _self.f_li4.close()
+            _self.f_femto.close()
+            _self.f_motor.close()
+            _self.f_temp.close()
+            _self.f_ips.close()
+            _self.f_ips_2.close()
+            _self.f_config.close()
+        except Exception,e:
+            log("Failed to Close a File",e)
+        
         _self.f_li0 = None
         _self.f_li1 = None
         _self.f_li3 = None
@@ -90,6 +94,11 @@ def close_files():
         _self.f_ips = None
         _self.f_ips_2 = None
         _self.f_config = None
+    if not _self.hdf5_file == None:
+        try:
+            _self.hdf5_file.close()
+        except Exception,e:
+            log("Failed to Close HDF5 File",e)
         _self.hdf5_file = None
     close_logfile()
 
@@ -260,6 +269,8 @@ def init_variables(_self):
     
     _self.histogram_in_progress = False
     _self.iv_in_progress = False
+    
+    _self.save_good_old_txt = False
 
 
 def init_shutdowns(_self):
