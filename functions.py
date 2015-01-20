@@ -266,7 +266,7 @@ def save_data(filename, saving_data):
                 filename.write(line)
     except Exception,e:
         #print "%i %i %i %i"%(len(saving_data),len(saving_data[0]),len(saving_data[1]),len(saving_data[2]))
-        log("Error while Saving data",e)
+        log("Error while saving data.",e)
         
 
     

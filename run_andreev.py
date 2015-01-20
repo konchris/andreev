@@ -466,7 +466,7 @@ class main_program(QtGui.QMainWindow):
         self.iv_in_progress = True
         
         self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "V (V)")
-        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)")         
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "I (A)") 
         
         if _resync_lockin:
             DEV.lockin.resync()
@@ -841,7 +841,7 @@ class main_program(QtGui.QMainWindow):
     def aquire_b_sweep(self, _max=None, _rate=None, _axes=None):  
         """aquire sweep to b field and perhaps back
         take care of _max and _rate!
-        _axes should be 0 or 1"""
+        _axes should be 0 or 1; 0=zSweep, 1=xSweep"""
         self.stop_measure = False
         _axes += 1              
         log("B Sweep Started")
@@ -951,7 +951,7 @@ class main_program(QtGui.QMainWindow):
             time.sleep(0.5)
         end_time = time.time()    
         
-        
+        # Switch Heater shut down
         if self.form_data["checkBSweepHeater"]:
             try:
                 if DEV.magnet.field_reached():
@@ -967,7 +967,8 @@ class main_program(QtGui.QMainWindow):
                     log("Magnet 2 Sweeping. Couldn't Turn off Heater!",e)
             except Exception,e:
                 log("Failed Auto-Off Heater IPS2",e)
-                
+        
+        # interpolating and saving of the data                
         try:
             self.data_lock.acquire()
             
@@ -1010,12 +1011,479 @@ class main_program(QtGui.QMainWindow):
         log("B Sweep Done")
         
 
+    def aquire_b_iv_map(self, _minB=None, _maxB=None, _steps=None, _rate=0.2,
+                        _axes=0, _minV=None, _maxV=None, _timeV=None,
+                        _sample=True, _double=True, _resync_lockin=True):  
+        """acquire a b-iv-map with given ranges and properties
+        
+        This function initializes the different devices so the can be used for 
+        this sweep. The field is driven from `_minB` to `_maxB` in steps with
+        the increment of `_steps`. At each value a IV sweep with the voltage
+        boundaries `_minV` `_maxV` in `_timeV` seconds is performed.
+        
+        Parameters
+        ----------
+        _minB : float
+            Minimum field, where the sweep begins, in Tesla.
+        _maxB : float
+            Maximum field, where the sweep ends, in Tesla.
+        _steps : float
+            The increment of the B sweep. Every `_step` T a IV sweep will be
+            started. Give in T.
+        _rate : float, optional
+            The speed of the change of the magnetic field. Default: 0.2 T/min
+        _axes : {0, 1}, optional
+            Selects the axis of the magnetic field. 0 : z direction (default)
+                                                    1 : x direction
+        _minV : float
+            Lower voltage boundary of the IV sweep
+        _maxV : float
+            Higher voltage boundary of the IV sweep
+        _timeV : float
+            Time in which the IV sweep from `_minV` to `_maxV` or 
+            from `_maxV` to `_minV` is performed. Give in seconds.
+        _sample : logical, optional
+            This variable manipulates the applied voltage:
+            True : Given voltage at the sample (default)
+            False : Given voltage over all.
+        _double : logical, optional
+            This variable decides the shape of the IV sweep:
+            True : triangular (default)
+            False: saw tooth
+            
+        Returns
+        -------
+        None
+        
+        Other Parameters
+        ----------------        
+        _resync_lockin: logical, optional
+            The Lock-In is resyncronized at the beginning of each invocation of
+            this function, optional value is True
+        
+        Raises
+        ------
+        No Exception is thrown with this function.
+        
+        See Also
+        --------
+        aquire_iv : a single IV sweep
+        aquire_b_sweep : a sweep of the magnetic field without any interruptions"""
+        
+        log("B-IV-map Started")
+        self.stop_measure = False    
+        
+        """defining which labels on the axis should appear"""
+        self.ui.cw5.plot.set_axis_title(self.ui.cw6.plot.X_BOTTOM, "U(V)")
+        self.ui.cw5.plot.set_axis_title(self.ui.cw6.plot.Y_LEFT,"I(A)")
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "B (T)")
+        self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "Resistance (Ohm)")
+        
+        """prelocations and precalculations for iv sweeps"""
+        if _resync_lockin:
+            DEV.lockin.resync()
+            
+        try:
+            sample_res = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
+            sample_factor = sample_res/(sample_res + self.rref)
+        except Exception,e:
+            sample_factor = 1000.0
+            log("IV voltage calculation failed",e)
+            
+        if _sample:
+            _minV = _minV / sample_factor
+            _maxV = _maxV / sample_factor
+            
+       # range maximum protection
+        _voltage_limits = 5.0
+        _minV = max(-_voltage_limits, min(_minV, _voltage_limits))
+        _maxV = max(-_voltage_limits, min(_maxV, _voltage_limits))
+        
+        """prelocations and allocations for b changes"""
+        _axes += 1
+        field = np.arange(_minB,_maxB+_steps,_steps)
+        print field
+        
+        #switch on switch heater of the chosen magnet
+        try:
+            # automatic switch heater mode is checked
+            if self.form_data["checkBAutoSwitchHeater"]:
+                if _axes == 1:
+                    if not DEV.magnet == None:
+                        if DEV.magnet.heater == False:
+                            log("IPS1 Heater was OFF, Switching ON")
+                            DEV.magnet.set_switchheater("ON")
+                            for i in range(20):
+                                time.sleep(1)
+                                app.processEvents()
+                if _axes == 2:
+                    if not DEV.magnet_2 == None:
+                        if DEV.magnet_2.heater == False:
+                            log("IPS2 Heater was OFF, Switching ON")
+                            DEV.magnet_2.set_switchheater("ON")
+                            for i in range(20):
+                                time.sleep(1)
+                                app.processEvents()
+            
+            # check if switch heater is in right state
+            if self.form_data["checkBSwitchHeater"]:
+                if _axes == 1:
+                    if not DEV.magnet == None:
+                        if DEV.magnet.heater == False:
+                            log("IPS1 Heater is OFF. Exiting.")
+                            self.stop_measure = True
+                            return -1  
+                if _axes == 2:
+                    if not DEV.magnet_2 == None:
+                        if DEV.magnet_2.heater == False:
+                            log("IPS2 Heater is OFF. Exiting.")
+                            self.stop_measure = True
+                            return -1            
+        except Exception,e:
+            log("Auto Set Switchheater Failed. Exiting.",e)
+            self.stop_measure = True
+            return -1
+        
+        """ Start with the b-iv-map """
+        self.begin_time_biv = time.time()
+        for k in field:
+            self.begin_time_biv_b = time.time()
+            last_time = time.time()
+            # set b field to target value
+            if _axes == 1:
+                DEV.magnet.SetField(k, _rate)
+                print "IPS set to %f T"%(k)
+                while not DEV.magnet.field_reached():
+                    time.sleep(5)
+                
+            if _axes == 2:
+                DEV.magnet_2.SetField(k, _rate)
+                print "IPS set to %f T"%(k)
+
+             
+            #check if update is needed and displays the new data
+            while not DEV.magnet_2.field_reached():
+                if time.time() - last_time > 1:
+                    last_time = time.time()
+                    
+                    try:
+                        self.data_lock.acquire()
+                        x_list = np.arange(self.begin_time_biv_b,last_time,0.1)
+                        
+                        voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                        current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                        
+                        if _axes == 1:
+                            b = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+                        if _axes == 2:
+                            b = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+                        
+                        self.plot_data["x2"] = b
+                        self.plot_data["y2"] = voltage_list/current_list*self.rref
+                        self.plot_data["new"][0] = True
+                    except Exception,e:
+                        log("B Sweep interpolation failed",e)       
+                    finally:
+                        self.data_lock.release()
+                time.sleep(0.1)
+                
+                if self.stop_measure():
+                    if _axes == 1:
+                        DEV.magnet.SetField(DEV.magnet.actual_field(), _rate)
+                    if _axes == 2:
+                        DEV.magnet_2.SetField(DEV.magnet_2.actual_field(), _rate)
+                    break
+                
+            # Saving b sweep from begin_time_biv_b
+            end_time_biv_b
+            try:
+                self.data_lock.acquire()
+                x_list = np.arange(self.begin_time_biv_b,end_time_biv_b,0.1)
+                voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                if _axes == 1:
+                    b = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+                elif _axes == 2:
+                    b = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+                
+                self.plot_data["x2"] = b
+                self.plot_data["y2"] = voltage_list/current_list * self.rref
+                self.plot_data["new"][0] = True
+                
+                saving_data = [x_list, voltage_list, current_list, b]
+                d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"
+                d_name = os.path.dirname(d)
+                if not os.path.exists(d_name):
+                    os.makedirs(d_name)
+                time_string = str(int(round(time.time())))
+                file_string = "bsweep_%s.txt"%(time_string)
+                f_b = open(d+file_string, 'a')
+                try:
+                    param_string = self.return_param_string
+                    f_b.write("%s\n"%(param_string))
+                    f_b.write("timestamp, voltage, current, b\n")
+                except Exception,e:
+                    log("B Sweep Parameter Save failed",e)
+                save_data(f_b, saving_data)
+                f_b.close()
+                self.ui.editLastIV.setText(file_string)
+                slef.last_iv_name = time_string
+            except Exception,e:
+                log("B Sweep interpolation and saving failed",e)
+            finally:
+                self.data_lock.release()
+            
+            time.sleep(0.1)
+            app.processEvents()
+            log("B = %1.4f reached"%(k))
+            
+                
+            # performing a iv sweep
+            bias = DEV.yoko.get_voltage() #bias to make postmeasuring allocations
+            DEV.yoko.program_goto_ramp(_minV,1)
+            time.sleep(1)
+            time.sleep(5 * float(self.form_data["editLITC"]))
+            
+            log("IV loop %f V,%f V, %4.0f s"%(_minV,_maxV,_timeV))
+            loop_count = 2
+            last_time = time.time()
+            start_sweep_yoko = True
+            while loop_count>0.1:
+                if start_sweep_yoko:
+                    self.begin_time_biv_iv = time.time()
+                    
+                    param_string = self.return_param_string()
+                    initialize.write_config("IV START\t%15.15f\t%s\n"%(self.begin_time_iv,param_string))
+                    
+                    start_sweep_yoko = False
+                    DEV.yoko.program_goto_ramp(_maxV,_timeV)
+                    log("IV goto Max")
+                    
+                # check if update is needed an displays the new data
+                if time.time() - last_time > 1:
+                    last_time = time.time()
+                    
+                    try:
+                        self.data_lock.acquire()
+                        x_list = np.arange(self.begin_time_biv_iv,last_time,0.1)
+                        
+                        try:
+                            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                            li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+                            li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+                            li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"])
+                            li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"])
+                            li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+                            li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])
+                            li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"])
+                            li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"])
+                            
+                            li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                            li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                            li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                            li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                            
+                            li_first = li_3_r/li_0_r*12900
+                            li_second = li_4_r/li_1_r*12900
+                            
+                            self.plot_data["x3"] = voltage_list[:]
+                            self.plot_data["x4"] = voltage_list[:]
+                            self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                    
+                            self.plot_data["new"][2] = True
+                            self.plot_data["new"][3] = True
+                        except Exception,e:
+                            log("IV interpolation failed",e)
+                            
+                        self.plot_data["x1"] = voltage_list[:]
+                        self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
+                        self.plot_data["new"][0] = True
+                    finally:
+                        self.data_lock.release()
+                        
+                time.sleep(0.1)
+                app.processEvents()
+                    
+                #check for stopping condition
+                if self.stop_measure:
+                    DEV.yoko.program_hold()
+                    loop_count = 0
+                    break
+                
+                if DEV.yoko.program_is_end():
+                    start_sweep_yoko = True
+                    if _double: #Dreiecksverlauf
+                        loop_count -=1
+                    else: #Sägezahn
+                        loop_count -=2
+                        
+                end_time_biv_iv = time.time()
+                initialize.write_config("IV STOP\t%15.15f\t\n"%(end_time_biv_iv))
+                
+                #save file of this iv-sweep
+                try:
+                    self.data_lock.acquire()
+                    
+                    x_list = np.arange(self.begin_time_biv_iv,end_time_biv_iv,0.1)
+                    
+                    # lockin data refurbishment
+                    voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+                    current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+                    li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+                    li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+                    li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"])
+                    li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"])
+                    li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+                    li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])
+                    li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"])
+                    li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"])
+                
+                    li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
+                    li_1_r = np.sqrt(np.square(li_1_x_interp)+np.square(li_1_y_interp))
+                    li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
+                    li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
+                    li_first = li_3_r/li_0_r*12900    # first derivative (dI/dV)
+                    li_second = li_4_r/li_1_r*12900   # second derivative (d^2I/dV^2)
+                
+                    self.plot_data["x1"] = voltage_list[:]
+                    self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
+                    
+                    self.plot_data["x3"] = voltage_list[:]
+                    self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
+                        
+                    self.plot_data["x4"] = voltage_list[:]
+                    self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                    
+                    # refresh plots and save them
+                    self.plot_data["new"][0] = True
+                    self.plot_data["new"][2] = True
+                    self.plot_data["new"][3] = True
+                        
+                    try:
+                        saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
+                        d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
+                        d_name = os.path.dirname(d)
+                        if not os.path.exists(d_name):
+                            os.makedirs(d_name)
+                        time_string = str(int(round(time.time())))
+                        file_string = "iv_%1.4f_%s_%i_%i.txt"%(k,time_string,self.config_data["main_index"],self.config_data["sub_index"])
+                        f_iv = open(d+file_string,'a')
+                            
+                        try:
+                            param_string = self.return_param_string()
+                            f_iv.write("%s\n"%(param_string))
+                            f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y\n")
+                        except Exception,e:
+                            log("IV Parameter Save failed",e)
+                        save_data(f_iv, saving_data)
+                        f_iv.close()
+                        self.ui.editLastIV.setText(file_string)
+                    except Exception,e:
+                        log("Failed to Save IV",e)
+                            
+                    self.plot_data["save"] = True
+                except Exception,e:
+                    log("IV Calculation Failed",e)
+                finally:
+                    self.data_lock.release()
+            
+            log("IV Loop End")
+            time.sleep(0.5)
+            DEV.yoko.program_goto_ramp(bias, 1)
+            time.sleep(2)
+            log("IV Sweep finished")
+            
+            if self.stop_measure():
+                break
+            time.sleep(0.5)
+            end_time = time.time()
+            
+        """post measuring things"""
+        # Switch Heater shut down
+        if self.form_data["checkBSweepHeater"]:
+            try:
+                if DEV.magnet.field_reached():
+                    DEV.magnet.set_switchheater("zeroOFF")
+                else:
+                    log("Magnet Sweeping. Couldn't Turn off Heater!",e)
+            except Exception,e:
+                log("Failed Auto-Off Heater IPS1",e)
+            try:
+                if DEV.magnet_2.field_reached():
+                    DEV.magnet_2.set_switchheater("zeroOFF")
+                else:
+                    log("Magnet 2 Sweeping. Couldn't Turn off Heater!",e)
+            except Exception,e:
+                log("Failed Auto-Off Heater IPS2",e)
+        
+        # interpolating and saving of the data        
+        try:
+            self.data_lock.acquire()
+            
+            x_list = np.arange(self.begin_time_biv,end_time,0.1)
+            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+            li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+            li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+            li_1_x_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_x"])
+            li_1_y_interp = interpolate(x_list, self.data["li_timestamp_1"], self.data["li_1_y"])
+            li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+            li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])
+            li_4_x_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_x"])
+            li_4_y_interp = interpolate(x_list, self.data["li_timestamp_4"], self.data["li_4_y"])
+                
+            if _axes == 1:
+                b = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+            if _axes == 2:
+                b = interpolate(x_list, self.data["ips_2_timestamp"], self.data["ips_2_mfield"])
+      
+            saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp, b]
+            d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())+"\\"    
+            d_name = os.path.dirname(d)
+            if not os.path.exists(d_name): #Überprüfen ob Ordner existiert, sonst erstellen
+                os.makedirs(d_name)
+            time_string = str(int(round(time.time())))
+            file_string = "bivmap_%s.txt"%(time_string)
+            f_iv = open(d+file_string, 'a')
+            try:
+                param_string = self.return_param_string
+                f_iv.write("%s\n"%(param_string))
+                f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_1_x, li_1_y, li_3_x, li_3_y, li_4_x, li_4_y, b\n")
+            except Exception,e:
+                log("B IV Map Parameter Save failed",e)
+            save_data(f_iv, saving_data)
+            f_iv.close()
+            self.ui.editLastIV.setText(file_string)
+            
+            self.last_iv_name = time_string
+        except Exception,e:
+            log("B IV Map interpolation and Saving failed",e)     
+        finally:
+            self.data_lock.release()
+
+        log("B-IV-Map Done")
+
+
+
     def measurement_thread(self):
-        """This thread is gathering data all time"""
+        """This thread is gathering data all time.
+        
+        This thread initialize the readout of the data from the single 
+        devices and write it into a variable called self.data["measured_variable"].
+        Additionally the data is written into the single files and the hdf5 file.
+        
+        For more information look down to the single try where the data is read."""
 
         while not self.shutdown:
             try:
                 self.data_lock.acquire()
+                # Readout of the Lock-In amplifier.
+                # The data of all channels is corrected with the amplification 
+                # factor `factor_voltage` of `factor_current`. The two auxillary
+                # channels are additionally corrected with the offset of the
+                # agilents.
+                
                 if not self.offset_in_progress:
                     li_timestamp_0 = []
                     li_aux0 = []
@@ -1103,7 +1571,9 @@ class main_program(QtGui.QMainWindow):
                         log("LockIn failed DAQ",e)
                         
                     
-                    
+                # The first Agilent which is connected to the voltage of the
+                # sample is read out. The voltage is corrected by the amplification
+                # factor and the offset of the Agilent.                    
                 if not self.offset_in_progress:
                     agilent_voltage_timestamp = []
                     agilent_voltage_voltage = []
@@ -1127,6 +1597,9 @@ class main_program(QtGui.QMainWindow):
                     except Exception,e:
                         log("Agilent New failed DAQ",e)
 
+                # The second Agilent which is connected to the voltage of the
+                # reference resistor is read out. The voltage is corrected by
+                # the amplification factor and the offset of the Agilent.
                 if not self.offset_in_progress:
                     agilent_current_timestamp = []
                     agilent_current_voltage = []
@@ -1152,7 +1625,7 @@ class main_program(QtGui.QMainWindow):
                     except Exception,e:
                         log("Agilent old failed DAQ",e)
                     
-                 
+                # The position, the current and the velocity is read out. No correction.                 
                 motor_timestamp = []
                 motor_pos = []
                 motor_cur = []
@@ -1181,7 +1654,9 @@ class main_program(QtGui.QMainWindow):
                             log("Failed to Save Motor HDF5",e)
                 except Exception,e:
                     log("Motor failed DAQ",e)
-                    
+                
+                # The Temperatur of the sample and the 1K pot is read out
+                # No corrections.                
                 temp_timestamp = []
                 temp1 = []
                 temp2 = []
@@ -1208,6 +1683,7 @@ class main_program(QtGui.QMainWindow):
                 except Exception,e:
                     log("Temperature failed DAQ",e)
                 
+                # The magnet in z-direction is read out.                
                 ips_timestamp = []
                 ips_mfield = []
                 try:
@@ -1231,7 +1707,7 @@ class main_program(QtGui.QMainWindow):
                 except Exception,e:
                     log("Magnet failed DAQ",e)
                 
-                
+                # The magnet in x-direction is read out.                
                 ips_2_timestamp = []
                 ips_2_mfield = []
                 try:
@@ -1263,8 +1739,15 @@ class main_program(QtGui.QMainWindow):
             time.sleep(0.2)
         initialize.close_files()
     
-    #def measurement_btn_IV_Sweep(self):
-    #     thread.start_new_thread(self.measurement_IV_Sweep,())
+    """ The following functions call the different functions for different 
+    measurements like IV sweep, B sweep ...
+    
+    Each function is called by a button action on the gui, which leads to an 
+    action in 'initialize.init_connections' which calls the functions hear.
+    Depending on the measurment different variable are read out. Then a new
+    thread is started with the function for the measurement and the variables
+    are passed."""
+    
     def measurement_btn_Acquire_Ultra(self):
         thread.start_new_thread(self.aquire_ultra,())
     def measurement_btn_Acquire_Histogram(self):
@@ -1295,8 +1778,35 @@ class main_program(QtGui.QMainWindow):
             _rate = float(self.form_data["editBRate_2"])
         # self, _max=None, _rate=None, _axes=None
         thread.start_new_thread(self.aquire_b_sweep,(_max,_rate,_axes))
+        
+    def measurement_btn_Acquire_B_IV_Map(self):
+        # variables for the B field
+        _minB = float(self.form_data["editBIVMapMinB"])
+        _maxB = float(self.form_data["editBIVMapMaxB"])
+        _steps = float(self.form_data["editBIVMapIncB"])
+        _rate = float(self.from_data["editBIVMapRateB"])
+        _axes = int(self.form_data["comboBIVMapAxes"])
+        # variables for the IV sweeps
+        _minV = float(self.form_data["editBIVMapMinV"])
+        _maxV = float(self.form_data["editBIVMapMaxV"])
+        _timeV = float(self.form_data["editBIVMapTimeV"])
+        _double = self.form_data["checkBIVdouble"]
+        _sample = self.form_data["checkBIVsample"]
+        #self, _minB=None, _maxB=None, _steps=None, _rate=None, _axes=None, _minV=None, _maxV=None, _timeV=None, _sample=None, _double=None, _resync_lockin=True
+        thread.start_new_thread(self.aquire_b_iv_map,(_minB,_maxB,_steps,_rate,_axes,
+                                                      _minV,_maxV,_timeV,_sample,_double))
             
     def return_param_string(self):
+        """This function produces a string which all latest values of all 
+        devices includes.
+        
+        Returns
+        -------
+        params_str : String
+            This string contains all values of all devices in an order of the 
+            dictionary --> looks quiet arbitrary.
+            This string is saved in all collected data files at the beginning."""
+            
         params_str = ""
         try:
             params = self.data.copy()
@@ -1314,7 +1824,12 @@ class main_program(QtGui.QMainWindow):
         return params_str      
         
     def execute(self):
-        """Executes a command"""
+        """Executes a command given in the command line.
+        
+        This function is called by a line in 'initialize.init_connection, which
+        gets in action bythe Button 'Execute' in the Main Tab. Then it executes
+        the command given in the command line in the Main Tab."""
+        
         try:
             exec(str(self.form_data["editCommand"]))
         except Exception,e:

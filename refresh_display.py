@@ -16,7 +16,12 @@ _self = None
 
 
 def refresh_display():
-    """This function is called every second for misc functions""" 
+    """This function is called every second for misc functions which 
+    reads out the given data in the the fields in the gui and update the
+    diffent fields.
+    
+    The read data is stored in a dictonary called 'form_data' where all 
+    fields have there own key."""  
                            
     global _self
     try:
@@ -60,6 +65,10 @@ def refresh_display():
         
         _self.ui.labSample.setText(str(len(_self.data["agilent_voltage_timestamp"])))
         
+        """ calculating the sample_factor, which is a value which part of the
+        voltage drops at the sample.
+        The estimated value for the voltage is calculated and the estimation
+        is represented in the estimation fields."""
         try:
             _sample_res= abs(_self.data["agilent_voltage_voltage"][-1]/_self.data["agilent_current_voltage"][-1]*_self.rref)
             sample_factor = _sample_res/(_sample_res+_self.rref)
@@ -132,6 +141,7 @@ def refresh_display():
         except Exception,e:
             log("Button Status update failed",e)
         
+        """The status off the switch heaters in the B tab is adjusted here"""
         try:
             if DEV.magnet == None:
                 _self.ui.labelSwitchHeater.setText("???")
