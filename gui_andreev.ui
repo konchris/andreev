@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>940</width>
-    <height>800</height>
+    <width>941</width>
+    <height>801</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -99,7 +99,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>13</number>
+        <number>11</number>
        </property>
        <widget class="QWidget" name="tab1">
         <attribute name="title">
@@ -3166,7 +3166,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="editFactorVoltage_2">
+           <widget class="QLineEdit" name="editFactorVoltage">
             <property name="text">
              <string>10</string>
             </property>
@@ -3176,7 +3176,7 @@
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QLineEdit" name="editFactorCurrent_2">
+           <widget class="QLineEdit" name="editFactorCurrent">
             <property name="text">
              <string>10</string>
             </property>
@@ -3193,7 +3193,7 @@
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QLineEdit" name="editOffsetVoltage_2">
+           <widget class="QLineEdit" name="editOffsetVoltage">
             <property name="text">
              <string>0</string>
             </property>
@@ -3203,7 +3203,7 @@
            </widget>
           </item>
           <item row="3" column="3">
-           <widget class="QLineEdit" name="editOffsetCurrent_2">
+           <widget class="QLineEdit" name="editOffsetCurrent">
             <property name="text">
              <string>0</string>
             </property>
@@ -3220,7 +3220,7 @@
            </widget>
           </item>
           <item row="7" column="0">
-           <widget class="QPushButton" name="btnOffset_2">
+           <widget class="QPushButton" name="btnOffset">
             <property name="text">
              <string>Correct</string>
             </property>
@@ -3265,7 +3265,7 @@
            </widget>
           </item>
           <item row="4" column="1">
-           <widget class="QLineEdit" name="editOffsetVoltage_3">
+           <widget class="QLineEdit" name="editOffsetVoltage_2">
             <property name="text">
              <string>0</string>
             </property>
@@ -3282,7 +3282,7 @@
            </widget>
           </item>
           <item row="4" column="3">
-           <widget class="QLineEdit" name="editOffsetCurrent_3">
+           <widget class="QLineEdit" name="editOffsetCurrent_2">
             <property name="text">
              <string>0</string>
             </property>
@@ -3292,7 +3292,7 @@
            </widget>
           </item>
           <item row="5" column="1">
-           <widget class="QLineEdit" name="editOffsetVoltage_5">
+           <widget class="QLineEdit" name="editOffsetVoltage_3">
             <property name="text">
              <string>0</string>
             </property>
@@ -3302,7 +3302,7 @@
            </widget>
           </item>
           <item row="5" column="3">
-           <widget class="QLineEdit" name="editOffsetCurrent_4">
+           <widget class="QLineEdit" name="editOffsetCurrent_3">
             <property name="text">
              <string>0</string>
             </property>
@@ -3312,7 +3312,7 @@
            </widget>
           </item>
           <item row="6" column="3">
-           <widget class="QLineEdit" name="editOffsetCurrent_5">
+           <widget class="QLineEdit" name="editOffsetCurrent_4">
             <property name="text">
              <string>0</string>
             </property>
@@ -3932,6 +3932,32 @@ p, li { white-space: pre-wrap; }
       <height>20</height>
      </rect>
     </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>760</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="btnFemtoVoltage">
+       <property name="text">
+        <string>V</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnFemtoCurrent">
+       <property name="text">
+        <string>I</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <action name="action_Close">
