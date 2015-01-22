@@ -258,8 +258,8 @@ class Magnet:
 
         
 class LAKESHORE:
-    def __init__(self,addr=12, label="Lakeshore 336"):
-        self.lakeshore=visa.instrument("GPIB0::%i"%(addr), timeout=0.1, term_chars="\r\n")
+    def __init__(self,GPIB_No=12, label="Lakeshore 336"):
+        self.lakeshore=visa.instrument("GPIB0::%i"%(GPIB_No), timeout=0.1, term_chars="\r\n")
         #self.initialize()
         
         self.data = {}
@@ -470,6 +470,12 @@ class LAKESHORE:
         print str(i+1) + " " + str(np.log10(calibration_probe2[i][0])) + " " + str(calibration_probe2[i][1])    """    
 
 class GS200:
+    """ This class manages the communication with the Yokogawa GS200
+    
+    Parameters
+    ----------
+    GPIB_No : integer
+        Number of the GPIB port the Yokogawa is attached."""
     def __init__(self, GPIB_No=14):
         #self.yoko=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.05, term_chars='\n')
         self.yoko=visa.instrument('USB0::0x0B21::0x0039::91M818122::0::INSTR', delay=0.05, term_chars='\n', timeout=0.2)
@@ -593,6 +599,17 @@ class GS200:
         return self.voltage
 
 class YOKO7651:
+    """ This class manages the communication with the Yokogawa 7651.
+    
+    Many functions in the class don't do anything, they where simply copied
+    from the class 'GS200' and are needed for good working of the whole programm.
+    This function only 'pass' and are collected at the end of the class.
+    
+    Parameters
+    ----------
+    GPIB_No : integer
+        The number on which GPIB port the Yokogawa is attached.
+    """
     def __init__(self, GPIB_No=24):
         self.yoko=visa.instrument('GPIB0::%i'%GPIB_No, delay=0.05, term_chars='\n')
         self.ranges={10e-3:'R2', 100e-3:'R3', 1.0:'R4', 10.0:'R5', 30.0:'R6'}
@@ -616,9 +633,11 @@ class YOKO7651:
 
     def set_voltage(self, U=1.0e-6):
         """define yoko setpoint U in V"""
+        voltage_old = self.voltage
         self.voltage=float(U)
         self.yoko.write('S%f'%float(U))
-        print 'S%f'%float(U)
+        if voltage_old !=self.voltage:
+            print 'Spannung auf %f gesetzt.'%float(U)
         self.yoko.write('E')
     
     def output(self,state=True):
@@ -628,13 +647,6 @@ class YOKO7651:
             self.yoko.write("o1e")
         else:
             self.yoko.write("o1e")
-
-    def display_set_text(self, text="GS200"):
-        """Displays desired text"""
-        pass
-    def display_main_screen(self):
-        """Sets Display back to normal"""
-        pass
    
     def program_is_end(self):
         try:
@@ -650,26 +662,19 @@ class YOKO7651:
             return False
 
     def program_goto_ramp(self, voltage=0.0, slope_time=1):
-        """set the sweep parameters for yokogawa
-           !!! the sweep is performed starting from the actual value to the first value in Bias_step !!!
-
-           Bias_step=[2.0, -2.0] - a list of bias target voltages in the sweep
-           step_interval=120 - the time interval between two subsequent steps the sweep
-           step_sweep=120  -  the duration of sweeping the voltage between two subseqent steps
-           
-           NOTE: step_interval should be equal or larger than step_sweep
-                 if step_interval=step_sweep the voltage source produces a triangular sawtooth function
-                 if step_interval>step_sweep the voltage source produces a ramp + dwell function
-                 if step_interval>0 and  step_sweep=0 the voltage source produces a rectangular staircase function
-                 make sure to have no range switch inbetween (david)
-        """
-        #migration david->scheerIV
-        Bias_step = [voltage]
-        step_interval = slope_time
-        step_sweep = slope_time
-        #migration david->scheerIV
+        """Programms the Yokogawa voltage supply so that it ramps from the current
+        value of the voltage to a given in a given time.
         
-        maxbias=max([abs(i) for i in Bias_step])        
+        Parameters
+        ----------
+        voltage : float
+            The voltage to which the yokogawa shoud ramp.
+        slope_time : float
+            The time in which the yokogawa should ramp to the 'voltage'.
+        """
+        
+        # defining the range of the yokogawa
+        maxbias=abs(voltage)       
         rangevals=np.array(self.ranges.keys())
         rangecomm=self.ranges[min(rangevals[np.where(rangevals>=maxbias)])]
         self.yoko.write('%s'%rangecomm)
@@ -679,34 +684,52 @@ class YOKO7651:
         self.yoko.write('PRS')  #open programming mode
         self.yoko.write('F1')   #set V:DC source
         self.yoko.write('%s'%rangecomm)
-        for i in Bias_step:     #create program steps
-            self.yoko.write('S%f'%float(i)) 
-            time.sleep(0.1)
+        #create program steps
+        self.yoko.write('S%f'%float(voltage)) 
+        time.sleep(0.1)
         self.yoko.write('PRE')  #end programming mode
-        self.yoko.write('PI%f'%float(step_interval))    #set step interval time
+        self.yoko.write('PI%f'%float(slope_time))    #set step interval time
         self.yoko.write('E')
-        self.yoko.write('SW%f'%float(step_sweep))       #set sweep interval time
+        self.yoko.write('SW%f'%float(slope_time))       #set sweep interval time
         self.yoko.write('E') 
         
         self.yoko.write('M1')   #single
         self.yoko.write('E')
         self.yoko.write('RU2')
         
-
+    # Functions with no real function.
     def set_function(self,function="VOLT"):
         """sets the function of the device.
         possible: VOLT | CURR"""
-        pass
-    
+        pass    
     def set_limits(self, current=0.005, voltage=2.000):
         """sets the limits for voltage and current"""
         pass
-
     def get_voltage(self):
         """returns the last set value"""
         return self.voltage
+    def display_set_text(self, text="GS200"):
+        """Displays desired text"""
+        pass
+    def display_main_screen(self):
+        """Sets Display back to normal"""
+        pass
 
 class Agilent34410A:
+    """ This class manages the communication with the Agilent34410A and fetches
+    the data from it.
+    
+    Parameters
+    ----------
+    label : String
+        So far unused?
+    dlay : float
+        So far unused?
+    addr : string
+        The exact USB address of this specific Agilent.
+    timeout : float
+        So far unused?"""
+        
     def __init__(self, label="Agilent", dlay=0, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR",timeout=0.2): #GPIB_No=22, 
         """Agilent 34410A"""
         self.label = label

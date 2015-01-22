@@ -44,6 +44,7 @@ def interp_breaking_trace(t_start=0,t_end=1,data={},steps=0.1):
 
 
 def round_to_digits(x, digits=1):
+    """ Rounds the value 'x' to the in 'digits' specified numbers of digits."""
     if x > 1e-6:
         return round(x, -int(np.floor(np.log10(abs(x)))) + (digits - 1))
     else:
@@ -242,10 +243,18 @@ def read_config(form):
 old_logs = []
 logfile = None
 def set_logfile(filename):
+    """This function opens a global logfile
+    
+    Parameters
+    ----------
+    filename : string
+        The name of the logfile.
+    """
     global logfile
     logfile = open(filename,"a")
 
 def close_logfile():
+    """ This function closes the logfile opened with set_logfile"""
     global logfile
     try:
         if not logfile == None:
@@ -256,6 +265,18 @@ def close_logfile():
     logfile = None
     
 def save_data(filename, saving_data):
+    """This function writes the data into the file.
+    
+    The function is mainly called by the different measurement functions in
+    run_andreev.py.
+    
+    Parameters
+    ----------
+    filename : file handle
+        The file handle of the file in which the data should be written.
+    saving_data : float array
+        Thw whole data for writing into a file.
+    """
     try:
         if not filename == None:
             for i in range(len(saving_data[0])):  # for all new data rows
@@ -271,9 +292,30 @@ def save_data(filename, saving_data):
 
     
 def log(message, exception=None, force=False):
+    """ This function manage the log an prints onto the output and write it 
+    into the log file.
+    
+    Before making a new log entry the function checks if there was the same 
+    message in the last 10 seconds. If this is the case the message no new
+    log entry is made. If it is a important message you can force ist with 
+    the parameter 'force'.
+    When the message did not appeared in the last 10 seconds a neew log entry
+    is build, which may contain an exception. This log entry is printed on
+    the standard output and, if there is an log file, into the log file.
+    
+    Parameters
+    ----------
+    message : string
+        The message which should be printed and written into the log file.
+    exception : exception, optional
+        If an exception was the problem, which is reported, this parameter 
+        contain the exception.
+    force : logical, optional
+        This parameter forces the function to display the message, even if it
+        was displayed as the last message."""
+        
     # time to do not show same log again
     cold_time = 10
-
     # delete old apperances
     i = 0
     while True:
@@ -333,6 +375,13 @@ def beep():
         log("Beep",e)
 
 def ensure_dir(f):
+    """This function checks if a special directory exists and when not build it.
+    
+    Parameters
+    ----------
+    f : string
+        The whole path to the directory.
+    """
     d = os.path.dirname(f)
     if not os.path.exists(d):
         os.makedirs(d)        

@@ -1254,10 +1254,15 @@ class main_program(QtGui.QMainWindow):
                     
                     param_string = self.return_param_string()
                     initialize.write_config("IV START\t%15.15f\t%s\n"%(self.begin_time_iv,param_string))
-                    
-                    start_sweep_yoko = False
-                    DEV.yoko.program_goto_ramp(_maxV,_timeV)
-                    log("IV goto Max")
+
+                    start_sweep_yoko = False                    
+                    if loop_count % 2:
+                        DEV.yoko.program_goto_ramp(_minV,_timeV)
+                        log("IV goto Min")
+                    else:
+                        DEV.yoko.program_goto_ramp(_maxV,_timeV)
+                        log("IV goto Max)
+                        
                     
                 # check if update is needed an displays the new data
                 if time.time() - last_time > 1:
