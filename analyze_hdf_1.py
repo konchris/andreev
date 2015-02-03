@@ -23,16 +23,13 @@ from functions_evaluate import *
 
 db = 0
 
-<<<<<<< .mine
+
 #filename = r"140809_Pb180_Histo_03"
 #filename = r"140810_Pb180_Histo_04"
 #filename = r"140812_Pb180_Histo_08"
 #filename = r"140826_Pb189_Histo_02"
-filename = r"141216_Pb266_Tc"
-=======
-filename = r"141124_Pb260_Cooldown"
-filename = r"141204_Pb244_Cooldown"
->>>>>>> .r42
+filename = r"150130_Pb248_Cooldown"
+
 base_path = os.path.join("Z:\dweber\data_p5",filename)
 base_path = os.path.join("C:\data_p5",filename)
 total_path = [os.path.join(base_path,'db_%i.h5'%(db))]

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui_andreev.ui'
 #
-# Created: Tue Jan 20 16:50:05 2015
+# Created: Tue Feb 03 10:37:56 2015
 #      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -1391,7 +1391,7 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.tab_10, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.tabWidget)
         self.verticalLayoutWidget_3 = QtGui.QWidget(self.centralwidget)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(580, 10, 100, 301))
+        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(580, 10, 81, 301))
         self.verticalLayoutWidget_3.setObjectName(_fromUtf8("verticalLayoutWidget_3"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.verticalLayoutWidget_3)
         self.verticalLayout_2.setSpacing(0)
@@ -2032,14 +2032,14 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_9), QtGui.QApplication.translate("MainWindow", "1", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_10), QtGui.QApplication.translate("MainWindow", "2", None, QtGui.QApplication.UnicodeUTF8))
         self.btnUnbreak.setText(QtGui.QApplication.translate("MainWindow", "UnBreak", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnStop.setText(QtGui.QApplication.translate("MainWindow", "Stop", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnStop.setText(QtGui.QApplication.translate("MainWindow", "Motor Stop", None, QtGui.QApplication.UnicodeUTF8))
         self.btnBreak.setText(QtGui.QApplication.translate("MainWindow", "Break", None, QtGui.QApplication.UnicodeUTF8))
         self.editSpeed.setText(QtGui.QApplication.translate("MainWindow", "500", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnMeasurementStop.setText(QtGui.QApplication.translate("MainWindow", "Stop Measurement", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnMeasurementStop.setText(QtGui.QApplication.translate("MainWindow", "Stop Meas", None, QtGui.QApplication.UnicodeUTF8))
         self.editBias.setText(QtGui.QApplication.translate("MainWindow", "0.01", None, QtGui.QApplication.UnicodeUTF8))
         self.btnSetBias.setText(QtGui.QApplication.translate("MainWindow", "Set Bias", None, QtGui.QApplication.UnicodeUTF8))
         self.btnSaveStart.setText(QtGui.QApplication.translate("MainWindow", "Save", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSaveStop.setText(QtGui.QApplication.translate("MainWindow", "Stop", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnSaveStop.setText(QtGui.QApplication.translate("MainWindow", "Stop Save", None, QtGui.QApplication.UnicodeUTF8))
         self.label_7.setText(QtGui.QApplication.translate("MainWindow", "Live Measurement", None, QtGui.QApplication.UnicodeUTF8))
         self.btnStatusLockin.setText(QtGui.QApplication.translate("MainWindow", "LockIn", None, QtGui.QApplication.UnicodeUTF8))
         self.btnStatusTemperatur.setText(QtGui.QApplication.translate("MainWindow", "Temperatur", None, QtGui.QApplication.UnicodeUTF8))

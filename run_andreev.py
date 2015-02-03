@@ -3,7 +3,7 @@
 All rights reserved by David Weber
 @author: David Weber
 """
-
+import config
 import sys
 import os
 from PyQt4 import QtCore, QtGui
@@ -1261,7 +1261,7 @@ class main_program(QtGui.QMainWindow):
                         log("IV goto Min")
                     else:
                         DEV.yoko.program_goto_ramp(_maxV,_timeV)
-                        log("IV goto Max)
+                        log("IV goto Max")
                         
                     
                 # check if update is needed an displays the new data
@@ -1553,7 +1553,7 @@ class main_program(QtGui.QMainWindow):
                         self.data["femto_channela"].extend(femto_channela)
                         self.data["femto_channelb"].extend(femto_channelb)
                         
-                        if self.save_good_old_txt:
+                        if config.save_good_old_txt:
                             saving_data = [li_timestamp_0,li_aux0,li_aux1,li_0_x,li_0_y]
                             save_data(self.f_li0, saving_data)
                             saving_data = [li_timestamp_1,li_1_x,li_1_y]
@@ -1590,7 +1590,7 @@ class main_program(QtGui.QMainWindow):
 
                         self.data["agilent_voltage_timestamp"].extend(agilent_voltage_timestamp)
                         self.data["agilent_voltage_voltage"].extend(agilent_voltage_voltage)
-                        if self.save_good_old_txt:
+                        if config.save_good_old_txt:
                             saving_data = [agilent_voltage_timestamp,agilent_voltage_voltage]
                             save_data(self.f_agilent_voltage, saving_data)   
                         
@@ -1618,7 +1618,7 @@ class main_program(QtGui.QMainWindow):
                         self.data["agilent_current_timestamp"].extend(agilent_current_timestamp)
                         self.data["agilent_current_voltage"].extend(agilent_current_voltage) 
                         
-                        if self.save_good_old_txt:
+                        if config.save_good_old_txt:
                             saving_data = [agilent_current_timestamp,agilent_current_voltage]
                             save_data(self.f_agilent_current, saving_data)   
                         
@@ -1648,7 +1648,7 @@ class main_program(QtGui.QMainWindow):
                     self.data["motor_cur"].extend(motor_cur)
                     self.data["motor_vel"].extend(motor_vel)                
                     
-                    if self.save_good_old_txt:
+                    if config.save_good_old_txt:
                         saving_data = [motor_timestamp,motor_pos,motor_cur,motor_vel]
                         save_data(self.f_motor, saving_data)
                     
@@ -1676,7 +1676,7 @@ class main_program(QtGui.QMainWindow):
                     self.data["temp1"].extend(temp1)
                     self.data["temp2"].extend(temp2)
                     
-                    if self.save_good_old_txt:
+                    if config.save_good_old_txt:
                         saving_data = [temp_timestamp,temp1,temp2]
                         save_data(self.f_temp, saving_data)
                     
@@ -1700,7 +1700,7 @@ class main_program(QtGui.QMainWindow):
                     self.data["ips_timestamp"].extend(ips_timestamp)
                     self.data["ips_mfield"].extend(ips_mfield)
                     
-                    if self.save_good_old_txt:    
+                    if config.save_good_old_txt:    
                         saving_data = [ips_timestamp,ips_mfield]
                         save_data(self.f_ips, saving_data)
                     
@@ -1724,7 +1724,7 @@ class main_program(QtGui.QMainWindow):
                     self.data["ips_2_timestamp"].extend(ips_2_timestamp)
                     self.data["ips_2_mfield"].extend(ips_2_mfield)
     
-                    if self.save_good_old_txt:
+                    if config.save_good_old_txt:
                         saving_data = [ips_2_timestamp,ips_2_mfield]
                         save_data(self.f_ips_2, saving_data)
                 

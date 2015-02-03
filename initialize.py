@@ -8,6 +8,7 @@ All rights reserved by David Weber
 """
 global _self
 _self = None
+import config
 
 def init_files(_self):
     _self.f_li0 = None
@@ -21,6 +22,7 @@ def init_files(_self):
     _self.f_ips = None
     _self.f_ips_2 = None
     _self.f_femto = None
+    
     _self.f_config = None
     _self.hdf5_file = None
     
@@ -41,7 +43,10 @@ def open_files():
         _self.f_femto.close()
         _self.f_ips.close()
         _self.f_ips_2.close()
+
+    if not _self.f_config == None:
         _self.f_config.close()
+    if not _self.hdf5_file == None:
         _self.hdf5_file.close()
     close_logfile()
         
@@ -49,7 +54,7 @@ def open_files():
     d_name = os.path.dirname(d)
     if not os.path.exists(d_name):
         os.makedirs(d_name)
-    if _self.save_good_old_txt:
+    if config.save_good_old_txt:
         _self.f_li0 = open(d+"li0.txt", 'a')    # TODO os.path.join()
         _self.f_li1 = open(d+"li1.txt", 'a')
         _self.f_li3 = open(d+"li3.txt", 'a')
@@ -61,7 +66,8 @@ def open_files():
         _self.f_temp = open(d+"temp.txt", 'a')
         _self.f_ips = open(d+"ips.txt", 'a') 
         _self.f_ips_2 = open(d+"ips_2.txt", 'a') 
-        _self.f_config = open(d+"config.txt", 'a')
+        
+    _self.f_config = open(d+"config.txt", 'a')
     _self.hdf5_file = hdf5_interface.hdf5_saving(d)
     set_logfile(d+"log.txt")      
     
@@ -78,9 +84,14 @@ def close_files():
             _self.f_temp.close()
             _self.f_ips.close()
             _self.f_ips_2.close()
-            _self.f_config.close()
         except Exception,e:
             log("Failed to Close a File",e)
+            
+    if not _self.f_config == None:
+        try:
+            _self.f_config.close()
+        except Exception,e:
+            log("Failed to Close Config File",e)
         
         _self.f_li0 = None
         _self.f_li1 = None
@@ -94,6 +105,7 @@ def close_files():
         _self.f_ips = None
         _self.f_ips_2 = None
         _self.f_config = None
+        
     if not _self.hdf5_file == None:
         try:
             _self.hdf5_file.close()
@@ -270,7 +282,6 @@ def init_variables(_self):
     _self.histogram_in_progress = False
     _self.iv_in_progress = False
     
-    _self.save_good_old_txt = False
 
 
 def init_shutdowns(_self):

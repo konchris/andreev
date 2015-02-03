@@ -3661,7 +3661,7 @@ p, li { white-space: pre-wrap; }
      <rect>
       <x>580</x>
       <y>10</y>
-      <width>100</width>
+      <width>81</width>
       <height>301</height>
      </rect>
     </property>
@@ -3688,7 +3688,7 @@ p, li { white-space: pre-wrap; }
      <item>
       <widget class="QPushButton" name="btnStop">
        <property name="text">
-        <string>Stop</string>
+        <string>Motor Stop</string>
        </property>
       </widget>
      </item>
@@ -3722,7 +3722,7 @@ p, li { white-space: pre-wrap; }
      <item>
       <widget class="QPushButton" name="btnMeasurementStop">
        <property name="text">
-        <string>Stop Measurement</string>
+        <string>Stop Meas</string>
        </property>
       </widget>
      </item>
@@ -3776,7 +3776,7 @@ p, li { white-space: pre-wrap; }
      <item>
       <widget class="QPushButton" name="btnSaveStop">
        <property name="text">
-        <string>Stop</string>
+        <string>Stop Save</string>
        </property>
       </widget>
      </item>
