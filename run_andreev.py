@@ -711,6 +711,32 @@ class main_program(QtGui.QMainWindow):
         
     
     def aquire_b_circle(self, _radius, _stepsize, _start, _stop):
+        """ This function acquires a b circle of a certain radius.
+        
+        After checking the magnet and switching on the switch heaters the
+        circle is performed. After it finished the data is saved and the 
+        magnets are driven to 0T. If the checkbox 'Check Switchheater' is
+        activ the heater are switched off.
+        
+        Parameters
+        ----------
+        _radius : float
+            The radius of the performed circle. Given in tesla.
+        _stepsize : float
+            The increment of degree between to points on the circle, leads to
+            the fineness of the circle.
+        _start : float
+            The start angle of the circle.
+        _stop : float
+            The end angle of the circle. Don't have to be the start angle.
+            
+        Other Parameter
+        ---------------
+        rate_1 : float
+            The speed of the change of the magnetic field in z direction [T/min].
+        rate_2 : float
+            The speed of the change of the magnetic field in x direction [T/min].
+        """
         self.stop_measure = False
         
         rate_1 = float(self.form_data["editBRate"])
@@ -799,6 +825,7 @@ class main_program(QtGui.QMainWindow):
                 if self.stop_measure: # check for stop condition
                     break
             time.sleep(0.1)
+        self.time_end = time.time()
         if not self.f_config == None:
             self.f_config.write("BCIRCLE_STOP\t%15.15f\n"%(time.time()))
             
@@ -806,9 +833,46 @@ class main_program(QtGui.QMainWindow):
         log("Waiting for Magnets set to Zero")
         DEV.magnet.ZeroField(rate_1)
         DEV.magnet_2.ZeroField(rate_2)
-
+        
+        # interpolating and saving of the data
+        try:
+            self.data_lock.acquire()
+            
+            x_list = np.arange(self.begin_time_b_circle,self.end_time,0.1)
+            voltage_list = interpolate(x_list, self.data["agilent_voltage_timestamp"], self.data["agilent_voltage_voltage"])
+            current_list = interpolate(x_list, self.data["agilent_current_timestamp"], self.data["agilent_current_voltage"])
+            li_0_x_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_x"])
+            li_0_y_interp = interpolate(x_list, self.data["li_timestamp_0"], self.data["li_0_y"])
+            li_3_x_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_x"])
+            li_3_y_interp = interpolate(x_list, self.data["li_timestamp_3"], self.data["li_3_y"])            
+            b_1 = interpolate(x_list, self.data["ips_timestamp"], self.data["ips_mfield"])
+            b_2 = interpolate(x_list, self.data["ips_2_imepstamp"], self.data["ips_2_mfield"])
+            
+            saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_3_x_interp, li_3_y_interp, b_1, b_2]
+            d = str(self.ui.editSetupDir.text())+str(self.ui.editHeader.text())
+            ensure_dir(d)
+            time_string = str(int(round(time.time())))
+            file_string = "bcircle_%s"%(time_string)
+            f_iv = open(d+file_string,'a')
+            try:
+                param_string = self.return_param_string
+                f_iv.write("%s\n"%(param_string))
+                f_iv.write("timestamp, voltage, current, li_0_x, li_0_y, li_3_x, li_3_y, b_z, b_x")
+            except Exception,e:
+                log("B Circle Parameter Save failed",e)
+            save_data(f_iv, saving_data)
+            f_iv.close()
+            self.ui.editLastIV(file_string)
+            
+            self.last_iv_name = time_string
+        except Exception,e:
+            log("B Circle interpolation and saving failed",e)
+        finally:
+            self.data_lock.release()
+            
+        # Switching of Heaters if wanted
         if self.form_data["checkBSweepHeater"]:
-            log("Requested to Switch of Heaters")
+            log("Requested to switch off Heaters")
             log("Waiting for Magnets to run down")
             self.stop_measure = False
             while not self.stop_measure:
@@ -838,10 +902,24 @@ class main_program(QtGui.QMainWindow):
         
 
    
-    def aquire_b_sweep(self, _max=None, _rate=None, _axes=None):  
-        """aquire sweep to b field and perhaps back
-        take care of _max and _rate!
-        _axes should be 0 or 1; 0=zSweep, 1=xSweep"""
+    def aquire_b_sweep(self, _max=None, _rate=None, _axes=0):  
+        """acquire b sweep between a given field and the negativ of this field
+        
+        This function initializes the magnet and the switch heater and performes
+        then a b sweep. This means the magnetic field is driven from current
+        field to the in '_max' given field then to '-_max' and back to '_max'. 
+        The last thing is back to 0. After the sweep the data is saved
+        
+        Parameters
+        ----------
+        _max : float
+            The field parameter, which gives the range of the b sweep in tesla.
+        _rate : float
+            The rate how fast the sweep is performed. Given in tesla per minute.
+        _axes : integer
+            This parameter defines the _axes of the magnetic field: 0 : z direction (default)
+                                                                    1 : x direction
+        """
         self.stop_measure = False
         _axes += 1              
         log("B Sweep Started")

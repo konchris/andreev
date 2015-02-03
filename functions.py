@@ -185,7 +185,7 @@ def app_init(main):
 
 def write_config(form):
     config = ConfigObj()
-    config.filename = r"C:\Users\David Weber\Desktop\andreev\config.ini"
+    config.filename = r"config.ini"
     
     form_objects = inspect.getmembers(form)
     config['QLineEdit'] = {}
@@ -215,7 +215,7 @@ def write_config(form):
     config.write()
 
 def read_config(form):
-    config = ConfigObj(r"C:\Users\David Weber\Desktop\andreev\config.ini")
+    config = ConfigObj(r"config.ini")
     
     form_objects = inspect.getmembers(form)
     for element in form_objects:

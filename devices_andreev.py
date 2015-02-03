@@ -8,6 +8,7 @@ import visa
 import numpy as np
 import time
 from functions import log
+import config
 #import luci
 #import struct   # ascii to single/double
 import thread
@@ -616,6 +617,7 @@ class YOKO7651:
         self.SetPoint=None
         self.status={'prog set':None, 'prog run':None, 'error':None, 'outp unstable':None, 'outp on':None, 'calib mode': None, 'memory card':None, 'CAL switch':None}
         self.byteorder=['CAL switch', 'memory card', 'calib mode', 'outp on', 'outp unstable', 'error', 'prog run', 'prog set']
+        self.voltage = 0.0
         self.initialize()
    
     def initialize(self):
@@ -674,7 +676,8 @@ class YOKO7651:
         """
         
         # defining the range of the yokogawa
-        maxbias=abs(voltage)       
+        Bias_step=[voltage]
+        maxbias=max([abs(i) for i in Bias_step])
         rangevals=np.array(self.ranges.keys())
         rangecomm=self.ranges[min(rangevals[np.where(rangevals>=maxbias)])]
         self.yoko.write('%s'%rangecomm)
@@ -685,8 +688,9 @@ class YOKO7651:
         self.yoko.write('F1')   #set V:DC source
         self.yoko.write('%s'%rangecomm)
         #create program steps
-        self.yoko.write('S%f'%float(voltage)) 
-        time.sleep(0.1)
+        for i in Bias_step:     #create program steps
+            self.yoko.write('S%f'%float(i)) 
+            time.sleep(0.1)
         self.yoko.write('PRE')  #end programming mode
         self.yoko.write('PI%f'%float(slope_time))    #set step interval time
         self.yoko.write('E')
@@ -730,7 +734,7 @@ class Agilent34410A:
     timeout : float
         So far unused?"""
         
-    def __init__(self, label="Agilent", dlay=0, addr="USB0::0x0957::0x0607::MY47030989::0::INSTR",timeout=0.2): #GPIB_No=22, 
+    def __init__(self, addr, label="Agilent", dlay=0, timeout=0.2): #GPIB_No=22, 
         """Agilent 34410A"""
         self.label = label
         self.Agilent=visa.instrument(addr)#, delay=dlay,term_chars='\n')
@@ -1248,9 +1252,9 @@ class ZURICH:
 
 
 class MOTOR:
-    def __init__(self, reduction=3088, encoder=512):
+    def __init__(self, addr="ASRL3", reduction=3088, encoder=512):
         #self.motor=serial.Serial('COM1',115200,timeout=0) 
-        self.motor=visa.SerialInstrument("ASRL3",delay=0.00,term_chars='\r\n',timeout=0.2)
+        self.motor=visa.SerialInstrument(addr,delay=0.00,term_chars='\r\n',timeout=0.2)
         self.motor.clear()
         self._gearfact=reduction*encoder*4
         self.initialize()
@@ -1478,7 +1482,7 @@ def motor_starter():
     while not found and not stop:
         try:
             global motor
-            motor = MOTOR()
+            motor = MOTOR(addr=config.installed_motor)
             log("Found Motor")
             found = True
         except:
@@ -1502,11 +1506,16 @@ def yoko_starter():
     while not found and not stop:
         try:
             global yoko
-            yoko = GS200()
+            if config.installed_yoko == "7651":
+                yoko = YOKO7651()
+            elif config.installed_yoko == "GS200":
+                yoko = GS200()    
+            else:
+                print 'XXXXXXXXXXXXXXXXXXXXXXXXXXX'
             log("Found Yoko")
             found = True
-        except:
-            #log("Couldn't Find Yoko")
+        except Exception,e:
+            log("Couldn't Find Yoko",e)
             time.sleep(device_delay)
 
 
@@ -1552,7 +1561,7 @@ def agilent_34410a_starter_new():
     while not found and not stop:
         try:
             global agilent_new
-            agilent_new = Agilent34410A(addr="USB0::0x0957::0x0607::MY47030989::0::INSTR")
+            agilent_new = Agilent34410A(addr=config.installed_agilent_voltage)
 
             log("Found Agilent 34410a")
             found = True
@@ -1565,7 +1574,7 @@ def agilent_34410a_starter_old():
     while not found and not stop:
         try:
             global agilent_old
-            agilent_old = Agilent34410A(addr='USB0::0x0957::0x0607::MY47031049::0::INSTR')
+            agilent_old = Agilent34410A(addr=config.installed_agilent_current)
 
             log("Found Agilent 34410a Old")
             found = True
