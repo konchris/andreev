@@ -1,8 +1,19 @@
 import os
 
+userList = os.listdir('C:\\Users')
 
+for i in userList:
+    if userList[i] == '1K_Stick_Clone':
+        userIndex = 2
+        break
+    elif userList[i] == 'David Weber':
+        userIndex = 1
+        break
+    else:
+        print 'Can not detect defined User.'
+        
 
-if True:
+if userIndex == 2:
     """ Defines which yoko driver to load"""
     installed_yoko = "7651"
 
@@ -16,7 +27,7 @@ if True:
     """ Motor address"""
     installed_motor = "COM1"
     
-if False:
+if userIndex == 1:
     """ Defines which yoko driver to load"""
     installed_yoko = "GS200"
 
