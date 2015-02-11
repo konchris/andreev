@@ -2,7 +2,7 @@ import os
 
 userList = os.listdir('C:\\Users')
 
-for i in userList:
+for i in range(len(userList)):
     if userList[i] == '1K_Stick_Clone':
         userIndex = 2
         break
