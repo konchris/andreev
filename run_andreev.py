@@ -1149,7 +1149,7 @@ class main_program(QtGui.QMainWindow):
         aquire_b_sweep : a sweep of the magnetic field without any interruptions"""
         
         log("B-IV-map Started")
-        self.stop_measure = False    
+        self.stop_measure = False
         
         """defining which labels on the axis should appear"""
         self.ui.cw5.plot.set_axis_title(self.ui.cw6.plot.X_BOTTOM, "U(V)")
@@ -1273,7 +1273,7 @@ class main_program(QtGui.QMainWindow):
                     break
                 
             # Saving b sweep from begin_time_biv_b
-            end_time_biv_b
+            end_time_biv_b=time.time()
             try:
                 self.data_lock.acquire()
                 x_list = np.arange(self.begin_time_biv_b,end_time_biv_b,0.1)
@@ -1305,7 +1305,7 @@ class main_program(QtGui.QMainWindow):
                 save_data(f_b, saving_data)
                 f_b.close()
                 self.ui.editLastIV.setText(file_string)
-                slef.last_iv_name = time_string
+                self.last_iv_name = time_string
             except Exception,e:
                 log("B Sweep interpolation and saving failed",e)
             finally:
@@ -1331,7 +1331,7 @@ class main_program(QtGui.QMainWindow):
                     self.begin_time_biv_iv = time.time()
                     
                     param_string = self.return_param_string()
-                    initialize.write_config("IV START\t%15.15f\t%s\n"%(self.begin_time_iv,param_string))
+                    initialize.write_config("IV START\t%15.15f\t%s\n"%(self.begin_time_biv_iv,param_string))
 
                     start_sweep_yoko = False                    
                     if loop_count % 2:
@@ -1462,6 +1462,8 @@ class main_program(QtGui.QMainWindow):
                         save_data(f_iv, saving_data)
                         f_iv.close()
                         self.ui.editLastIV.setText(file_string)
+                        
+                        self.last_iv_name = time_string
                     except Exception,e:
                         log("Failed to Save IV",e)
                             
@@ -1477,7 +1479,7 @@ class main_program(QtGui.QMainWindow):
             time.sleep(2)
             log("IV Sweep finished")
             
-            if self.stop_measure():
+            if self.stop_measure:
                 break
             time.sleep(0.5)
             end_time = time.time()
@@ -1867,7 +1869,7 @@ class main_program(QtGui.QMainWindow):
         _minB = float(self.form_data["editBIVMapMinB"])
         _maxB = float(self.form_data["editBIVMapMaxB"])
         _steps = float(self.form_data["editBIVMapIncB"])
-        _rate = float(self.from_data["editBIVMapRateB"])
+        _rate = float(self.form_data["editBIVMapRateB"])
         _axes = int(self.form_data["comboBIVMapAxes"])
         # variables for the IV sweeps
         _minV = float(self.form_data["editBIVMapMinV"])

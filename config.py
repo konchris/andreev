@@ -27,6 +27,12 @@ if userIndex == 2:
     """ Motor address"""
     installed_motor = "COM1"
     
+    """ Definitions which magnets should be started and the address"""
+    magnetZ = True
+    magnetX = True
+    magnetZAddresse = 26
+    magnetXAddresse = 25
+    
 if userIndex == 1:
     """ Defines which yoko driver to load"""
     installed_yoko = "GS200"
@@ -41,4 +47,8 @@ if userIndex == 1:
     """ Motor address"""
     installed_motor = "ASRL3"
     
-    
+    """ Definitions which magnets should be started"""
+    magnetZ = False
+    magnetX = False
+    magnetZAddresse = 26
+    magnetXAddresse = 25    

@@ -1524,7 +1524,7 @@ def magnet_starter():
     while not found and not stop:
         try:
             global magnet
-            magnet = Magnet(26)
+            magnet = Magnet(config.magnetZAddresse)
             log("Found Magnet")
             found = True
         except Exception,e:
@@ -1536,7 +1536,7 @@ def magnet_starter_2():
     while not found and not stop:
         try:
             global magnet_2
-            magnet_2 = Magnet(25)
+            magnet_2 = Magnet(config.magnetXAddresse)
             log("Found Magnet 2")
             found = True
         except Exception,e:
@@ -1618,8 +1618,10 @@ else:
 thread.start_new_thread(yoko_starter,())
 thread.start_new_thread(motor_starter,())
 thread.start_new_thread(lockin_starter,())
-#thread.start_new_thread(magnet_starter,())
-#thread.start_new_thread(magnet_starter_2,())
+if config.magnetZ:
+    thread.start_new_thread(magnet_starter,())
+if config.magnetX:
+    thread.start_new_thread(magnet_starter_2,())
 thread.start_new_thread(lakeshore_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())
