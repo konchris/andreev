@@ -137,8 +137,10 @@ def init_curvewidgets(_self):
     _self.data_curve7 = make.curve([],[])
     _self.data_curve8 = make.curve([1],[1], yaxis="right", color="b")
     _self.data_curve8b = make.curve([1],[1], yaxis="right", color="g")
+    
     _self.data_curve9 = make.curve([],[], linestyle="NoPen", marker="Rect",  markersize=3, markeredgecolor="k", markerfacecolor="b") # SolidLine NoPen
-    #_self.data_curve10 = make.curve([],[],yaxis="right",color="b")
+    _self.data_curve10 = make.curve([],[],yaxis="right",color="b")
+    
     _self.data_curve11 = make.curve([],[], linestyle="NoPen", marker="Rect" ,markersize=3, markeredgecolor="k", markerfacecolor="k") # SolidLine NoPen
     _self.data_curve12 = make.curve([],[], yaxis="right", linestyle="NoPen", marker="Ellipse",  markersize=4, markeredgecolor="k",markerfacecolor="r") # SolidLine NoPen
         
@@ -156,10 +158,14 @@ def init_curvewidgets(_self):
     _self.ui.cw4.plot.set_axis_title(_self.ui.cw4.plot.Y_RIGHT, "Conductance (Go)")
     _self.ui.cw4.plot.set_axis_color(_self.ui.cw4.plot.Y_RIGHT, "MediumBlue")
     _self.ui.cw4.plot.set_axis_scale(_self.ui.cw4.plot.Y_RIGHT, "log")
+    
     _self.ui.cw5.plot.set_axis_title(_self.ui.cw5.plot.Y_LEFT, "I (A)")
+    _self.ui.cw5.plot.set_axis_title(_self.ui.cw5.plot.Y_RIGHT, "dI/dV")
     _self.ui.cw5.plot.set_axis_title(_self.ui.cw5.plot.X_BOTTOM, "Voltage (V)") 
-    _self.ui.cw6.plot.set_axis_title(_self.ui.cw6.plot.Y_LEFT, "dI/dV")
-    _self.ui.cw6.plot.set_axis_title(_self.ui.cw6.plot.Y_RIGHT, "d2I/dV2")  
+    
+    _self.ui.cw6.plot.set_axis_title(_self.ui.cw6.plot.Y_LEFT, "d2I/dV2 Sample")
+    _self.ui.cw6.plot.set_axis_color(_self.ui.cw6.plot.Y_RIGHT, "MediumBlue")
+    _self.ui.cw6.plot.set_axis_title(_self.ui.cw6.plot.Y_RIGHT, "d2I/dV2 Reference")  
     _self.ui.cw6.plot.set_axis_title(_self.ui.cw6.plot.X_BOTTOM, "Voltage (V)") 
     _self.ui.cw6.plot.set_axis_color(_self.ui.cw6.plot.Y_RIGHT, "DarkRed")
         
@@ -174,8 +180,9 @@ def init_curvewidgets(_self):
     _self.ui.cw4.plot.add_item(_self.data_curve7)
     _self.ui.cw4.plot.add_item(_self.data_curve8)
     _self.ui.cw4.plot.add_item(_self.data_curve8b)
+    
     _self.ui.cw5.plot.add_item(_self.data_curve9)
-    #_self.ui.cw5.plot.add_item(_self.data_curve10)
+    _self.ui.cw5.plot.add_item(_self.data_curve10)
     _self.ui.cw6.plot.add_item(_self.data_curve11)
     _self.ui.cw6.plot.add_item(_self.data_curve12)
     
@@ -197,6 +204,8 @@ def init_variables(_self):
     _self.plot_data["save"] = False
     _self.plot_data["x1"] = []
     _self.plot_data["y1"] = []
+    _self.plot_data["x2"] = []
+    _self.plot_data["y2"] = []
     _self.plot_data["x3"] = []
     _self.plot_data["y3"] = []
     _self.plot_data["x4"] = []
@@ -271,8 +280,8 @@ def init_variables(_self):
     
     _self.config_data["offset_voltage"] = 0
     _self.config_data["offset_current"] = 0
-    _self.config_data["range_voltage"] = 0
-    _self.config_data["range_current"] = 0
+    _self.config_data["range_voltage"] = 1
+    _self.config_data["range_current"] = 1
     
     _self.factor_voltage = float(_self.ui.editFactorVoltage.text())
     _self.factor_current = float(_self.ui.editFactorCurrent.text())

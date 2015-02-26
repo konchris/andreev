@@ -469,7 +469,112 @@ class LAKESHORE:
     calibration_probe2 = np.array([[104,300],[104.5,280],[105,260],[106,240],[107,220],[108,200],[108.5,190],[109,180],[110,170],[111,160],[112,150],[113,140],[114,130],[116,120],[118,110],[120,100],[121,95],[122,90],[124,85],[126,80],[128,75],[130,70],[132,65],[135,60],[139,55],[144,50],[149,45],[154,40],[162,35],[174,30],[179,28],[184,26],[194,24],[204,22],[214,20],[229,18],[245,16],[273,14],[304,12],[354,10],[394,9],[444,8],[524,7],[629,6],[704,5.5],[954,4.5],[1054,4.2],[1154,4],[1304,3.75],[1504,3.5],[1704,3.25],[2104,3],[2404,2.8],[2954,2.6],[3504,2.4],[4404,2.2],[5654,2],[6804,1.9],[8004,1.8],[10004,1.7],[12404,1.6],[14004,1.55],[20563.86,1.4],[28062.44,1.3],[40143.44,1.2],[60929.16,1.1]])
     for i in range(len(calibration_ruo2)):
         print str(i+1) + " " + str(np.log10(calibration_probe2[i][0])) + " " + str(calibration_probe2[i][1])    """    
+class ITC503:
+    def __init__(self, gpib_identifier = "GPIB::24", timeout = 1, term_chars = '\r',
+                 delay = 0):
 
+        self.itc = visa.GpibInstrument("GPIB::24", timeout=1, term_chars="\r", delay=0)
+        self.itc.ask('C3')
+        self.itc.clear()
+        
+    def get_TSorb(self):
+        """The temperature on the Sorption pump / K"""
+        return self.itc.ask_for_values('R1')[0]
+        
+    def get_THe3(self):
+        """The temperature on the He3-Pot / K"""
+        return self.itc.ask_for_values('R2')[0]
+        
+    def get_T1K(self):
+        """The temperature on the 1K-Pot / K"""
+        return self.itc.ask_for_values('R3')[0]
+
+    def TSorbSoll(self,TSoll): 
+        '''Solltemperatur der Sorb / K'''
+        self.itc.write('$T'+str(TSoll))
+
+    def Local(self):
+        '''ITC auf Local stellen'''
+        self.itc.write('$C2')
+
+    def start_heating(self, temp = 30.0, power = 5.5):
+        """Start heating the cryostat (on the sorb).
+
+        Using the heater on the sorption pump you can heat
+        the cryostat. This function automates the process.
+
+        Parameters
+        ----------
+        temp : float, optional
+            The end temperature for the heater on the sorption
+            pump in K. The default setting is that used for He3
+            condensation
+            DEFAULT : 30.0
+        power : float, optional
+            The power of the heater in procent. Defualt setting
+            is that used for He3 condensation
+            DEFAULT : 5.5
+
+        """
+        self.set_heater(1)
+        self.set_heater_manual()
+        self.turn_off_auto_pid()
+        self.set_Set_Temp(temp)
+        self.set_heater_output(power * 2.5)
+
+    def set_auto_temp(self):
+        """Let the ITC automatically regulate the temperature via PID."""
+        self.set_heater_auto()
+        self.turn_on_auto_pid()
+
+    def stop_heating(self):
+        self.set_heater_manual()
+        self.turn_off_auto_pid()
+        self.set_heater_output(0.0)
+        self.set_Set_Temp(1.5)
+
+    def stop_auto_temp(self):
+        """Set temperature control to manual."""
+        self.set_heater_manual()
+        self.turn_off_auto_pid()
+
+    def set_heater_manual(self):
+        self.itc.write('$A0')
+
+    def set_heater_auto(self):
+        self.itc.write('$A1')
+
+    def turn_on_auto_pid(self):
+        self.itc.write('$L1')
+
+    def turn_off_auto_pid(self):
+        self.itc.write('$L0')
+
+    def set_heater(self, Hn = 1):
+        """Set the heater sensor for automatic heating. Default is 1, or the Sorb heater.
+        
+        Parameters
+        ----------
+        Hn : int
+            Set the heater sensor for automatic control.
+            1 - Sorption Pump Sensor
+            2 - He3 Pot Sensor
+            3 - 1K Pot Sensor
+
+        """
+        self.write('$H'+str(Hn))
+
+    def set_heater_output(self, Onnn = 5.5):
+        """Set the heater output power as a percentage of the maximum power output"""
+        self.itc.write('$O'+str(Onnn))
+
+    def set_Set_Temp(self, Tnnnn):
+        """Set a set point temperature. ."""
+        self.itc.write('$T'+str(Tnnnn))
+
+    def get_sys_status(self):
+        self.x_string = self.itc.ask('X')
+        
 class GS200:
     """ This class manages the communication with the Yokogawa GS200
     
@@ -1510,8 +1615,6 @@ def yoko_starter():
                 yoko = YOKO7651()
             elif config.installed_yoko == "GS200":
                 yoko = GS200()    
-            else:
-                print 'XXXXXXXXXXXXXXXXXXXXXXXXXXX'
             log("Found Yoko")
             found = True
         except Exception,e:

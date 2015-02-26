@@ -544,22 +544,28 @@ class main_program(QtGui.QMainWindow):
                         
                         li_first = li_3_r/li_0_r*12900    # first
                         #li_second = li_4_r/li_1_r*12900   # trash
-                        li_second = li_4_r   # second
-                                            
+                        #li_second = li_4_r   # second
+                                     
+                        self.plot_data["x1"] = voltage_list[:]
+                        self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
+                        
+                        self.plot_data["x2"] = voltage_list[:]
+                        self.plot_data["y2"] = [x/self.rref for x in li_first[:]]
+                        
                         self.plot_data["x3"] = voltage_list[:]
-                        self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
-                        
+                        self.plot_data["y3"] = li_1_r[:]
                         self.plot_data["x4"] = voltage_list[:]
-                        self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                        self.plot_data["y4"] = [x/self.rref for x in li_4_r[:]]
                         
+                        self.plot_data["new"][0] = True 
+                        self.plot_data["new"][1] = True
                         self.plot_data["new"][2] = True
                         self.plot_data["new"][3] = True
                     except Exception,e:
                         log("IV interpolation failed",e)
             
-                    self.plot_data["x1"] = voltage_list[:]
-                    self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
-                    self.plot_data["new"][0] = True 
+                    
+                    
                     
                 finally:
                     self.data_lock.release()
@@ -605,19 +611,21 @@ class main_program(QtGui.QMainWindow):
                     li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
                     li_4_r = np.sqrt(np.square(li_4_x_interp)+np.square(li_4_y_interp))
                     li_first = li_3_r/li_0_r*12900    # first
-                    li_second = li_4_r/li_1_r*12900   # second
+                    #li_second = li_4_r/*12900   # second
                     
                     self.plot_data["x1"] = voltage_list[:]
                     self.plot_data["y1"] = [x/self.rref for x in current_list[:]]
                     
+                    self.plot_data["x2"] = voltage_list[:]
+                    self.plot_data["y2"] = [x/self.rref for x in li_first[:]]
+                    
                     self.plot_data["x3"] = voltage_list[:]
-                    self.plot_data["y3"] = [x/self.rref for x in li_first[:]]
-                    
+                    self.plot_data["y3"] = [x/self.rref for x in li_1_r[:]]
                     self.plot_data["x4"] = voltage_list[:]
-                    self.plot_data["y4"] = [x/self.rref for x in li_second[:]]
+                    self.plot_data["y4"] = [x/self.rref for x in li_4_r[:]]
                     
-                    # refresh plots and save them
                     self.plot_data["new"][0] = True
+                    self.plot_data["new"][1] = True
                     self.plot_data["new"][2] = True
                     self.plot_data["new"][3] = True
                     

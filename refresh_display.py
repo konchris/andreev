@@ -310,14 +310,22 @@ def refresh_display():
                 _self.data_curve9.set_data(np.array(_self.plot_data["x1"]),np.array(_self.plot_data["y1"]))
                 _self.ui.cw5.plot.do_autoscale()
                 _self.plot_data["new"][0] = False
+                
+            if _self.plot_data["new"][1]:
+                _self.data_curve10.set_data(np.array(_self.plot_data["x2"]),np.array(_self.plot_data["y2"]))
+                _self.ui.cw5.plot.do_autoscale()
+                _self.plot_data["new"][1] = False
+                
             if _self.plot_data["new"][2]:
                 _self.data_curve11.set_data(np.array(_self.plot_data["x3"]),np.array(_self.plot_data["y3"]))
                 _self.ui.cw6.plot.do_autoscale()
                 _self.plot_data["new"][2] = False
+                
             if _self.plot_data["new"][3]:
                 _self.data_curve12.set_data(np.array(_self.plot_data["x4"]),np.array(_self.plot_data["y4"]))                
                 _self.ui.cw6.plot.do_autoscale()
-                _self.plot_data["new"][3] = False     
+                _self.plot_data["new"][3] = False  
+                
             if _self.plot_data["save"]:
                 # save bitmap
                 _self.plot_data["save"] = False
