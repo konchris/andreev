@@ -18,6 +18,36 @@ def movingaverage(values, window_size):
     window = np.ones(int(window_size))/float(window_size)
     return np.convolve(values, window, 'same')
     
+def flip_data_positive(data):
+    """ Takes a list of data and makes not a usual abs(x) 
+    but multiplies the data *(-1) if it's mainly negative"""
+    length = len(data)
+    negative = 0
+    for x in data:
+        if x < 0:
+            negative += 1
+    if negative > length/2:
+        return data*(-1.0)
+    else:
+        return data
+
+def thin_out(data, count):
+    """ Thins out data so that a number (counts) of
+    points are left, almost equally distributed if possible.
+    Data should be [[x],[y]]"""
+    x,y = [],[]
+    
+    distance = (data[0][-1] - data[0][0])/count
+    last_x = 0
+    for i in range(len(data[0])):
+        if data[0][i] > last_x:
+            x.append(data[0][i])
+            y.append(data[1][i])
+            last_x += distance
+    return np.array([x,y])
+        
+    
+    
 def interpolate(x=[],data=[[],[]],scale_y=1.0):
     """interpolates using np.interp() with some extras"""
     xp = np.array(data[0])
@@ -189,7 +219,7 @@ class HDF_DATA:
         
         self.cond = abs(self.current/self.voltage*r0)
         self.di_dv = self.ch_3_r/self.ch_0_r*r0
-        self.d2i_dv2 = self.ch_4_r/self.ch_1_r*r0
+        #self.d2i_dv2 = self.ch_4_r/self.ch_1_r*r0
         
         print "Calc after %is"%(time.time()-_time)
         _time = time.time()

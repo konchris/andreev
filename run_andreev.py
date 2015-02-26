@@ -492,8 +492,7 @@ class main_program(QtGui.QMainWindow):
         time.sleep(1)
         time.sleep(5 * float(self.form_data["editLITC"]))       
         
-                
-        
+                        
         log("IV Loop %fV,%fV,%4.0fs"%(_min,_max,_time)) 
         # load counter
         loop_count = 2

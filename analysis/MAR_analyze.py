@@ -7,14 +7,15 @@ import pylab
 from MAR_functions import *
 
 # set the fit parameter
-_gap = 1370                 # uV
+_gap = 1380                 # uV
 _punkte = 800               # sample points to interpolate
 _vmin = 0.05                # fitting min partial of gap
 _vmax = 3.3                 # max voltage of gap
-_iterations = 5000          # iterations for fit
+_iterations = 50000          # iterations for fit
 _max_channels = 4           # starting value of channels
 additional_info = True     # print additional information in plot
-show_plots = True          # show plots after fit (else direct save)
+show_plots = False          # show plots after fit (else direct save)
+reduced_y = True
 
 
 # initialize fitting by loading all theoretical ivs
@@ -24,36 +25,38 @@ mar=MAR('.\\t_0k\\')
 
 
 # load ivs
-iv_dir = r"C:\Users\David Weber\Desktop\Pb216\\"
+#iv_dir = r"c"
+iv_dir = r"C:\Users\David Weber\Desktop\09\140911_Pb216_MAR01\ivs"
 iv_files = load_iv_files(iv_dir)
 
 
 for iv_file in iv_files[:]:
+    savename = os.path.split(iv_file)[1]
    
-    u,i,params = load_iv_data(os.path.join(iv_dir,iv_file))  
+    if True:
+        u,i,params = load_iv_data(os.path.join(iv_dir,iv_file))
+    else:
+        u,i,params = load_iv_data(os.path.join(iv_dir,iv_file),index_u=0,index_i=1,skip=0)
+        params={"temp2": 99.9}
+    
     if u[0] > u[-1]:
         u,i = u[::-1],i[::-1]
         
+    i = i/104000.0
     u_new = np.linspace(min(u),max(u),1000)
     i_new = np.interp(u_new, u, i)
     
     u,i = u_new,i_new
-    du,di,shift,u,i = find_iv_offset([u,i], verbal=True)
-    #u,i = u-du,i-di
+    du,di,shift,u,i,anti_sym = find_iv_offset([u,i], verbal=True, show_plot=show_plots, plot_path=os.path.join(iv_dir,savename)+"_offset.png")
     
-    #u_min = np.argmin(abs(u))
-    #u,i = u[u_min:],i[u_min:]
-    
-    #break
-    
-    if additional_info:    # DEBUG
+        
+    if show_plots:    # DEBUG
         pylab.close("all")
         pylab.plot(u,i,"+")
         ax = pylab.gca()
         ax.set_xlim([-0.01,0.01])
         ax.grid()
-        if show_plots:
-            pylab.show()
+        pylab.show()
     
     print "Max: %5.2f Delta" %(u[-1]/_gap*1e6)
     if u[-1]/_gap*1e6 < _vmax:
@@ -83,36 +86,64 @@ for iv_file in iv_files[:]:
     
     set2 = brewer2mpl.get_map('Paired', 'qualitative', 8).mpl_colors
     extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)  #empty rectangle for legend
-    i_factor = 1e6
-    u_factor = 1e3/_gap*1e3 # /_gap*1e3 for gap units
-    no_channel = 5e-2       # transmission indicating no real channel anymore
-    pos_x,pos_y = 0.5,1.0
+    
+
     
     
     pylab.axes()
     ax1 = pylab.gca()
     
+    i_factor = 1e6
+    u_factor = 1.0/(_gap*1e-6) # /_gap*1e3 for gap units
+    no_channel = 5e-2       # transmission indicating no real channel anymore
+    pos_x,pos_y = 0.5,1.0
     
-    ax1.set_xlabel("U ($\Delta$)")
-    ax1.set_ylabel("I ($\mu$A)")
+    
+    ax1.set_xlabel("eV/$\Delta$")
+    if reduced_y:
+        ax1.set_ylabel("eI/G$\Delta$")
+    else:
+        ax1.set_ylabel("I ($\mu$A)")
     ax1.set_title("MAR")
     ax1.hold("False")
-    pl_fit = ax1.plot(fit[0]*u_factor, fit[1]*i_factor, color = set2[1], linewidth=2,label="Fit %2.2f $G_0$"%(np.sum(c)))
-    ax1.hold("True")
-    pl_data = ax1.plot(mar1[0]*u_factor, mar1[1]*i_factor, color = set2[4], linewidth=2,label="Experimental Data")
+    
+    G = np.sum(c)
+    
+    #G0 = scipy.constants.e**2/scipy.constants.h
+    from scipy.constants import h,e
+    G0 = e**2/h
+
+    if reduced_y:
+        # plot only some points
+        #x,y = thin_out(mar1, 40)
+        #pl_data, = ax1.plot(x*u_factor, y/(G*G0*_gap*1e-6), marker="+", mew=1.3, ms=10, color=set2[4], linewidth=0,label="Experimental Data")
+        # plot all points        
+        pl_data, = ax1.plot(mar1[0]*u_factor, mar1[1]/(G*G0*_gap*1e-6), color = set2[4], linewidth=2)
+        ax1.hold("True")
+        pl_fit, = ax1.plot(fit[0]*u_factor, fit[1]/(G*G0*_gap*1e-6), color = set2[1], linewidth=2)
+        
+        ax1.set_xlim(xmin=0)
+        ax1.set_ylim(ymin=0,ymax=10)
+        ax1.set_xticks([1,2,3,4])
+    else:
+        pl_fit, = ax1.plot(fit[0]*u_factor, fit[1]*i_factor, color = set2[1], linewidth=2,label="Fit %2.2f $G_0$"%(G))
+        ax1.hold("True")
+        pl_data, = ax1.plot(mar1[0]*u_factor, mar1[1]*i_factor, color = set2[4], linewidth=2,label="Experimental Data")
+        
+        ax1.set_xlim(xmin=0)
+        ax1.set_ylim(ymin=0)
+        ax1.set_xticks([1,2,3,4])
+    
+    
+        
+    
     
     if additional_info:
-        pl_data = ax1.plot(u*u_factor, i_linear*i_factor, color = set2[2], linewidth=1,label="Excess Current %2.2f $G_0$"%(p[0]*12906))
-    
-    ax1.set_xlim(xmin=0)
-    ax1.set_ylim(ymin=0)
-    ax1.set_xticks([1,2,3,4])
-    #pylab.legend([pl_fit,pl_data,extra],("Fit","Data","Gap: %2.3fmeV"%(_gap/1000.0)),loc=2)
-    ax1.legend(loc=2)    
+        ax1.legend([pl_fit,pl_data,extra,extra],["Fit %2.2f $G_0$"%(np.sum(c)),"Data","$\Delta$ = %2.3f meV"%(_gap/1000.0),r"T$\,$ = %2.1f K"%(float(params["temp2"])) ],loc=2)
+    else:
+        ax1.legend([pl_fit,pl_data],["Fit","Data"],loc=2)
+        
     ax1.grid()
-    if additional_info:
-        ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.8, "Gap: %2.3fmeV"%(_gap/1000.0),ha="left")
-        ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.75, "T: %2.1fK"%(float(params["temp2"])),ha="left")
     
     """for i in range(len(c)):
         if c[i] < no_channel:
@@ -150,9 +181,10 @@ for iv_file in iv_files[:]:
     ax2.xaxis.set_ticks_position('none')
     ax2.yaxis.set_ticks_position('none')
     
-    savename = os.path.split(iv_file)[1]
+    
     pylab.savefig(os.path.join(iv_dir,savename)+".png")
-    #pylab.savefig(os.path.join(iv_dir,savename)+".pdf")
+    pylab.savefig(os.path.join(iv_dir,savename)+".pdf")
+    pylab.savefig(os.path.join(iv_dir,savename)+".svg")
     if show_plots:    
         pylab.show()
 

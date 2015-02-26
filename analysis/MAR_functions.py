@@ -61,8 +61,9 @@ def align_direction(data):
 
 
 
-def find_iv_offset(data=[[],[]],x_adjustment=2.5e-4, y_adjustment=1e-8, verbal=False):
+def find_iv_offset(data=[[],[]],x_adjustment=2.5e-4, y_adjustment=1e-8, verbal=False, show_plot=False, plot_path=None):
     """Estimates the offset in x and y direction"""
+    import pylab
     u,i = data[0],data[1]
     [u,i] = align_direction([u,i])
     length = len(u)
@@ -78,8 +79,8 @@ def find_iv_offset(data=[[],[]],x_adjustment=2.5e-4, y_adjustment=1e-8, verbal=F
     new_u,new_i = new_u[1:-1],new_i[1:-1]
     length -= 2
     
-    if verbal:
-        import pylab
+    if show_plot:
+        
         
         pylab.close("all")
         pylab.plot(u,i,label="Raw Data")
@@ -94,30 +95,25 @@ def find_iv_offset(data=[[],[]],x_adjustment=2.5e-4, y_adjustment=1e-8, verbal=F
     if verbal:
         print "limit %f, sample length %i"%(limit, length)
     dx_range = int(x_adjustment/(2*limit/length))
-    #print dx_range
     dx = np.arange(-dx_range,dx_range,10)    # move along array elements
     
     
     _min,min_x = 999,0
-    #len_x = len(dx)
+
 
     for x in dx:#range(len_x):
         center = length/2+x
         
         u1,i1 = new_u[dx_range+x : center] , new_i[dx_range+x : center]-new_i[center]
         u2,i2 = new_u[center:-dx_range+x] , new_i[center:-dx_range+x]-new_i[center]
-        #diff_sum = abs(np.sum(i1+i2[::-1]))
+
         u2,i2 = u2[::-1],i2[::-1]
         diff_sum = np.sum(abs(i1+i2))
-        #matrix[y,x] = diff_sum
+
         if diff_sum < abs(_min):
             _min = abs(diff_sum)
             min_x = x
-            #print "Origin: %fuV %fnA"%(u2[0]*1e6,i2[0]*1e9)#,_min,min_x,min_y
-        #print y,x,diff_sum   
-    
-    #print _min,min_x
-    #print len_x
+
     
     x = min_x
     center = length/2+x
@@ -125,25 +121,43 @@ def find_iv_offset(data=[[],[]],x_adjustment=2.5e-4, y_adjustment=1e-8, verbal=F
     u2,i2 = new_u[center:-dx_range+x]-new_u[center] , new_i[center:-dx_range+x]-new_i[center]
    
     diff = i1+i2[::-1]
-    #diff_sum = np.sum(np.abs(diff))
+    anti_sym = i1-i2[::-1]
     
     if verbal:
+        print "Offset: %fuV %fnA"%(new_u[center]*1e6,new_i[center]*1e9)
+    
+    if plot_path != None:
+        # plot offset correction
+        pylab.ioff()
         pylab.plot(u1,i1,"r",label="Corrected")
         pylab.plot(u2,i2,"r")
-
-        print "Offset: %fuV %fnA"%(new_u[center]*1e6,new_i[center]*1e9)
-
         pylab.grid(True)
         pylab.legend()
+        
+    if show_plot:
         pylab.show()
+    if plot_path != None:
+        pylab.savefig(plot_path)
     
     du,di,shift = new_u[center],new_i[center],x
     
+    # correct all u/i values with found offset
     u,i = u-du,i-di
+    # find new center of i/v-sweep
     u_min = np.argmin(abs(u))
-    u,i = u[u_min:],i[u_min:]
     
-    return du,di,shift,u,i
+    # for anti symmetrize we must have two equally long
+    # branches to add them up, so look for the maximum length
+    # our output may have since we're no longer symmetric
+    max_length = min(len(u)-u_min, u_min)    
+    #print u_min, max_length
+    #print u_min, u_min+max_length, u_min-max_length
+    
+    # thenn cut a bit of the edges to fit for both results
+    anti_sym = (i[u_min:u_min+max_length] - i[u_min:u_min-max_length:-1])/2.0
+    u,i = u[u_min:u_min+max_length],i[u_min:u_min+max_length]
+
+    return du,di,shift,u,i,anti_sym
 
 class MAR:
     """Fitroutine für Multiple Andreev Refektionen"""    

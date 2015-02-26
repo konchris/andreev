@@ -5,7 +5,7 @@ Created on Thu Jun 19 21:02:03 2014
 @author: David Weber
 """
 
-import tables
+#import tables
 import numpy as np
 import os
 import time
@@ -14,9 +14,11 @@ import pylab as pl
 import scipy.constants as const
 
 from functions_evaluate import *
+import MAR_functions
 
     
-
+r_0 = const.h/const.e**2/2.0
+g_0 = 2.0*const.e**2/const.h
 ################################
 ##### START ####################
 ################################
@@ -24,28 +26,14 @@ from functions_evaluate import *
 db = 0
 
 
-#filename = r"140809_Pb180_Histo_03"
-#filename = r"140810_Pb180_Histo_04"
-#filename = r"140812_Pb180_Histo_08"
-#filename = r"140826_Pb189_Histo_02"
-filename = r"150130_Pb248_Cooldown"
+filename = r"141216_Pb266_Tc"
 
-base_path = os.path.join("Z:\dweber\data_p5",filename)
-base_path = os.path.join("C:\data_p5",filename)
+base_path = os.path.join("Z:\dweber\data_p5",filename)              # server
+base_path = os.path.join("C:\data_p5",filename)                     # local
+base_path = r"C:\Users\David Weber\Desktop\09\140911_Pb216_MAR01"   # custom
 total_path = [os.path.join(base_path,'db_%i.h5'%(db))]
 config_path = os.path.join(base_path,'config.txt')
 
-"""
-filename = [r"140809_Pb180_Histo_03", r"140810_Pb180_Histo_04", r"140812_Pb180_Histo_08"]
-
-paths = []
-for f in filename:
-    paths.append(
-        [ os.path.join(r"Z:\dweber\data_p5",f),
-          os.path.join(r"Z:\dweber\data_p5",f,'db_%i.h5'%(db)),
-          os.path.join(r"Z:\dweber\data_p5",f,'config.txt')
-        ] )
-"""
 
 pl.close("all")
 
@@ -126,8 +114,14 @@ try:
  
 except Exception,e:
     print e   
+    
+    
+##########################################################
+### Taking apart all measurements from bunch of data #####
+##########################################################
 
 if split_up_ivs:
+    # create dir and paths
     iv_dir = os.path.join(base_path,"ivs")
     trace_dir = os.path.join(base_path,"traces")
     bsweep_dir = os.path.join(base_path,"bsweep")
@@ -138,6 +132,7 @@ if split_up_ivs:
     print "TRACE-DIR: %s"%(trace_dir)
     print "BSWEEP-DIR: %s"%(bsweep_dir)
     
+    # todo
     seperate_windows = True
     if not seperate_windows:
         fig = pl.figure(figsize=(21,12), dpi=72)
@@ -149,60 +144,77 @@ if split_up_ivs:
         ax_sub_d = fig.add_subplot(2,2,4)
       
     i = 1
-    for iv_times in ivs:#[0:10]:
+    for iv_times in ivs[:]:
         if not seperate_windows:
             ax_sub_a.cla()
             ax_didv.cla()
             ax_sub_b.cla()
             ax_sub_c.cla()
             ax_sub_d.cla()
-        i_begin = find_min(x_list, iv_times[0])
-        i_end = find_min(x_list, iv_times[1])
+            
+        i_begin = find_min(data_packages[0].x_list, iv_times[0])
+        i_end = find_min(data_packages[0].x_list, iv_times[1])
 
         ax_x_factor = 1e3
         ax_y_factor = 1e6
-        x_voltage = voltage[i_begin:i_end]*ax_x_factor
-        slice_current = current[i_begin:i_end]*ax_y_factor
+        slice_voltage = data_packages[0].voltage[i_begin:i_end]*ax_x_factor
+        slice_current = data_packages[0].current[i_begin:i_end]*ax_y_factor
         
-        abs_current = abs(slice_current)
-        current_center_index = np.argmin(abs_current)
+        fig = pl.figure(figsize=(21,12), dpi=72)
+        fig.subplots_adjust(hspace = 0.3, wspace = 0.2)
+        ax_sub_a = fig.add_subplot(2,2,1) # fig.gca()
+        ax_didv = fig.add_subplot(2,2,2)
+        ax_sub_b = ax_didv.twinx()
+        ax_sub_c = fig.add_subplot(2,2,3)
+        ax_sub_d = fig.add_subplot(2,2,4)
         
-        if max(abs(x_voltage)) < 10.0:  # 
-            i += 1
-            continue
-        else:
-            if seperate_windows:
-                fig = pl.figure(figsize=(21,12), dpi=72)
-                fig.subplots_adjust(hspace = 0.3, wspace = 0.2)
-                ax_sub_a = fig.add_subplot(2,2,1) # fig.gca()
-                ax_didv = fig.add_subplot(2,2,2)
-                ax_sub_b = ax_didv.twinx()
-                ax_sub_c = fig.add_subplot(2,2,3)
-                ax_sub_d = fig.add_subplot(2,2,4)
-
-        if max(abs(x_voltage)) > 10.0:
-            ax_sub_a.plot(  x_voltage, slice_current, 'k-')
-        else:
+        ####################   A (I/V)   ####################
+        from matplotlib.patches import Rectangle
+        extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)  #empty rectangle for legend
+        
+        current_center_index = np.argmin(abs(slice_current))
+        
+        du,di,shift,corr_u,corr_i,anti_sym = MAR_functions.find_iv_offset([slice_voltage, slice_current], verbal=True)
+        
+        ax_sub_a.hold(True)
+        if max(abs(slice_voltage)) > 10.0: # IETS
+            ax_sub_a.plot(  slice_voltage, slice_current, 'r-', label="Raw")
+            ax_sub_a.plot(  slice_voltage, slice_current, 'k-', label="Offset Corrected")
+        else: # if MAR
             pl.hold(True)
-            ax_sub_a.plot(  abs(x_voltage[0:current_center_index]), abs(slice_current[0:current_center_index]), 'k-')
-            ax_sub_a.plot(  abs(x_voltage[current_center_index:]), abs(slice_current[current_center_index:]), 'g--')
-        ax_didv.plot(   x_voltage, di_dv[i_begin:i_end], 'k-', label="$dI/dV$")
+            branch_a,    = ax_sub_a.plot(  flip_data_positive(slice_voltage[0:current_center_index]), flip_data_positive(slice_current[0:current_center_index]), 'r--')
+            branch_b,    = ax_sub_a.plot(  flip_data_positive(slice_voltage[current_center_index:]), flip_data_positive(slice_current[current_center_index:]), 'g--')
+            offset_corr, = ax_sub_a.plot(  corr_u, corr_i, 'k-')
+            anti_sym,    = ax_sub_a.plot(  corr_u, anti_sym, 'b--')
+            
+            ax_sub_a.legend([branch_a,branch_b,offset_corr,anti_sym,extra,extra],["A","B","Offset Corrected","Anti Sym","dU %f mV"%(du), "dI %f $\mu$A"%(di)],loc=2)
         
-        #pl.hold(True)
-        #ax_sub_b.plot( x_voltage, ch_0_r[i_begin:i_end]/max(ch_0_r[i_begin:i_end]), 'g-', label="ch 0 r")
-        #ax_sub_b.plot( x_voltage, ch_1_r[i_begin:i_end]/max(ch_1_r[i_begin:i_end]), 'r-', label="ch 1 r")
-        #ax_sub_b.plot( x_voltage, ch_3_r[i_begin:i_end]/max(ch_3_r[i_begin:i_end]), 'y-', label="ch 3 r")
-        #ax_sub_b.plot( x_voltage, ch_4_r[i_begin:i_end]/max(ch_4_r[i_begin:i_end]), 'b-', label="ch 4 r")
-        #ax_sub_b.legend()
         
+        # save raw agilent data interpolated on agilent_voltage
+        t_raw,v_raw = data_packages[0].v_raw   
+        
+        j_begin = find_min(t_raw, iv_times[0])
+        j_end = find_min(t_raw, iv_times[1])
+        
+        t_raw,v_raw = t_raw[j_begin:j_end],v_raw[j_begin:j_end]
+        drop, i_raw = data_packages[0].i_raw 
+        i_raw = np.interp(t_raw, drop, i_raw)
+        np.savetxt(os.path.join(iv_dir,str(int(iv_times[1]))+".txt"), np.array([v_raw,i_raw]).transpose(), "%10.10f", "\t")
+        
+        
+        
+        
+        ####################   B   ####################
+        ax_didv.plot(   slice_voltage, data_packages[0].di_dv[i_begin:i_end], 'k-', label="$dI/dV$")
         pl.hold(True)       
-        ax_sub_b.plot( x_voltage, ch_0_x[i_begin:i_end]/max(ch_0_x[i_begin:i_end]), 'g-', label="ch 0 x")
-        ax_sub_b.plot( x_voltage, ch_1_x[i_begin:i_end]/max(ch_1_x[i_begin:i_end]), 'r-', label="ch 1 x")
-        ax_sub_b.plot( x_voltage, ch_3_x[i_begin:i_end]/max(ch_3_x[i_begin:i_end]), 'y-', label="ch 3 x")
-        ax_sub_b.plot( x_voltage, ch_4_x[i_begin:i_end]/max(ch_4_x[i_begin:i_end]), 'b-', label="ch 4 x")
+        ax_sub_b.plot( slice_voltage, data_packages[0].ch_0_r[i_begin:i_end]/max(data_packages[0].ch_0_r[i_begin:i_end]), 'g-', label="ch 0 r")
+        ax_sub_b.plot( slice_voltage, data_packages[0].ch_1_r[i_begin:i_end]/max(data_packages[0].ch_1_r[i_begin:i_end]), 'r-', label="ch 1 r")
+        ax_sub_b.plot( slice_voltage, data_packages[0].ch_3_r[i_begin:i_end]/max(data_packages[0].ch_3_r[i_begin:i_end]), 'y-', label="ch 3 r")
+        ax_sub_b.plot( slice_voltage, data_packages[0].ch_4_r[i_begin:i_end]/max(data_packages[0].ch_4_r[i_begin:i_end]), 'b-', label="ch 4 r")
+        
         ax_sub_b.legend()
 
-        #ax_sub_b.plot( x_voltage, d2i_dv2[i_begin:i_end]/di_dv[i_begin:i_end], 'b-')
+        #ax_sub_b.plot( slice_voltage, d2i_dv2[i_begin:i_end]/di_dv[i_begin:i_end], 'b-')
         
         ax_sub_a.set_xlabel("Voltage (mV)")
         ax_sub_a.set_ylabel("Current (uA)")
@@ -214,28 +226,42 @@ if split_up_ivs:
         ax_didv.set_title("LockIn")
         ax_didv.grid()
         
-        ax_sub_b.set_ylabel("$d^2I/dV^2$ (norm.)")
-        std = np.average(d2i_dv2[i_begin:i_end]/di_dv[i_begin:i_end])
+        ax_sub_b.set_ylabel("Raw Value (a.u.)")
+        
+        std = np.average(data_packages[0].ch_3_r[i_begin:i_end]/data_packages[0].di_dv[i_begin:i_end])
         #ax_sub_b.set_ylim([0,min(5*std,max(d2i_dv2[i_begin:i_end]/di_dv[i_begin:i_end]))])
         
         
-        diff_x = movingaverage(voltage[i_begin:i_end]*ax_x_factor,25)
-        diff_y = movingaverage(di_dv[i_begin:i_end],5)
+        ####################   C   ####################
+        diff_x = movingaverage(data_packages[0].voltage[i_begin:i_end]*ax_x_factor,25)
+        diff_y = movingaverage(data_packages[0].di_dv[i_begin:i_end],5)
         d2idv2_num = np.diff(diff_x) / np.diff(diff_y)
-        ax_sub_c.plot(voltage[i_begin:i_end-1]*ax_x_factor, d2idv2_num)
+        ax_sub_c.plot(data_packages[0].voltage[i_begin:i_end-1]*ax_x_factor, d2idv2_num, label="num. diff")
         ax_sub_c.grid()
         
-        _xmin = min(voltage[i_begin:i_end]*ax_x_factor)
-        _xmax = max(voltage[i_begin:i_end]*ax_x_factor)
+        
+        
+        _xmin = min(data_packages[0].voltage[i_begin:i_end]*ax_x_factor)
+        _xmax = max(data_packages[0].voltage[i_begin:i_end]*ax_x_factor)
         std = np.average(abs(d2idv2_num)*5)
         ax_sub_c.set_xlim([_xmin*0.9, _xmax*0.9])
         ax_sub_c.set_ylim([-std, +std])
         
-        ax_sub_d.plot(x_voltage,ch_0_theta[i_begin:i_end], label="ch 0")
-        ax_sub_d.plot(x_voltage,ch_1_theta[i_begin:i_end], label="ch 1")
-        ax_sub_d.plot(x_voltage,ch_3_theta[i_begin:i_end], label="ch 3")
-        ax_sub_d.plot(x_voltage,ch_4_theta[i_begin:i_end], label="ch 4")
+        ax_sub_c.set_title("Lockin Second")
+        ax_sub_c.set_xlabel("Voltage (mV)")
+        ax_sub_c.set_ylabel("$d^2I/dV^2$ (a.u.)")
+        
+        
+        ####################   D   ####################
+        ax_sub_d.plot(slice_voltage,data_packages[0].ch_0_theta[i_begin:i_end], label="ch 0")
+        ax_sub_d.plot(slice_voltage,data_packages[0].ch_1_theta[i_begin:i_end], label="ch 1")
+        ax_sub_d.plot(slice_voltage,data_packages[0].ch_3_theta[i_begin:i_end], label="ch 3")
+        ax_sub_d.plot(slice_voltage,data_packages[0].ch_4_theta[i_begin:i_end], label="ch 4")
         ax_sub_d.legend()
+        
+        ax_sub_d.set_title("Lockin Phase")
+        ax_sub_d.set_xlabel("Voltage (mV)")
+        ax_sub_d.set_ylabel("Phase ($^\circ$)")
         
         #pl.rcParams['legend.loc'] = 'best'
         
@@ -244,13 +270,14 @@ if split_up_ivs:
 
         fig.savefig(os.path.join(iv_dir,str(int(iv_times[1]))+".png"))
         print "%i/%i %s"%(i,len(ivs),capture_time) 
-        pl.show()
+        plt.draw()
+        plt.pause(0.001)
         
         i += 1
     pl.close()
     
     i = 1
-    for hist_times in histograms[0:1]:
+    for hist_times in histograms[1:2]:
         
         i_begin =   find_min(data_packages[0].x_list, hist_times[0])
         i_end =     find_min(data_packages[0].x_list, hist_times[1])
@@ -366,15 +393,15 @@ if split_up_ivs:
         i += 1
         
 
-if True:
+if False:
     ov_plot = pl.figure(figsize=(8,6),dpi=120)
     ov_hist = ov_plot.add_subplot(1,1,1)
     
     if True:   # log
-        ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.logspace(-4,3, 250))  
+        ov_hist.hist(1.0/data_packages[0].r_raw/g_0, log=False, bins=np.logspace(-4,3, 250))  
         ov_hist.set_xscale("log")
     else:
-        ov_hist.hist(1.0/data_packages[0].r_raw*12900.0, log=False, bins=np.linspace(0.0,15, 45))
+        ov_hist.hist(1.0/data_packages[0].r_raw/g_0, log=False, bins=np.linspace(0.0,15, 45))
         ov_hist.set_xscale("linear")
     ov_hist.set_xlabel("G (G/$G_0$)")
     ov_hist.set_ylabel("Counts")
@@ -392,7 +419,7 @@ if True:
     
     popt, pcov = curve_fit(func, xdata, ydata)"""
 
-if True:
+if False:
     plot_t = pl.figure()
     plot_t_1 = plot_t.add_subplot(2,1,1)
     plot_t_2 = plot_t.add_subplot(2,1,2)

@@ -159,16 +159,18 @@ mar=MAR('.\\t_0k\\')
 #mar=MAR('.\\t_4k_0_25\\')
 
 # set the fit parameter
-_gap = 1370                 # uV
+_gap = 1370                 # uV  1370 
 _punkte = 400               # sample points to interpolate
-_vmin = 0.1                 # fitting min partial of gap
-_vmax = 3.3                 # max voltage of gap
-_iterations = 5000          # iterations for fit
-_max_channels = 4           # starting value of channels
-additional_info = False     # print additional information in plot
+_vmin = 0.05                 # fitting min partial of gap
+_vmax = 3.5                # max voltage of gap
+_iterations = 20000          # iterations for fit
+_max_channels = 5           # starting value of channels
+_KickOff=0.01              # KickOff: Rückschrittwahrscheinlichkeit 0.002
+_Strength=1e-3               # Strength: Zufallsstörung              0.2
+additional_info = True      # print additional information in plot
 show_plots = False          # show plots after fit (else direct save)
 
-iv_dir = r"C:\Users\David Weber\Desktop\Pb216\\"
+iv_dir = r"C:\Users\David Weber\Desktop\140911_Pb216_MAR01\ivs"
 iv_files = []
 for _file in os.listdir(iv_dir):
     if _file.endswith(".txt"):
@@ -178,7 +180,8 @@ iv_files.sort()
 print "Found %i IV-Files."%(len(iv_files))
 
 for iv_file in iv_files[:]:
-
+    if iv_file != "iv_1410429384_4_0.txt":
+        continue
 
     ### TORSTEN TORSTEN TORSTEN
     loaded_data = scipy.loadtxt(os.path.join(iv_dir,iv_file),unpack=True, skiprows=2)
@@ -197,7 +200,7 @@ for iv_file in iv_files[:]:
     u = loaded_data[1]
     i = loaded_data[2]
     i = np.array(i)/104000.0
-    ### HIER MUSS IN U UND I DIE RAW-DATEN SEIN
+    ### b HIER MUSS IN U UND I DIE RAW-DATEN SEIN
     
     u_min = np.argmin(abs(u))
     
@@ -234,7 +237,7 @@ for iv_file in iv_files[:]:
     mar1 = np.array([u,i])
     
     # do the actual fit
-    c = mar.fit(messung=mar1, iter=_iterations, chanels=_max_channels, gap=_gap, punkte=_punkte, Vmin=_vmin, Vmax=_vmax, ErrRef=1E-10, KickOff=0.002, Strength=0.2); c #was gap=180 # kickoff 2e-4 # strength=0.1
+    c = mar.fit(messung=mar1, iter=_iterations, chanels=_max_channels, gap=_gap, punkte=_punkte, Vmin=_vmin, Vmax=_vmax, ErrRef=1E-10, KickOff=_KickOff, Strength=_Strength); c #was gap=180 # kickoff 2e-4 # strength=0.1
     # gather a curve with the results of the fit (displaying only)
     fit = mar.kanalf(c, _gap, _punkte, 0, _vmax)
     
@@ -249,7 +252,7 @@ for iv_file in iv_files[:]:
     extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)  #empty rectangle for legend
     i_factor = 1e6
     u_factor = 1e3/_gap*1e3 # /_gap*1e3 for gap units
-    no_channel = 5e-2       # transmission indicating no real channel anymore
+    no_channel = 4e-2       # transmission indicating no real channel anymore
     pos_x,pos_y = 0.5,1.0
     
     
@@ -259,27 +262,33 @@ for iv_file in iv_files[:]:
     #ax3 = ax1.twiny()
     #ax3.set_xlabel("U ($\Delta$)")
     
+    from matplotlib.patches import Rectangle
+    extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)
+    
     ax1.set_xlabel("U ($\Delta$)")
     ax1.set_ylabel("I ($\mu$A)")
     ax1.set_title("MAR")
     ax1.hold("False")
-    pl_fit = ax1.plot(fit[0]*u_factor, fit[1]*i_factor, color = set2[1], linewidth=2,label="Fit %2.2f $G_0$"%(np.sum(c)))
+    pl_fit, = ax1.plot(fit[0]*u_factor, fit[1]*i_factor, color = set2[1], linewidth=2,label="Fit %2.2f $G_0$"%(np.sum(c)))
     ax1.hold("True")
-    pl_data = ax1.plot(mar1[0]*u_factor, mar1[1]*i_factor, color = set2[4], linewidth=2,label="Experimental Data")
+    pl_data, = ax1.plot(mar1[0]*u_factor, mar1[1]*i_factor, color = set2[4], linewidth=2,label="Experimental Data")
     
-    if additional_info:
-        pl_data = ax1.plot(u*u_factor, i_linear*i_factor, color = set2[2], linewidth=1,label="Excess Current %2.2f $G_0$"%(p[0]*12906))
+    #if additional_info:
+    #    pl_data = ax1.plot(u*u_factor, i_linear*i_factor, color = set2[2], linewidth=1,label="Excess Current %2.2f $G_0$"%(p[0]*12906))
     
     ax1.set_xlim(xmin=0)
     ax1.set_ylim(ymin=0)
     ax1.set_xticks([1,2,3,4])
-    #pylab.legend([pl_fit,pl_data,extra],("Fit","Data","Gap: %2.3fmeV"%(_gap/1000.0)),loc=2)
+    
     ax1.legend(loc=2)    
     ax1.grid()
     if additional_info:
-        ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.8, "Gap: %2.3fmeV"%(_gap/1000.0),ha="left")
-        ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.75, "T: %2.1fK"%(float(params["temp2"])),ha="left")
-    
+        #pl_data = ax1.plot(u*u_factor, i_linear*i_factor, color = set2[2], linewidth=1,label="Excess Current %2.2f $G_0$"%(p[0]*12906))
+        #ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.8, "Gap: %2.3fmeV"%(_gap/1000.0),ha="left")
+        #ax1.text(max(u*u_factor)*0.1,max(i*i_factor)*0.75, "T: %2.1fK"%(float(params["temp2"])),ha="left")
+        ax1.legend([pl_fit,pl_data,extra,extra],["Fit %2.2f $G_0$"%(np.sum(c)),"Data","$\Delta$ = %2.3f meV"%(_gap/1000.0),r"T$\,$ = %2.1f K"%(float(params["temp2"])) ],loc=2)
+    else:
+        ax1.legend([pl_fit,pl_data],["Fit","Data"],loc=2)
     """for i in range(len(c)):
         if c[i] < no_channel:
             rest = np.sum(c[i:])
@@ -287,7 +296,7 @@ for iv_file in iv_files[:]:
             break
         pylab.text(pos_x,pos_y-i*0.05,"Channel %i:\t%f $G_0$"%(i+1,c[i]))"""
     
-    ch = [x for x in c if x > no_channel]
+    ch = [x for x in c if x >= no_channel]
     ch_rest = [x for x in c if x < no_channel]
     rest = np.sum(ch_rest)
     

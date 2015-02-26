@@ -3,7 +3,7 @@
 Some parts copyright by David Weber
 @author: David Weber
 """
-
+import config
 import visa
 import numpy as np
 import time
@@ -1595,8 +1595,8 @@ def agilent_34410a_starter_old():
             time.sleep(device_delay)"""
 
 
-
-if False:
+""" Just helps the editor to know, what is behind the labels """
+if False: # dont change
     motor = MOTOR()
     lockin = ZURICH() 
     yoko = GS200() 
