@@ -360,6 +360,7 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnBCircleStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_B_Circle)
     QtCore.QObject.connect(_self.ui.btnBSweepStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_B_Sweep)
     QtCore.QObject.connect(_self.ui.btnBIVMapStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_B_IV_Map)
+    QtCore.QObject.connect(_self.ui.btnSwitchingStart, QtCore.SIGNAL("clicked()"), _self.measurement_btn_Acquire_Switching)
     
     QtCore.QObject.connect(_self.ui.btnNature, QtCore.SIGNAL("clicked()"), gui_helper.send_to_nature)
     QtCore.QObject.connect(_self.ui.btnResetBeginTime, QtCore.SIGNAL("clicked()"), gui_helper.reset_begin_times)
@@ -386,6 +387,7 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnMotorSetLimit, QtCore.SIGNAL("clicked()"), gui_helper.motor_set_limit) 
     
     QtCore.QObject.connect(_self.ui.btnSetBias, QtCore.SIGNAL("clicked()"), gui_helper.set_bias) 
+    QtCore.QObject.connect(_self.ui.btnBiasInvert, QtCore.SIGNAL("clicked()"), gui_helper.bias_invert)
     
     QtCore.QObject.connect(_self.ui.btnSaveStart, QtCore.SIGNAL("clicked()"), open_files)
     QtCore.QObject.connect(_self.ui.btnSaveStop, QtCore.SIGNAL("clicked()"), close_files)
@@ -405,6 +407,10 @@ def init_connections(_self):
     QtCore.QObject.connect(_self.ui.btnExecute, QtCore.SIGNAL("clicked()"), _self.execute)
     
     QtCore.QObject.connect(_self.ui.btnFemtoSet, QtCore.SIGNAL("clicked()"), gui_helper.femto_set)
+    
+    # switching
+    QtCore.QObject.connect(_self.ui.btnSwitchSetHigh, QtCore.SIGNAL("clicked()"), gui_helper.switch_high)
+    QtCore.QObject.connect(_self.ui.btnSwitchSetLow, QtCore.SIGNAL("clicked()"), gui_helper.switch_low)
     
     
     

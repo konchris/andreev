@@ -40,13 +40,13 @@ def motor_break(speed=None, quiet=False):
         speed = float(_self.ui.editSpeed.text())
     DEV.motor.set_velocity(-speed)
     if not quiet:
-        log("Motor break with %f"%(-speed))
+        log("Motor break with %i"%(-int(speed)))
 def motor_unbreak(speed=None, quiet=False):
     if speed == None:
         speed = float(_self.ui.editSpeed.text())
     DEV.motor.set_velocity(speed)
     if not quiet:
-        log("Motor unbreak with %f"%(speed))
+        log("Motor unbreak with %i"%(int(speed)))
 def motor_stop():
     DEV.motor.set_velocity(0)
     log("Motor stop")
@@ -98,6 +98,13 @@ def femto_set(a=0,b=0):
     _self.config_data["range_voltage"] = a+1
     _self.config_data["range_current"] = b+1
     DEV.lockin.femto_set(a,b)
+
+
+def switch_high():
+    DEV.yoko.set_voltage(float(_self.form_data["editSwitchingHigh"]))
+
+def switch_low():
+    DEV.yoko.set_voltage(float(_self.form_data["editSwitchingLow"]))    
 
 def save_description():
     import os
@@ -220,6 +227,16 @@ def set_bias():
         bias = float(_self.ui.editBias.text())
         DEV.yoko.set_voltage(bias)
         DEV.yoko.output(True)
+    except Exception,e:
+        log("Failed to set Bias",e)
+
+def bias_invert():
+    try:     
+        bias = -float(_self.form_data["editBias"])
+        _self.ui.editBias.setText(str(bias))
+        DEV.yoko.set_voltage(bias)
+        DEV.yoko.output(True)
+        log("Bias: %f"%(bias))
     except Exception,e:
         log("Failed to set Bias",e)
 

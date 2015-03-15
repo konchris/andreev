@@ -265,7 +265,7 @@ def refresh_display():
                     
                 if _self.form_data["checkViewConductance"]:
                     try:
-                        g_y = 12900.0/r_y
+                        g_y = 12906.0/r_y
                         _self.data_curve8.set_data(resistance_x, g_y)
                     except Exception,e:
                         log("Conductance calculation failed",e)
@@ -286,7 +286,7 @@ def refresh_display():
                     li_0_r = np.sqrt(np.square(li_0_x_interp)+np.square(li_0_y_interp))
                     li_3_r = np.sqrt(np.square(li_3_x_interp)+np.square(li_3_y_interp))
                     
-                    li_first = li_3_r/li_0_r*12900.0/_self.rref
+                    li_first = li_3_r/li_0_r*12906.0/_self.rref
                     
                     _self.data_curve8b.set_data(x_list-_self._start_time, li_first)
                 except Exception,e:

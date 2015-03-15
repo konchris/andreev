@@ -195,6 +195,7 @@ class main_program(QtGui.QMainWindow):
         breaking = True         # sets direction of motor
         cold_timer = 0
         histo_sleep = 0.1
+        last_offset = time.time()
         
         self.begin_time_histogram = time.time()
         if not self.f_config == None:
@@ -238,16 +239,30 @@ class main_program(QtGui.QMainWindow):
                                     self.f_config.write("HISTOGRAM_OPEN\t%15.15f\n"%(self.begin_time_histogram))   
                                 self.config_data["main_index"] += 1
                                 self.config_data["sub_index"] = 0
+                                
+                                
+                                if bool(self.form_data["checkHistogramOffset"]):
+                                    try:
+                                        if last_offset > time.time() + int(self.form_data["editHistogramOffset"]):
+                                            self.offset_correct()
+                                            last_offset = time.time()
+                                    except Exception,e:
+                                        log("Auto Offset failed",e)
+                                    
                             breaking = True     # if resistance low -> BREAK
                     
+                    # reset cold timer if we are not above/under limits
                     if resistance < upper_res and resistance > lower_res:
                         cold_timer = cold_time
                     
+                    # tell the motor where to go depending on direction
                     if breaking:
                         gui_helper.motor_break(int(self.form_data["editHistogramOpeningSpeed"]), quiet=True)
                     else:
                         gui_helper.motor_unbreak(int(self.form_data["editHistogramClosingSpeed"]), quiet=True)
                         
+                    
+                    
                     # if escape on motor limit hit
                     if bool(self.form_data["checkHistogramEscape"]):
                         if DEV.motor.higher_bound or DEV.motor.lower_bound:
@@ -255,11 +270,11 @@ class main_program(QtGui.QMainWindow):
                             break
                     else:
                         if DEV.motor.higher_bound:
-                            log("Motor reached its bounds, trying to break again in 10s!")
+                            log("Motor reached higher bounds, trying to break again in 10s!")
                             time.sleep(10)
                             breaking = True
                         if DEV.motor.lower_bound:
-                            log("Motor reached its bounds, trying to close again in 10s!")
+                            log("Motor reached lower bounds, trying to close again in 10s!")
                             time.sleep(10)
                             breaking = False
                 except Exception,e:
@@ -319,7 +334,7 @@ class main_program(QtGui.QMainWindow):
 
                 if last_engage > float(self.form_data["editUltraColdTime"]):
                     if resistance < float(self.form_data["editUltraMax"]) and resistance > float(self.form_data["editUltraMin"]):
-                        log("Found desired Resistance for Action")
+                        log("Found desired Resistance for Action (%.0f kOhm)"%(resistance/1e3))
                         log("Stopping Motor")
                         last_engage = 0
                         
@@ -328,9 +343,9 @@ class main_program(QtGui.QMainWindow):
                         time.sleep(float(self.form_data["editUltraStabilizeTime"]))
                         resistance_new = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
                         
-                        log("Resistance changed by %f"%(resistance_new*100/resistance-100))
+                        log("Resistance changed by %3.0f%%"%(resistance_new*100/resistance-100))
 
-                        if abs(resistance_new / resistance - 1) < 0.1:
+                        if abs(resistance_new / resistance - 1) < float(self.form_data["editUltraTolerance"])*1e-2:
                             sample_factor = resistance_new/(resistance_new+self.rref)
                             if int(self.form_data["comboUltraAction"]) == 0:
                                 # ivs
@@ -459,7 +474,7 @@ class main_program(QtGui.QMainWindow):
 
 
     
-    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None, _double=None, _resync_lockin=True):
+    def aquire_iv(self, _min=None, _max=None, _time=None, _sample=None, _double=None, _resync_lockin=True, _filename=None):
         """(self, _min=None, _max=None, _time=None, _sample=None, _double=None)"""
         log("IV Sweep Starting") 
         self.stop_measure = False
@@ -475,7 +490,7 @@ class main_program(QtGui.QMainWindow):
             sample_res = abs(self.data["agilent_voltage_voltage"][-1] / self.data["agilent_current_voltage"][-1] * self.rref)
             sample_factor = sample_res/(sample_res+self.rref)
         except Exception,e:
-            sample_factor = 1000.0
+            sample_factor = 10.0
             log("IV voltage calculation failed",e)
         
         if _sample:
@@ -488,9 +503,9 @@ class main_program(QtGui.QMainWindow):
         _max = max(-_voltage_limits, min(_max, _voltage_limits))
                 
         bias = DEV.yoko.get_voltage()
-        DEV.yoko.program_goto_ramp(_min, 1)
-        time.sleep(1)
-        time.sleep(5 * float(self.form_data["editLITC"]))       
+        DEV.yoko.program_goto_ramp(_min, 2)
+        time.sleep(2)
+        time.sleep(8 * float(self.form_data["editLITC"]))       
         
                         
         log("IV Loop %fV,%fV,%4.0fs"%(_min,_max,_time)) 
@@ -553,14 +568,14 @@ class main_program(QtGui.QMainWindow):
                         self.plot_data["y2"] = [x/self.rref for x in li_first[:]]
                         
                         self.plot_data["x3"] = voltage_list[:]
-                        self.plot_data["y3"] = li_1_r[:]
+                        self.plot_data["y3"] = [x/self.rref for x in li_1_r[:]]
                         self.plot_data["x4"] = voltage_list[:]
                         self.plot_data["y4"] = [x/self.rref for x in li_4_r[:]]
                         
                         self.plot_data["new"][0] = True 
                         self.plot_data["new"][1] = True
                         self.plot_data["new"][2] = True
-                        self.plot_data["new"][3] = True
+                        #self.plot_data["new"][3] = True
                     except Exception,e:
                         log("IV interpolation failed",e)
             
@@ -627,7 +642,7 @@ class main_program(QtGui.QMainWindow):
                     self.plot_data["new"][0] = True
                     self.plot_data["new"][1] = True
                     self.plot_data["new"][2] = True
-                    self.plot_data["new"][3] = True
+                    #self.plot_data["new"][3] = True
                     
                     try:        
                         saving_data = [x_list, voltage_list, current_list, li_0_x_interp, li_0_y_interp, li_1_x_interp, li_1_y_interp, li_3_x_interp, li_3_y_interp, li_4_x_interp, li_4_y_interp]
@@ -636,7 +651,10 @@ class main_program(QtGui.QMainWindow):
                         if not os.path.exists(d_name):
                             os.makedirs(d_name)
                         time_string = str(int(round(time.time())))
-                        file_string = "iv_%s_%i_%i.txt"%(time_string,self.config_data["main_index"],self.config_data["sub_index"])
+                        if _filename == None:
+                            file_string = "iv_%s_%i_%i.txt"%(time_string,self.config_data["main_index"],self.config_data["sub_index"])
+                        else:
+                            file_string = _filename
                         f_iv = open(d+file_string, 'a')
         
                         try:
@@ -647,9 +665,9 @@ class main_program(QtGui.QMainWindow):
                             log("IV Parameter Save failed",e)
                         save_data(f_iv, saving_data)
                         f_iv.close()
-                        self.ui.editLastIV.setText(file_string)
                         
-                        self.last_iv_name = time_string
+                        self.ui.editLastIV.setText(file_string)
+                        self.last_iv_name = file_string
                     except Exception,e:
                         log("Failed to Save IV",e)
                     
@@ -668,7 +686,148 @@ class main_program(QtGui.QMainWindow):
         time.sleep(2)
         log("IV Sweep finished")
         self.iv_in_progress = False
+        
+    def aquire_switching(self):
+        log("Switching Procedure Started") 
+        self.stop_measure = False
+        
+     
+        bias = DEV.yoko.get_voltage()
 
+        pulse_high = float(self.form_data["editSwitchingHigh"])
+        pulse_low  = float(self.form_data["editSwitchingLow"])
+        switching_duration  = float(self.form_data["editSwitchingDuration"])
+        switching_bias  = float(self.form_data["editSwitchingProbeBias"])
+        switching_measure_delay  = float(self.form_data["editSwitchingMeasureDelay"])
+        switching_pulse_delay  = float(self.form_data["editSwitchingPulseDelay"])
+        
+        log("Switching %fV,%fV,%fs,%fV"%(pulse_high,pulse_low,switching_duration,switching_bias)) 
+        
+        self.begin_time_switching = time.time()
+        
+        
+        # storing data
+        switching_conductances = []
+        d = os.path.join(str(self.form_data["editSetupDir"]),str(self.form_data["editHeader"]))   
+        if not os.path.exists(os.path.dirname(d+"\\")):
+            os.makedirs(os.path.dirname(d))
+        time_string = str(int(round(self.begin_time_switching)))
+        file_string = "switching_%s.txt"%(time_string)
+        switching_output = open(os.path.join(d,file_string), 'a')
+        switching_output.write("Switching %fV,%fV,%fs,%fV\n"%(pulse_high,pulse_low,switching_duration,switching_bias))
+        
+        
+
+        switch_index = 0
+        while not self.stop_measure:
+            
+            # update params
+            _min = float(self.form_data["editIVMin"])
+            _max = float(self.form_data["editIVMax"])
+            _time = float(self.form_data["editIVTime"])
+            _sample = self.form_data["checkIVSample"]
+            _double = self.form_data["checkIVDouble"]
+            
+            pulse_high = float(self.form_data["editSwitchingHigh"])
+            pulse_low  = float(self.form_data["editSwitchingLow"])
+            switching_duration  = float(self.form_data["editSwitchingDuration"])
+            switching_bias  = float(self.form_data["editSwitchingProbeBias"])
+            switching_measure_delay  = float(self.form_data["editSwitchingMeasureDelay"])
+            switching_pulse_delay  = float(self.form_data["editSwitchingPulseDelay"])
+            
+            
+            
+            DEV.yoko.set_voltage(pulse_high)
+            time.sleep(switching_duration)
+                
+            # positive measure bias
+            DEV.yoko.set_voltage(switching_bias)
+            time.sleep(switching_measure_delay)
+            
+            v = np.average(self.data["agilent_voltage_voltage"][-5:])
+            i = np.average(self.data["agilent_current_voltage"][-5:])
+            g_high = i/v/self.rref*12906.0
+            
+            # negative measure bias
+            DEV.yoko.set_voltage(-switching_bias)
+            time.sleep(switching_measure_delay)
+            
+            v = np.average(self.data["agilent_voltage_voltage"][-5:])
+            i = np.average(self.data["agilent_current_voltage"][-5:])
+            g_low = i/v/self.rref*12906.0
+            
+            switching_conductances.append(g_high)
+            switching_conductances.append(g_low)
+            
+            time_string = str(int(round(self.begin_time_switching)))
+            iv_filename = "switching_%s_%i_high_iv.txt"%(time_string,switch_index)
+            self.aquire_iv(_min,_max,_time,_sample,_double,_filename=iv_filename)
+            
+            switching_output.write("%i,high,%f,%f,%s\n"%(switch_index,g_high, g_low,iv_filename)) 
+            log("%i (high):\t%f Go,%f Go,%s\n"%(switch_index,g_high, g_low,iv_filename))
+            
+            time.sleep(switching_pulse_delay)
+            
+            
+            
+            DEV.yoko.set_voltage(pulse_low)
+            time.sleep(switching_duration)
+                
+            # positive measure bias
+            DEV.yoko.set_voltage(switching_bias)
+            time.sleep(switching_measure_delay)
+            
+            v = np.average(self.data["agilent_voltage_voltage"][-5:])
+            i = np.average(self.data["agilent_current_voltage"][-5:])
+            g_high = i/v/self.rref*12906.0
+            
+            # negative measure bias
+            DEV.yoko.set_voltage(-switching_bias)
+            time.sleep(switching_measure_delay)
+            
+            v = np.average(self.data["agilent_voltage_voltage"][-5:])
+            i = np.average(self.data["agilent_current_voltage"][-5:])
+            g_low = i/v/self.rref*12906.0
+            
+            switching_conductances.append(g_high)
+            switching_conductances.append(g_low)
+            
+            time_string = str(int(round(self.begin_time_switching)))
+            iv_filename = "switching_%s_%i_low_iv.txt"%(time_string,switch_index)
+            self.aquire_iv(_min,_max,_time,_sample,_double,_filename=iv_filename)
+            
+            switching_output.write("%i,low,%f,%f,%s\n"%(switch_index,g_high, g_low,iv_filename))
+            log("%i (low):\t%f Go,%f Go,%s\n"%(switch_index,g_high, g_low,iv_filename))
+            
+            time.sleep(switching_pulse_delay)
+            
+            time.sleep(0.1)
+            app.processEvents()
+            
+
+                 
+            try:
+                self.plot_data["x1"] = range(len(switching_conductances))
+                self.plot_data["y1"] = switching_conductances[:]
+                self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.X_BOTTOM, "Counts")
+                self.ui.cw5.plot.set_axis_title(self.ui.cw5.plot.Y_LEFT, "Conductance ($G_0$)") 
+                self.plot_data["new"][0] = True
+            except Exception,e:
+                log("Switching Plotting Failed",e)
+
+ 
+            switching_output.flush() 
+            switch_index += 1
+            
+        switching_output.close()
+        end_time = time.time()
+        initialize.write_config("SWITCHING_STOP\t%15.15f\t\n"%(end_time))            
+        log("Switching End") 
+        
+        time.sleep(0.25)      
+        DEV.yoko.program_goto_ramp(bias, 1)
+        time.sleep(2)
+        log("Switching Finished")
 
     
     def temp_sweep(self):       
@@ -1828,7 +1987,7 @@ class main_program(QtGui.QMainWindow):
             finally:
                 self.data_lock.release()
 
-            time.sleep(0.2)
+            time.sleep(0.15)
         initialize.close_files()
     
     """ The following functions call the different functions for different 
@@ -1852,6 +2011,9 @@ class main_program(QtGui.QMainWindow):
         _double = self.form_data["checkIVDouble"]
         #(self, _min=None, _max=None, _time=None, _sample=None, _double=None)
         thread.start_new_thread(self.aquire_iv,(_min,_max,_time,_sample,_double))
+    
+    def measurement_btn_Acquire_Switching(self):
+        thread.start_new_thread(self.aquire_switching,())
         
     def measurement_btn_Acquire_B_Circle(self):
         _radius = float(self.form_data["editBCircleRadius"])

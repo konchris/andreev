@@ -26,11 +26,11 @@ g_0 = 2.0*const.e**2/const.h
 db = 0
 
 
-filename = r"141216_Pb266_Tc"
+filename = r"150312_Pb314_Histo03"
 
 base_path = os.path.join("Z:\dweber\data_p5",filename)              # server
 base_path = os.path.join("C:\data_p5",filename)                     # local
-base_path = r"C:\Users\David Weber\Desktop\09\140911_Pb216_MAR01"   # custom
+#base_path = r"C:\Users\David Weber\Desktop\09\140911_Pb216_MAR01"   # custom
 total_path = [os.path.join(base_path,'db_%i.h5'%(db))]
 config_path = os.path.join(base_path,'config.txt')
 
@@ -279,15 +279,16 @@ if split_up_ivs:
     i = 1
     for hist_times in histograms[1:2]:
         
-        i_begin =   find_min(data_packages[0].x_list, hist_times[0])
-        i_end =     find_min(data_packages[0].x_list, hist_times[1])
+        local_t, local_g = data_packages[0].v_raw[0], 12906.0/data_packages[0].r_raw
+    
+        
+        i_begin =   find_min(local_t, hist_times[0])
+        i_end =     find_min(local_t, hist_times[1])
 
         fig = pl.figure(figsize=(12,12), dpi=72)
         fig.subplots_adjust(hspace = 0.35, wspace = 0.6)
         ax_cond = fig.add_subplot(1,1,1) 
-        #fig.gca()
-        #ax_didv = fig.add_subplot(2,1,2)
-        #ax_sub_b = ax_didv.twinx()
+
         
         opening_data = []
         closing_data = []
@@ -296,8 +297,8 @@ if split_up_ivs:
         cond_lower_end = 1e-4
         cond_higher_end = 1e1
         ##############################
-        #print len(data_packages[0].position[i_begin:i_end]), data_packages[0].position[i_begin], data_packages[0].position[i_end]
-        if data_packages[0].cond[i_begin] > data_packages[0].cond[i_end]: 
+        
+        if data_packages[0].r_raw[i_begin] > data_packages[0].r_raw[i_end]: 
             # opening curve
             opening_data.extend(data_packages[0].cond[i_begin:i_end])
             j = i_begin
@@ -329,12 +330,12 @@ if split_up_ivs:
             
             ax_cond.set_title("Closing") 
 
-        #ax_didv.plot(position[i_begin:i_end],di_dv[i_begin:i_end], 'r-')
-        #ax_sub_b.plot(voltage[i_begin:i_end],d2i_dv2[i_begin:i_end], 'b-')
+
         
         ax_cond.set_xlabel("Pos (Turns)")
         ax_cond.set_ylabel("S ($G_0$)")
         ax_cond.set_yscale("log")
+        ax_cond.set_ylim([1e-4,1e2])
         ax_cond.grid()
         
         fig.savefig(os.path.join(trace_dir,str(int(hist_times[1]))+".png"))
@@ -393,7 +394,12 @@ if split_up_ivs:
         i += 1
         
 
-if False:
+
+
+##########
+# TRACES #
+##########
+if True:
     ov_plot = pl.figure(figsize=(8,6),dpi=120)
     ov_hist = ov_plot.add_subplot(1,1,1)
     
@@ -407,6 +413,8 @@ if False:
     ov_hist.set_ylabel("Counts")
     ov_hist.set_title("Histogram (%i open+close)"%(len(histograms)))
     ov_plot.savefig(os.path.join(base_path,"histogramm.png"))
+    
+
     
     #import numpy as np
     #from scipy.optimize import curve_fit
