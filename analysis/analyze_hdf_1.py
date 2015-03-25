@@ -427,7 +427,7 @@ if True:
     
     popt, pcov = curve_fit(func, xdata, ydata)"""
 
-if False:
+if True:
     plot_t = pl.figure()
     plot_t_1 = plot_t.add_subplot(2,1,1)
     plot_t_2 = plot_t.add_subplot(2,1,2)
@@ -436,12 +436,23 @@ if False:
     plot_t_1.plot(data_packages[0].t_sample[von:bis], data_packages[0].cond[von:bis])
     plot_t_1.set_ylabel("G (G/$G_0$)")
     plot_t_1.set_xlabel("T (K)")
-    plot_t_2.plot(data_packages[0].cond)
-
+    
+    
+    plot_t_2.plot(data_packages[0].cond, label="Conductance")
+    plot_t_2.hold(True)
+    plot_t_2_twin = plot_t_2.twinx()
+    plot_t_2_twin.plot(data_packages[0].t_sample, color='r', lw=2, label="Temperature")
     plot_t_2.set_ylabel("G (G/$G_0$)")
     plot_t_2.set_xlabel("t (s)")
     #plot_t_1.set_ylim([0,2000])
-    #plot_t_2.set_ylim([0,2000])
+    #
+    x_limit = 50000
+    plot_t_2.set_xlim([0,x_limit])
+    plot_t_2_twin.set_xlim([0,x_limit])
+    
+    y_limit = 1000
+    plot_t_2.set_ylim([0,y_limit])
+    plot_t_2_twin.set_ylim([0,10])
     plot_t.savefig(os.path.join(base_path,"temperature.png"))
 
 

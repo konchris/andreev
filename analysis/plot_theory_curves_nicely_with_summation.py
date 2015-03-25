@@ -10,7 +10,7 @@ from MAR_functions import *
 import numpy as np
 
 dataset="t_4k_0_25"
-dataset="t_0k"
+dataset2="t_0k"
 
 pl.close("all")
 
@@ -22,10 +22,10 @@ normalize = True
 transmissions = np.arange(0.1,1.1,0.1)
 colors = ["black", "grey", "blue", "cyan", "green", "magenta", "red", "purple"]
 
-colors = ["#%s%s%s"%(hex((x*22)%256)[2:-1] , hex((80+x*8)%256)[2:-1] , hex((80+x*4)%256)[2:-1]) for x in arange(16)+2]
+colors = ["#%s%s%s"%(hex((x*22)%256)[2:-1] , hex((80+x*8)%256)[2:-1] , hex((80+x*4)%256)[2:-1]) for x in np.arange(16)+2]
 
 color_count = 11
-colors = ["#%s%s%s"%(hex((x*(256/color_count))%256)[2:-1] , "00","00") for x in arange(color_count)+1]
+colors = ["#%s%s%s"%(hex((x*(256/color_count))%256)[2:-1] , "00","00") for x in np.arange(color_count)+1]
 
 pl.figure(figsize=(8,6),dpi=72)
 
@@ -61,7 +61,7 @@ else:
     pl.xlim((0,3.5))
 pl.xticks([2.0/x for x in [0.666,1,2,3,4,5,6,7,8]],["3","2","1",r"$\frac{2}{3}$",r"$\frac{2}{4}$",r"$\frac{2}{5}$"])
 pl.xlabel("Voltage ($\Delta$/e)",fontsize=20)
-plt.gcf().subplots_adjust(left=0.08, bottom=0.15, right=0.99, top=0.95)
+pl.gcf().subplots_adjust(left=0.08, bottom=0.15, right=0.99, top=0.95)
 
 
 if normalize:
@@ -71,7 +71,7 @@ else:
     pl.ylim((0,6))
     pl.ylabel("Current (2e$\Delta$/$\hbar$)",fontsize=20)
 legend = pl.legend(loc="best", title="Transmission", fontsize="16", ncol=1, shadow=True, )
-plt.setp(legend.get_title(),fontsize='16')
+pl.setp(legend.get_title(),fontsize='16')
 pl.grid()
 pl.gca().tick_params(axis='both', which='major', labelsize=20)
 pl.show()
