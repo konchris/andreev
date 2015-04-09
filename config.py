@@ -26,11 +26,14 @@ if userIndex == 2:
     
     """ Motor address"""
     installed_motor = "COM1"
+    max_I = 300
+    max_rpm = 8000
+    encoder = 1024
     
     """ Definitions which magnets should be started and the address"""
     magnetZ = True
-    magnetX = True
-    magnetZAddresse = 26
+    magnetX = False
+    magnetZAddresse = 25
     magnetXAddresse = 25
     
 if userIndex == 1:
@@ -46,6 +49,9 @@ if userIndex == 1:
     
     """ Motor address"""
     installed_motor = "ASRL3"
+    max_I = 150
+    max_rpm = 8000
+    encoder = 512
     
     """ Definitions which magnets should be started"""
     magnetZ = False

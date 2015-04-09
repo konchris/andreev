@@ -236,11 +236,10 @@ class Magnet:
                     self.actual_field = float(answer[1:])
                     self.ReadStatus()
                 except Exception,e:
-                    self.actual_field=11
+                    self.actual_field=17
                     log("Field Aquire Failed",e)
                     self.magnet.clear()
             except Exception,e:
-                
                 log("Magnet Thread Acquire Failed",e)
             finally:
                 gpib_lock.release()
@@ -1357,7 +1356,7 @@ class ZURICH:
 
 
 class MOTOR:
-    def __init__(self, addr="ASRL3", reduction=3088, encoder=512):
+    def __init__(self, addr="ASRL3", reduction=3088, encoder=config.encoder):
         #self.motor=serial.Serial('COM1',115200,timeout=0) 
         self.motor=visa.SerialInstrument(addr,delay=0.00,term_chars='\r\n',timeout=0.2)
         self.motor.clear()
@@ -1387,11 +1386,11 @@ class MOTOR:
         self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
         log("Thread #%i started"%(self.thread_id))
 
-    def initialize(self, max_rpm=8000):
+    def initialize(self, max_rpm=config.max_rpm, max_I = config.max_I):
         """activate motor control"""
         self.motor.write('V0')                # speed = 0 rpm
-        self.motor.write('AC500')            # acceleration
-        self.motor.write('LCC100')             # max current in mA
+        self.motor.write('AC500')             # acceleration
+        self.set_current(max_I)               # max current in mA
         self.motor.write('SP%i'%(max_rpm))    # maximum rpm
         self.motor.write('EN')                # enable movement
         
@@ -1400,7 +1399,6 @@ class MOTOR:
         self._mpos = 0
         self._v = 0
         self._current = 0
-        self.set_current(150)
         self._gv = self.update_set_velocity()
         log("Motor initialized")
     
