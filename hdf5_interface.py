@@ -18,6 +18,12 @@ class temperature(IsDescription):
     timestamp   =   Float64Col()
     pot         =   Float32Col()
     sample      =   Float32Col()
+    
+class itc(IsDescription):
+    timestamp   =   Float64Col()
+    temp1         =   Float32Col()
+    temp2      =   Float32Col()
+    temp3      =   Float32Col()
 
 class magnet(IsDescription):
     timestamp   =   Float64Col()
@@ -35,6 +41,7 @@ class voltage(IsDescription):
 class parameter(IsDescription):
     timestamp   =   Float64Col()
     name        =   StringCol(25)
+    label        =  StringCol(99)
     value       =   Float64Col()
     
 class hdf5_saving:
@@ -74,6 +81,9 @@ class hdf5_saving:
         group = self.h5file.createGroup("/", 'temperature', 'Temperature Data')
         table = self.h5file.createTable(group, 'data', temperature, "All Data")
         
+        group = self.h5file.createGroup("/", 'itc', 'Temperature Data')
+        table = self.h5file.createTable(group, 'data', itc, "All Data")
+        
         group = self.h5file.createGroup("/", 'magnet', 'Magnet Data')
         table = self.h5file.createTable(group, 'ch_0', magnet, "IPS Z")
         table = self.h5file.createTable(group, 'ch_1', magnet, "IPS X")
@@ -101,6 +111,17 @@ class hdf5_saving:
             t_row["timestamp"] = timestamp[i]
             t_row["pot"] = temp_pot[i]
             t_row["sample"] = temp_sample[i]
+            t_row.append()
+        self.h5file.flush()
+    
+    def save_itc(self, timestamp=[], temp1=[], temp2=[], temp3=[]):
+        table = self.h5file.root.itc.data
+        t_row = table.row
+        for i in range(len(timestamp)):
+            t_row["timestamp"] = timestamp[i]
+            t_row["temp1"] = temp1[i]
+            t_row["temp2"] = temp2[i]
+            t_row["temp3"] = temp3[i]
             t_row.append()
         self.h5file.flush()
     
@@ -167,15 +188,19 @@ class hdf5_saving:
             t_row.append()
         self.h5file.flush()
     
-    def save_parameter(self, timestamp=[], position=[], velocity=[]):
-        table = self.h5file.root.motor.data            
+    def save_parameter(self, timestamp=None, name="none", label="none", value=0.0):
+        table = self.h5file.root.info.parameters            
+        
+        if timestamp == None:
+            timestamp = time.time()
         
         t_row = table.row
-        for i in range(len(timestamp)):
-            t_row["timestamp"] = timestamp[i]
-            t_row["position"] = position[i]
-            t_row["velocity"] = velocity[i]
-            t_row.append()
+        t_row["timestamp"] = timestamp
+        t_row["name"] = name
+        t_row["label"] = label
+        t_row["value"] = value
+        t_row.append()
+        
         self.h5file.flush()
 
             

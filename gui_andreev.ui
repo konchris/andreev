@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>941</width>
-    <height>801</height>
+    <height>756</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>10</x>
       <y>320</y>
       <width>921</width>
-      <height>441</height>
+      <height>391</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -82,7 +82,7 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>611</width>
+      <width>681</width>
       <height>301</height>
      </rect>
     </property>
@@ -99,7 +99,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>10</number>
        </property>
        <widget class="QWidget" name="tab1">
         <attribute name="title">
@@ -1321,7 +1321,7 @@
        </widget>
        <widget class="QWidget" name="tab_8">
         <attribute name="title">
-         <string>T</string>
+         <string>LS</string>
         </attribute>
         <widget class="QWidget" name="gridLayoutWidget_3">
          <property name="geometry">
@@ -1594,96 +1594,11 @@
           <string>Static</string>
          </property>
         </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay1a">
-         <property name="geometry">
-          <rect>
-           <x>320</x>
-           <y>50</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>None</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input A</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input B</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 2</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 2</string>
-          </property>
-         </item>
-        </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay1b">
-         <property name="geometry">
-          <rect>
-           <x>320</x>
-           <y>70</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>Kelvin</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Celsius</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Sensor</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Min</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Max</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Name</string>
-          </property>
-         </item>
-        </widget>
         <widget class="QLabel" name="label_76">
          <property name="geometry">
           <rect>
-           <x>320</x>
-           <y>20</y>
+           <x>530</x>
+           <y>30</y>
            <width>54</width>
            <height>21</height>
           </rect>
@@ -1692,274 +1607,322 @@
           <string>Display</string>
          </property>
         </widget>
-        <widget class="QPushButton" name="btnTemperatureCustom">
+        <widget class="QWidget" name="gridLayoutWidget_20">
          <property name="geometry">
           <rect>
-           <x>320</x>
-           <y>160</y>
-           <width>81</width>
-           <height>23</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Custom</string>
-         </property>
-        </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay2a">
-         <property name="geometry">
-          <rect>
-           <x>410</x>
+           <x>529</x>
            <y>50</y>
-           <width>81</width>
-           <height>22</height>
+           <width>131</width>
+           <height>129</height>
           </rect>
          </property>
-         <item>
-          <property name="text">
-           <string>None</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input A</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input B</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 2</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 2</string>
-          </property>
-         </item>
+         <layout class="QGridLayout" name="gridLayout_20">
+          <item row="2" column="0">
+           <widget class="QComboBox" name="comboTemperatureDisplay3a">
+            <item>
+             <property name="text">
+              <string>None</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input A</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input B</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QComboBox" name="comboTemperatureDisplay1b">
+            <item>
+             <property name="text">
+              <string>Kelvin</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Celsius</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Sensor</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Min</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Max</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Name</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QComboBox" name="comboTemperatureDisplay1a">
+            <item>
+             <property name="text">
+              <string>None</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input A</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input B</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="comboTemperatureDisplay4b">
+            <item>
+             <property name="text">
+              <string>Kelvin</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Celsius</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Sensor</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Min</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Max</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Name</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="comboTemperatureDisplay4a">
+            <item>
+             <property name="text">
+              <string>None</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input A</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input B</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="comboTemperatureDisplay2b">
+            <item>
+             <property name="text">
+              <string>Kelvin</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Celsius</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Sensor</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Min</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Max</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Name</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboTemperatureDisplay2a">
+            <item>
+             <property name="text">
+              <string>None</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input A</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Input B</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Setpoint 2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Output 2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QComboBox" name="comboTemperatureDisplay3b">
+            <item>
+             <property name="text">
+              <string>Kelvin</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Celsius</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Sensor</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Min</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Max</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Name</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QPushButton" name="btnTemperatureCustom">
+            <property name="text">
+             <string>Custom</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay3a">
-         <property name="geometry">
-          <rect>
-           <x>320</x>
-           <y>100</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>None</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input A</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input B</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 2</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 2</string>
-          </property>
-         </item>
-        </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay4a">
-         <property name="geometry">
-          <rect>
-           <x>410</x>
-           <y>100</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>None</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input A</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Input B</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Setpoint 2</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Output 2</string>
-          </property>
-         </item>
-        </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay2b">
-         <property name="geometry">
-          <rect>
-           <x>410</x>
-           <y>70</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>Kelvin</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Celsius</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Sensor</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Min</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Max</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Name</string>
-          </property>
-         </item>
-        </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay3b">
-         <property name="geometry">
-          <rect>
-           <x>320</x>
-           <y>120</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>Kelvin</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Celsius</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Sensor</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Min</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Max</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Name</string>
-          </property>
-         </item>
-        </widget>
-        <widget class="QComboBox" name="comboTemperatureDisplay4b">
-         <property name="geometry">
-          <rect>
-           <x>410</x>
-           <y>120</y>
-           <width>81</width>
-           <height>22</height>
-          </rect>
-         </property>
-         <item>
-          <property name="text">
-           <string>Kelvin</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Celsius</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Sensor</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Min</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Max</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Name</string>
-          </property>
-         </item>
-        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_14">
+        <attribute name="title">
+         <string>ITC</string>
+        </attribute>
        </widget>
        <widget class="QWidget" name="tab_7">
         <attribute name="title">
@@ -3046,8 +3009,8 @@
         <widget class="QCheckBox" name="checkViewT1">
          <property name="geometry">
           <rect>
-           <x>250</x>
-           <y>210</y>
+           <x>380</x>
+           <y>40</y>
            <width>111</width>
            <height>17</height>
           </rect>
@@ -3062,8 +3025,8 @@
         <widget class="QCheckBox" name="checkViewT2">
          <property name="geometry">
           <rect>
-           <x>250</x>
-           <y>230</y>
+           <x>380</x>
+           <y>60</y>
            <width>111</width>
            <height>17</height>
           </rect>
@@ -3099,6 +3062,54 @@
          </property>
          <property name="text">
           <string>Conductance LI</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkViewITCT1">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>80</y>
+           <width>111</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>ITC1</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkViewITCT2">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>100</y>
+           <width>111</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>ITC2</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkViewITCT3">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>120</y>
+           <width>111</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>ITC3</string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -3891,7 +3902,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QWidget" name="verticalLayoutWidget_3">
     <property name="geometry">
      <rect>
-      <x>630</x>
+      <x>690</x>
       <y>10</y>
       <width>81</width>
       <height>301</height>
@@ -4034,9 +4045,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QWidget" name="verticalLayoutWidget_5">
     <property name="geometry">
      <rect>
-      <x>720</x>
+      <x>770</x>
       <y>10</y>
-      <width>211</width>
+      <width>161</width>
       <height>301</height>
      </rect>
     </property>
@@ -4081,7 +4092,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>760</y>
+      <y>720</y>
       <width>482</width>
       <height>31</height>
      </rect>
@@ -4153,7 +4164,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>680</x>
-      <y>770</y>
+      <y>730</y>
       <width>46</width>
       <height>13</height>
      </rect>
@@ -4166,7 +4177,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>730</x>
-      <y>770</y>
+      <y>730</y>
       <width>201</width>
       <height>20</height>
      </rect>
@@ -4176,7 +4187,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>500</x>
-      <y>760</y>
+      <y>720</y>
       <width>161</width>
       <height>31</height>
      </rect>
@@ -4271,7 +4282,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>comboTemperatureDisplay3b</tabstop>
   <tabstop>comboTemperatureDisplay4a</tabstop>
   <tabstop>comboTemperatureDisplay4b</tabstop>
-  <tabstop>btnTemperatureCustom</tabstop>
   <tabstop>editBMax</tabstop>
   <tabstop>editBRate</tabstop>
   <tabstop>btnBStart</tabstop>

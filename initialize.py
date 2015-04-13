@@ -40,6 +40,7 @@ def open_files():
         _self.f_agilent_current.close()
         _self.f_motor.close()
         _self.f_temp.close()
+        _self.f_itc.close()
         _self.f_femto.close()
         _self.f_ips.close()
         _self.f_ips_2.close()
@@ -64,6 +65,7 @@ def open_files():
         _self.f_femto = open(d+"femto.txt", 'a')
         _self.f_motor = open(d+"motor.txt", 'a')
         _self.f_temp = open(d+"temp.txt", 'a')
+        _self.f_itc = open(d+"itc.txt", 'a')
         _self.f_ips = open(d+"ips.txt", 'a') 
         _self.f_ips_2 = open(d+"ips_2.txt", 'a') 
         
@@ -82,6 +84,7 @@ def close_files():
             _self.f_femto.close()
             _self.f_motor.close()
             _self.f_temp.close()
+            _self.f_itc.close()
             _self.f_ips.close()
             _self.f_ips_2.close()
         except Exception,e:
@@ -102,6 +105,7 @@ def close_files():
         _self.f_femto = None
         _self.f_motor = None
         _self.f_temp = None
+        _self.f_itc = None
         _self.f_ips = None
         _self.f_ips_2 = None
         _self.f_config = None
@@ -134,6 +138,10 @@ def init_curvewidgets(_self):
     _self.data_curve5b = make.curve([],[], color="G")   # magnet 2
     _self.data_curve6 = make.curve([],[], yaxis="right", color="b")
     _self.data_curve6b = make.curve([],[], yaxis="right", color="g")
+    _self.data_curve6c = make.curve([],[], yaxis="right", color="y")
+    _self.data_curve6d = make.curve([],[], yaxis="right", color="r")
+    _self.data_curve6e = make.curve([],[], yaxis="right", color="l")
+    
     _self.data_curve7 = make.curve([],[])
     _self.data_curve8 = make.curve([1],[1], yaxis="right", color="b")
     _self.data_curve8b = make.curve([1],[1], yaxis="right", color="g")
@@ -171,12 +179,18 @@ def init_curvewidgets(_self):
         
     _self.ui.cw1.plot.add_item(_self.data_curve1)
     _self.ui.cw1.plot.add_item(_self.data_curve2)
+    
     _self.ui.cw2.plot.add_item(_self.data_curve3)
     _self.ui.cw2.plot.add_item(_self.data_curve4)
+    
     _self.ui.cw3.plot.add_item(_self.data_curve5)
     _self.ui.cw3.plot.add_item(_self.data_curve5b)
     _self.ui.cw3.plot.add_item(_self.data_curve6)
     _self.ui.cw3.plot.add_item(_self.data_curve6b)
+    _self.ui.cw3.plot.add_item(_self.data_curve6c)
+    _self.ui.cw3.plot.add_item(_self.data_curve6d)
+    _self.ui.cw3.plot.add_item(_self.data_curve6e)
+    
     _self.ui.cw4.plot.add_item(_self.data_curve7)
     _self.ui.cw4.plot.add_item(_self.data_curve8)
     _self.ui.cw4.plot.add_item(_self.data_curve8b)
@@ -245,6 +259,11 @@ def init_variables(_self):
     _self.data["temp_timestamp"] = []
     _self.data["temp1"] = []
     _self.data["temp2"] = []
+    
+    _self.data["itc_timestamp"] = []
+    _self.data["itc_temp1"] = []
+    _self.data["itc_temp2"] = []
+    _self.data["itc_temp3"] = []
     
     _self.data["ips_timestamp"] = []
     _self.data["ips_mfield"] = []

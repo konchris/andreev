@@ -217,28 +217,52 @@ def refresh_display():
                 _self.data_curve6b.set_data(temp_x, _self.data["temp2"][x0:x1:step]) 
             else:
                 _self.data_curve6b.set_data([],[])
-            _self.ui.cw3.plot.do_autoscale()
+        except Exception,e:
+            log("Displaying TEMP",e)
+        
+        try:
+            x0 = find_min(_self.data["itc_timestamp"],begin)
+            x1 = find_min(_self.data["itc_timestamp"],end)                
             
-            try:
-                x0 = find_min(_self.data["ips_timestamp"],begin)
-                x1 = find_min(_self.data["ips_timestamp"],end)
+            temp_x = np.array(_self.data["itc_timestamp"][x0:x1:step])-_self._start_time
+            if _self.ui.checkViewITCT1.isChecked():            
+                _self.data_curve6c.set_data(temp_x, _self.data["itc_temp1"][x0:x1:step])
+            else:
+                _self.data_curve6c.set_data([],[])
+            if _self.ui.checkViewITCT2.isChecked():
+                _self.data_curve6d.set_data(temp_x, _self.data["itc_temp2"][x0:x1:step]) 
+            else:
+                _self.data_curve6d.set_data([],[])
+            if _self.ui.checkViewITCT3.isChecked():
+                _self.data_curve6e.set_data(temp_x, _self.data["itc_temp3"][x0:x1:step]) 
+            else:
+                _self.data_curve6e.set_data([],[])
+
+        except Exception,e:
+            log("Displaying ITC",e)
+            
+        try:
+            x0 = find_min(_self.data["ips_timestamp"],begin)
+            x1 = find_min(_self.data["ips_timestamp"],end)
+                        
+            ips_x = np.array(_self.data["ips_timestamp"][x0:x1:step])-_self._start_time
+            _self.data_curve5.set_data(ips_x, _self.data["ips_mfield"][x0:x1:step])
+        except Exception,e:
+            log("IPS Display Failed",e)
+        
+        try:
+            x0 = find_min(_self.data["ips_2_timestamp"],begin)
+            x1 = find_min(_self.data["ips_2_timestamp"],end)
                             
-                ips_x = np.array(_self.data["ips_timestamp"][x0:x1:step])-_self._start_time
-                _self.data_curve5.set_data(ips_x, _self.data["ips_mfield"][x0:x1:step])
-            except Exception,e:
-                log("IPS Display Failed",e)
+            ips_x = np.array(_self.data["ips_2_timestamp"][x0:x1:step])-_self._start_time
+            _self.data_curve5b.set_data(ips_x, _self.data["ips_2_mfield"][x0:x1:step])
+        except Exception,e:
+            log("IPS 2 Display Failed",e)
             
-            try:
-                x0 = find_min(_self.data["ips_2_timestamp"],begin)
-                x1 = find_min(_self.data["ips_2_timestamp"],end)
-                                
-                ips_x = np.array(_self.data["ips_2_timestamp"][x0:x1:step])-_self._start_time
-                _self.data_curve5b.set_data(ips_x, _self.data["ips_2_mfield"][x0:x1:step])
-            except Exception,e:
-                log("IPS 2 Display Failed",e)
+        try:
             _self.ui.cw3.plot.do_autoscale()
         except Exception,e:
-            log("Displaying IPS+TEMP",e)
+            log("Autoscale cw3",e)
         
         # 7 + 8  
         try:

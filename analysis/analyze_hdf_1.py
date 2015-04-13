@@ -26,7 +26,7 @@ g_0 = 2.0*const.e**2/const.h
 db = 0
 
 
-filename = r"150312_Pb314_Histo03"
+filename = r"150323_Pb314_HistoSlow03"
 
 base_path = os.path.join("Z:\dweber\data_p5",filename)              # server
 base_path = os.path.join("C:\data_p5",filename)                     # local

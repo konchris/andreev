@@ -97,6 +97,7 @@ def femto_set(a=0,b=0):
     _self.config_data["offset_current"] = _self.config_data["offset_agilent_current"][b]
     _self.config_data["range_voltage"] = a+1
     _self.config_data["range_current"] = b+1
+
     DEV.lockin.femto_set(a,b)
 
 

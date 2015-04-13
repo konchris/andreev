@@ -8,7 +8,6 @@ import visa
 import numpy as np
 import time
 from functions import log
-import config
 #import luci
 #import struct   # ascii to single/double
 import thread
@@ -28,12 +27,13 @@ try:
     board_0.send_ifc()
 except Exception,e:
     log("Failed to Clear Interface 0",e)
+""" only needed when several adapters   
 try:
     board_0 = visa.Gpib(1)
     board_0.send_ifc()
 except Exception,e:
     log("Failed to Clear Interface 1",e)
-
+"""
 
 def collect_garbage():
     import gc
@@ -467,14 +467,35 @@ class LAKESHORE:
     """calibration_ruo2 = np.array([[1280.23, 300.0], [1280.973, 280.0], [1281.822, 260.0], [1282.802, 240.0], [1283.947, 220.0], [1285.305, 200.0], [1286.083, 190.0], [1286.942, 180.0], [1287.894, 170.0], [1288.958, 160.0], [1290.152, 150.0], [1291.505, 140.0], [1293.052, 130.0], [1294.837, 120.0], [1296.923, 110.0], [1299.396, 100.0], [1300.814, 95.0], [1302.378, 90.0], [1304.113, 85.0], [1306.049, 80.0], [1308.225, 75.0], [1310.69, 70.0], [1313.506, 65.0], [1316.758, 60.0], [1320.558, 55.0], [1325.062, 50.0], [1330.493, 45.0], [1337.179, 40.0], [1345.632, 35.0], [1356.685, 30.0], [1362.129, 28.0], [1368.351, 26.0], [1375.535, 24.0], [1383.93, 22.0], [1393.881, 20.0], [1405.878, 18.0], [1420.651, 16.0], [1439.325, 14.0], [1463.742, 12.0], [1497.156, 10.0], [1519.009, 9.0], [1545.916, 8.0], [1579.928, 7.0], [1624.403, 6.0], [1652.253, 5.5], [1725.066, 4.5], [1753.167, 4.2], [1774.075, 4.0], [1803.124, 3.75], [1836.025, 3.5], [1873.622, 3.25], [1917.031, 3.0], [1956.936, 2.8], [2002.539, 2.6], [2055.19, 2.4], [2116.717, 2.2], [2189.645, 2.0], [2231.454, 1.9], [2277.578, 1.8], [2328.744, 1.7], [2385.85, 1.6], [2416.972, 1.55], [2522.709, 1.4], [2605.77, 1.3], [2701.67, 1.2], [2813.734, 1.1]])
     calibration_probe2 = np.array([[104,300],[104.5,280],[105,260],[106,240],[107,220],[108,200],[108.5,190],[109,180],[110,170],[111,160],[112,150],[113,140],[114,130],[116,120],[118,110],[120,100],[121,95],[122,90],[124,85],[126,80],[128,75],[130,70],[132,65],[135,60],[139,55],[144,50],[149,45],[154,40],[162,35],[174,30],[179,28],[184,26],[194,24],[204,22],[214,20],[229,18],[245,16],[273,14],[304,12],[354,10],[394,9],[444,8],[524,7],[629,6],[704,5.5],[954,4.5],[1054,4.2],[1154,4],[1304,3.75],[1504,3.5],[1704,3.25],[2104,3],[2404,2.8],[2954,2.6],[3504,2.4],[4404,2.2],[5654,2],[6804,1.9],[8004,1.8],[10004,1.7],[12404,1.6],[14004,1.55],[20563.86,1.4],[28062.44,1.3],[40143.44,1.2],[60929.16,1.1]])
     for i in range(len(calibration_ruo2)):
-        print str(i+1) + " " + str(np.log10(calibration_probe2[i][0])) + " " + str(calibration_probe2[i][1])    """    
+        print str(i+1) + " " + str(np.log10(calibration_probe2[i][0])) + " " + str(calibration_probe2[i][1])    """   
+        
 class ITC503:
-    def __init__(self, gpib_identifier = "GPIB::24", timeout = 1, term_chars = '\r',
-                 delay = 0):
-
+    def __init__(self, gpib_identifier = "GPIB::24", timeout = 1, term_chars = '\r', delay = 0):
         self.itc = visa.GpibInstrument("GPIB::24", timeout=1, term_chars="\r", delay=0)
         self.itc.ask('C3')
         self.itc.clear()
+        
+        self.data = {}
+        self.data_lock = thread.allocate_lock()
+        self.data["timestamp"] = []
+        self.data["temperature1"] = []
+        self.data["temperature2"] = []
+        self.data["temperature3"] = []
+        
+        self.thread_id = None
+        self.start_thread()
+
+    def start_thread(self, delay=0.05):
+        if self.thread_id != None:
+            self._stop = True                # send stop to thread
+            _timeout = time.time()+3        # timeout = 1s
+            # check if thread exited or timeout occured
+            while self.thread_id != None and time.time() < _timeout:
+                pass
+        self._stop = False                   # reset terminate signal
+        # create new thread and insert id
+        self.thread_id = thread.start_new_thread(self.measurement_thread,(delay,))
+        log("Thread #%i started"%(self.thread_id))
         
     def get_TSorb(self):
         """The temperature on the Sorption pump / K"""
@@ -498,12 +519,8 @@ class ITC503:
 
     def start_heating(self, temp = 30.0, power = 5.5):
         """Start heating the cryostat (on the sorb).
-
         Using the heater on the sorption pump you can heat
         the cryostat. This function automates the process.
-
-        Parameters
-        ----------
         temp : float, optional
             The end temperature for the heater on the sorption
             pump in K. The default setting is that used for He3
@@ -512,9 +529,7 @@ class ITC503:
         power : float, optional
             The power of the heater in procent. Defualt setting
             is that used for He3 condensation
-            DEFAULT : 5.5
-
-        """
+            DEFAULT : 5.5        """
         self.set_heater(1)
         self.set_heater_manual()
         self.turn_off_auto_pid()
@@ -551,17 +566,10 @@ class ITC503:
 
     def set_heater(self, Hn = 1):
         """Set the heater sensor for automatic heating. Default is 1, or the Sorb heater.
-        
-        Parameters
-        ----------
-        Hn : int
-            Set the heater sensor for automatic control.
             1 - Sorption Pump Sensor
             2 - He3 Pot Sensor
-            3 - 1K Pot Sensor
-
-        """
-        self.write('$H'+str(Hn))
+            3 - 1K Pot Sensor        """
+        self.itc.write('$H'+str(Hn))
 
     def set_heater_output(self, Onnn = 5.5):
         """Set the heater output power as a percentage of the maximum power output"""
@@ -573,6 +581,57 @@ class ITC503:
 
     def get_sys_status(self):
         self.x_string = self.itc.ask('X')
+    
+    
+    
+    # data handling
+    def get_data_list(self, erase=True):
+        """returns all the gathered data in one bunch
+        and erases the list """       
+        # get lock first
+        self.data_lock.acquire()
+        # copy data
+        return_data = self.data.copy()
+
+        if erase:    
+            self.data["timestamp"] = []
+            self.data["temperature1"] = []
+            self.data["temperature2"] = []
+            self.data["temperature3"] = []
+
+        # release lock
+        self.data_lock.release()
+        return return_data    
+    
+    def measurement_thread(self, delay=0.05):
+        log("Temperature Thread started!")
+        while not (self._stop or stop):
+            try:
+                gpib_lock.acquire()
+                temperature1 = float(self.get_TSorb())            
+                temperature2 = float(self.get_THe3())
+                temperature3 = float(self.get_T1K())
+            except Exception,e:
+                log("Temperature Aquire Failed",e)
+                temperature1 = 0         
+                temperature2 = 0
+                temperature3 = 0
+            finally:
+                gpib_lock.release()
+
+            # append gathered data to internal data dictionary
+            
+            self.data_lock.acquire()
+            self.data["timestamp"].append(time.time())
+            self.data["temperature1"].append(temperature1)
+            self.data["temperature2"].append(temperature2)
+            self.data["temperature3"].append(temperature3)
+            self.data_lock.release()
+            
+            time.sleep(delay)
+        # indicate that thread terminated 
+        log("Thread #%i finished"%(self.thread_id))
+        self.thread_id = None
         
 class GS200:
     """ This class manages the communication with the Yokogawa GS200
@@ -1043,8 +1102,8 @@ class ZURICH:
     
     def initialize(self, frequency=222.222, ampl=0.01, order=4, tc=0.1, rate=7):
         general_setting = [
-                [["/", self.device, "/sigins/0/diff"],0.0],
-                [["/", self.device, "/sigins/1/diff"],0.0],
+                [["/", self.device, "/sigins/0/diff"],config.lockinDiff],
+                [["/", self.device, "/sigins/1/diff"],config.lockinDiff],
                 #[["/", self.device, "/sigins/0/ac"],1],
                 #[["/", self.device, "/sigins/1/ac"],1],
 
@@ -1656,6 +1715,17 @@ def lakeshore_starter():
             log("Couldn't Find Lakeshore",e)
             time.sleep(device_delay)
 
+def itc_starter():
+    found = False
+    while not found and not stop:
+        try:
+            global itc
+            itc = ITC503()
+            log("Found ITC503")
+            found = True
+        except Exception,e:
+            log("Couldn't Find ITC503",e)
+            time.sleep(device_delay)
 
 def agilent_34410a_starter_new():
     found = False
@@ -1683,18 +1753,6 @@ def agilent_34410a_starter_old():
             log("Couldn't Find Agilent 34410a Old",e)
             time.sleep(device_delay)
 
-"""def agilent_34401a_starter():
-    found = False
-    while not found and not stop:
-        try:
-            global agilent_old
-            agilent_old = Agilent34401A()
-            log("Found Agilent 34401a")
-            found = True
-        except:
-            log("Couldn't Find Agilent 34401a")
-            time.sleep(device_delay)"""
-
 
 """ Just helps the editor to know, what is behind the labels """
 if False: # dont change
@@ -1704,6 +1762,7 @@ if False: # dont change
     magnet = Magnet() 
     magnet_2 = Magnet() 
     lakeshore = LAKESHORE() 
+    itc = ITC503()
     agilent_new = Agilent34410A() 
     agilent_old = Agilent34410A() 
 else:
@@ -1712,7 +1771,8 @@ else:
     yoko = None 
     magnet = None 
     magnet_2 = None
-    lakeshore = None 
+    lakeshore = None
+    itc = None
     agilent_new = None 
     agilent_old = None 
 
@@ -1724,9 +1784,10 @@ if config.magnetZ:
 if config.magnetX:
     thread.start_new_thread(magnet_starter_2,())
 thread.start_new_thread(lakeshore_starter,())
+if config.itc:
+    thread.start_new_thread(itc_starter,())
 thread.start_new_thread(agilent_34410a_starter_new,())
 thread.start_new_thread(agilent_34410a_starter_old,())
-#thread.start_new_thread(agilent_34401a_starter,())
 
 log("Device Threads Initalized")
 
@@ -1735,8 +1796,7 @@ if __name__ == "__main__":
     
     while True:
         try:
-            #print len(agilent_new.get_data_list())
-            print len(agilent_old.get_data_list()["timestamp"])
+            print itc.data["temperature1"][-1],itc.data["temperature2"][-1],itc.data["temperature3"][-1]
         except:
             pass
         time.sleep(1)

@@ -6,10 +6,11 @@ for i in range(len(userList)):
     if userList[i] == '1K_Stick_Clone':
         userIndex = 2
         break
-    elif userList[i] == 'David Weber': #test
+    elif userList[i] == 'David Weber':
         userIndex = 1
         break
     else:
+        userIndex = 1
         print 'Can not detect defined User.'
         
 
@@ -30,11 +31,18 @@ if userIndex == 2:
     max_rpm = 8000
     encoder = 1024
     
+    """ Lockin """
+    lockinDiff = 0
+    
     """ Definitions which magnets should be started and the address"""
     magnetZ = True
     magnetX = False
     magnetZAddresse = 25
     magnetXAddresse = 25
+    
+    
+    """ ITC503 """
+    itc = False
     
 if userIndex == 1:
     """ Defines which yoko driver to load"""
@@ -53,8 +61,15 @@ if userIndex == 1:
     max_rpm = 8000
     encoder = 512
     
+    """ Lockin """
+    lockinDiff = 1
+    
     """ Definitions which magnets should be started"""
     magnetZ = False
     magnetX = False
     magnetZAddresse = 26
     magnetXAddresse = 25    
+    
+    
+    """ ITC503 """
+    itc = True

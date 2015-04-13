@@ -58,7 +58,15 @@ class main_program(QtGui.QMainWindow):
         initialize.init_curvewidgets(self)
         initialize.init_files(self)
         initialize.init_shutdowns(self)
-        initialize.init_validators(self)       
+        initialize.init_validators(self)  
+        
+        #########################################################
+        ##############   MEASUREMENT THREAD   ###################
+        #########################################################
+        # lock to synchronize access
+        self.data_lock = thread.allocate_lock()
+        thread.start_new_thread(self.measurement_thread,())  
+        time.sleep(1)
         
         #########################################################
         ##############    REFRESH DISPLAY     ###################
@@ -82,12 +90,7 @@ class main_program(QtGui.QMainWindow):
         self.wiring = 620.0
 
 
-        #########################################################
-        ##############   MEASUREMENT THREAD   ###################
-        #########################################################
-        # lock to synchronize access
-        self.data_lock = thread.allocate_lock()
-        thread.start_new_thread(self.measurement_thread,())    
+          
 
     def slow_timer(self):
         export_html(self.ui)
@@ -102,7 +105,7 @@ class main_program(QtGui.QMainWindow):
         DEV.yoko.set_voltage(0)
         DEV.yoko.output(True)
 
-        DEV.lockin.set_amplitude(0.01, output=False)
+        DEV.lockin.set_amplitude(0.0001, output=True)
         
         # time to settle 0 value
         for i in range(10):
@@ -1725,6 +1728,7 @@ class main_program(QtGui.QMainWindow):
         Additionally the data is written into the single files and the hdf5 file.
         
         For more information look down to the single try where the data is read."""
+        time.sleep(2)
 
         while not self.shutdown:
             try:
@@ -1758,20 +1762,23 @@ class main_program(QtGui.QMainWindow):
                         if DEV.lockin != None:
                             lockin_data = DEV.lockin.get_data_list(averages=1)
                             
+                            factor_voltage = np.power(10,self.config_data["range_voltage"])
+                            factor_current = np.power(10,self.config_data["range_current"])
+                            
                             li_timestamp_0 = lockin_data["0"]["timestamp"][:]
-                            li_aux0 =  [(x - self.config_data["offset_voltage"])/self.factor_voltage for x in lockin_data["0"]["auxin0"]]
-                            li_aux1 =  [(x - self.config_data["offset_current"])/self.factor_current for x in lockin_data["0"]["auxin1"]]
-                            li_0_x =  [x / self.factor_voltage for x in lockin_data["0"]["x"]]
-                            li_0_y =  [x / self.factor_voltage for x in lockin_data["0"]["y"]]
+                            li_aux0 =  [(x - self.config_data["offset_voltage"])/factor_voltage for x in lockin_data["0"]["auxin0"]]
+                            li_aux1 =  [(x - self.config_data["offset_current"])/factor_current for x in lockin_data["0"]["auxin1"]]
+                            li_0_x =  [x / factor_voltage for x in lockin_data["0"]["x"]]
+                            li_0_y =  [x / factor_voltage for x in lockin_data["0"]["y"]]
                             li_timestamp_1 = lockin_data["1"]["timestamp"][:]
-                            li_1_x =  [x / self.factor_voltage for x in lockin_data["1"]["x"]]
-                            li_1_y =  [x / self.factor_voltage for x in lockin_data["1"]["y"]]
+                            li_1_x =  [x / factor_voltage for x in lockin_data["1"]["x"]]
+                            li_1_y =  [x / factor_voltage for x in lockin_data["1"]["y"]]
                             li_timestamp_3 = lockin_data["3"]["timestamp"][:]
-                            li_3_x =  [x / self.factor_current for x in lockin_data["3"]["x"]]
-                            li_3_y =  [x / self.factor_current for x in lockin_data["3"]["y"]]
+                            li_3_x =  [x / factor_current for x in lockin_data["3"]["x"]]
+                            li_3_y =  [x / factor_current for x in lockin_data["3"]["y"]]
                             li_timestamp_4 = lockin_data["4"]["timestamp"][:]
-                            li_4_x =  [x / self.factor_current for x in lockin_data["4"]["x"]]
-                            li_4_y =  [x / self.factor_current for x in lockin_data["4"]["y"]]
+                            li_4_x =  [x / factor_current for x in lockin_data["4"]["x"]]
+                            li_4_y =  [x / factor_current for x in lockin_data["4"]["y"]]
                             
                         femto_timestamp = lockin_data["femto"]["timestamp"]
                         femto_channela = lockin_data["femto"]["channela"]
@@ -1958,6 +1965,65 @@ class main_program(QtGui.QMainWindow):
                 except Exception,e:
                     log("Magnet failed DAQ",e)
                 
+                
+                # The Temperatur of the ITC are read out
+                # No corrections.                
+                itc_timestamp = []
+                itc_temp1 = []
+                itc_temp2 = []
+                itc_temp3 = []
+                try:
+                    if DEV.itc != None:
+                        itc_data = DEV.itc.get_data_list()
+                        itc_timestamp = itc_data["timestamp"]
+                        itc_temp1 = itc_data["temperature1"]
+                        itc_temp2 = itc_data["temperature2"]
+                        itc_temp3 = itc_data["temperature3"]
+
+                    self.data["itc_timestamp"].extend(itc_timestamp)
+                    self.data["itc_temp1"].extend(itc_temp1)
+                    self.data["itc_temp2"].extend(itc_temp2)
+                    self.data["itc_temp3"].extend(itc_temp3)
+                    
+                    if config.save_good_old_txt:
+                        saving_data = [itc_timestamp,itc_temp1,itc_temp2, itc_temp3]
+                        save_data(self.f_itc, saving_data)
+                    
+                    if not self.hdf5_file == None:
+                        try:
+                            self.hdf5_file.save_itc(itc_timestamp,itc_temp1,itc_temp2,itc_temp3)
+                        except Exception,e:
+                            log("Failed to Save ITC HDF5",e)
+                except Exception,e:
+                    log("ITC failed DAQ",e)
+                
+                # The magnet in z-direction is read out.                
+                ips_timestamp = []
+                ips_mfield = []
+                try:
+                    if DEV.magnet != None:
+                        ips_data = DEV.magnet.get_data_list()
+                        ips_timestamp = ips_data["timestamp"]
+                        ips_mfield = ips_data["field"]
+                
+                    self.data["ips_timestamp"].extend(ips_timestamp)
+                    self.data["ips_mfield"].extend(ips_mfield)
+                    
+                    if config.save_good_old_txt:    
+                        saving_data = [ips_timestamp,ips_mfield]
+                        save_data(self.f_ips, saving_data)
+                    
+                    if not self.hdf5_file == None:
+                        try:
+                            self.hdf5_file.save_magnet(0,ips_timestamp,ips_mfield)
+                        except Exception,e:
+                            log("Failed to Save IPS1 HDF5",e)
+                except Exception,e:
+                    log("Magnet failed DAQ",e)
+                
+                
+                
+                
                 # The magnet in x-direction is read out.                
                 ips_2_timestamp = []
                 ips_2_mfield = []
@@ -2109,12 +2175,12 @@ class main_program(QtGui.QMainWindow):
             event.accept()
         else:
             event.ignore()
-    
-            
-myapp = None     
+
+#global myapp       
+#myapp = None     
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    global myapp
+    #global myapp
     myapp = main_program()
     myapp.show()
 
